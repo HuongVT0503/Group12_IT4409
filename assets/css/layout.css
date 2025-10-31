@@ -1,0 +1,13 @@
+/*for main regions(navbar,sidebar,maingrid)*/
+.layout{
+    display:grid;
+    grid-template-columns: 15% 85%;
+    gap:20px;
+}
+/*header/footer n containe4r width*/
+
+
+
+
+
+
