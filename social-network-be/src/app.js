@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import driver from './config/neo4j.js';
+import authRoutes from "./routes/authRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -24,5 +25,7 @@ app.get('/db-test', async (req, res) => {
     await session.close();
   }
 });
+
+app.use('/api/auth', authRoutes);
 
 export default app;
