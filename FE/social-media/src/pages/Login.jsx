@@ -3,6 +3,8 @@ import Button from "../components/Button.jsx";
 import InputField from "../components/InputField.jsx";
 import logo from "../assets/img/logo/logo.png";
 
+import { useEffect } from "react";
+
 
 
 export default function Login({ onSwitch, onSuccess, onForgot }) {
@@ -10,14 +12,21 @@ export default function Login({ onSwitch, onSuccess, onForgot }) {
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const [isShort, setIsShort] = useState(false); //for smallheight/short devices
+  const [layout, setLayout] = useState({
+    isShort: false,
+    isNarrow: false,
+  }); //for tall/short n large/narrow devices
 
 
  useEffect(() => {
     const check = () => {
       if (typeof window === "undefined") return;
-      setIsShort(window.innerHeight < 680); //tweak threshold
-    };
+const h = window.innerHeight;
+      const w = window.innerWidth;
+      setLayout({
+        isShort: h < 680,
+        isNarrow: w <= 480, //threshold
+      });    };
     check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
@@ -44,7 +53,7 @@ export default function Login({ onSwitch, onSuccess, onForgot }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, remember }),
-      });
+      });////
 
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || data?.message || "Login failed.");
@@ -65,30 +74,30 @@ export default function Login({ onSwitch, onSuccess, onForgot }) {
 
 
 
-
+const { isShort, isNarrow } = layout;
 
 
   return (
     <div style={getRoot(isShort)}>
-      <div style={getTopBar(isShort)}>
+      <div style={topBar}>
         <div style={brandRow}>
           <img src={logo} alt=" SocioICT logo" style={brandLogo} />
           <span style={brandName}>SocioICT</span>
         </div>
       </div>
       
-      <div style={card}>
+      <div style={getCard(isShort, isNarrow)}>
         {/*header*/}
-        <div style={headerWrap}>
-          <h1 className="h1 text-black" style={headerTitle}>Login</h1>
+        <div style={getHeaderWrap(isShort)}>
+          <h1 className="h1 text-black" style={getHeaderTitle(isShort)}>Login</h1>
           <div style={subRow}>
-            <span className="caption-2 text-gray"  style={{ display: "inline", flex: "0 0 auto" }}>Don’t have an account?</span>
+            <span style={subText}>Don’t have an account?</span>
             <button type="button" onClick={onSwitch} style={linkBtn}>Sign Up</button>
           </div>
         </div>
 
         {/*form */}
-        <form onSubmit={handleSubmit} style={formCol}>
+        <form onSubmit={handleSubmit} style={getFormCol(isShort, isNarrow)}>
           <InputField
             label="Email"
             name="identifier"
@@ -119,7 +128,7 @@ export default function Login({ onSwitch, onSuccess, onForgot }) {
                 onChange={(e) => setRemember(e.target.checked)}
                 style={checkbox}
               />
-              <span className="caption-2 text-gray">Remember me</span>
+              <span style={subText}>Remember me</span>
             </label>
 
             <button
@@ -134,13 +143,13 @@ export default function Login({ onSwitch, onSuccess, onForgot }) {
 
           {err && <div style={errorBox}>{err}</div>}
 
-          <div style={{ position: "relative", height: 150 }}>
+          <div>
             <Button
               variant="primary"
               size="lg"
               loading={loading}
               className="w-100"
-              style={cta}
+              style={getCta(isShort, isNarrow)}
               type="submit"
             >
               Log In
@@ -150,7 +159,7 @@ export default function Login({ onSwitch, onSuccess, onForgot }) {
           {/*divider */}
           <div style={dividerRow}>
             <div style={hr} />
-            <span className="caption-2 text-gray">Or</span>
+            <span style={subText}>Or</span>
             <div style={hr} />
           </div>
 
@@ -182,8 +191,8 @@ export default function Login({ onSwitch, onSuccess, onForgot }) {
       </div>
 
       {/* Bottom signup row*/}
-      <div style={bottomRow}>
-        <span className="caption-2 text-gray">Don’t have an account?</span>
+      <div style={getBottomRow(isShort)}>
+        <span style={subText}>Don’t have an account?</span>
         <button type="button" onClick={onSwitch} style={linkBtn}>Sign Up</button>
       </div>
     </div>
@@ -196,9 +205,9 @@ export default function Login({ onSwitch, onSuccess, onForgot }) {
 
 
 /*Layout & style tokens */
-const root = {
+const baseroot = {
   width: "100%",
-  maxWidth: 500,
+  /*maxWidth: 500,*/
   minHeight: "100dvh",
   margin: "0 auto",
   padding:"24px 16px 16px",
@@ -207,16 +216,22 @@ const root = {
   flexDirection: "column",
   alignItems: "center",
   position: "relative",
-  overflow: "hidden",
+
   background:"var(--neutral-300)",
 };
 
+const getRoot = (isShort) => ({
+  ...baseroot,
+  justifyContent: isShort ? "flex-start" : "center", //center on tall,start of short
+})
+
 const topBar={
   width: "100%",
-  maxWidth: 500,
+  
   display: "flex",
   justifyContent: "center",
   alignItems: "flex-start",
+  marginBottom:  16,
 };
 
 const brandRow = {
@@ -226,52 +241,63 @@ const brandRow = {
 };
 
 const brandLogo = {
-  width: 32,
-  height: 32,
+  width: "clamp(24px, 5vw, 32px)",
+  height: "clamp(24px, 5vw, 32px)",
   objectFit: "contain",
 };
 
 const brandName = {
   fontFamily: "Inter, sans-serif",
   fontWeight: 700,
-  fontSize: 24,
-  lineHeight: "28px",
+  fontSize: "clamp(20px, 4vw, 24px)",
+  lineHeight: 1.25,
   color: "var(--primary-purple-500)", 
 };
 
-const card = {
+const baseCard = {
   width: "100%",
-  maxWidth: 500,
-  padding: 24,
+  
+  padding: "clamp(18px, 4vw, 24px)",
 
   position: "relative",
+  
   boxSizing: "border-box",
-  margin: "32px auto 16px",
-  background: "#fff",
+  margin: "8px auto 12px",
+  background: "var(--neutral-100)",
   borderRadius: 12,
   display: "flex",
   flexDirection: "column",
-  alignItems: "flex-start",
-  gap: 24,
+  alignItems: "stretch",
+  gap: "clamp(16px, 3vw, 24px)",
 };
 
-const headerWrap = {
+const getCard = (isShort, isNarrow) => ({
+  ...baseCard,
+
+  marginTop:isShort ? 4 : 8,
+  marginBottom: isShort ? 8 : 12,
+  boxShadow: isNarrow
+    ? "0px 8px 24px rgba(0,0,0,0.04)"
+    : "0px 10px 30px rgba(15,15,30,0.08)",
+});////
+
+const getHeaderWrap =(isShort) => ({
   alignSelf: "stretch",
   display: "flex",
   justifyContent: "center",
   flexDirection: "column",
   alignItems: "center",
-  gap: 6,
-};
+  gap: isShort ? 2 : 4,
+});
 
-const headerTitle = {
+const getHeaderTitle = (isShort) => ({
   
   margin: 0,
   fontFamily: "Inter, sans-serif",
   fontWeight: 700,
-  fontSize: 32,
-  lineHeight: "41.6px",
-};
+  fontSize: isShort ? "clamp(22px, 5vw, 26px)" : "clamp(24px, 3vw, 28px)",
+  lineHeight: 1.4,
+});
 
 const subRow = {
   alignSelf: "stretch",
@@ -281,31 +307,40 @@ const subRow = {
   gap: 6,
 };
 
+const subText = {
+  fontFamily: "Inter, sans-serif",
+  fontSize: "clamp(11px, 2.6vw, 12px)",
+  lineHeight: 1.4,
+  color: "var(--text-gray)",
+};
+
+
 const linkBtn = {
   padding: 0,
   display:"inline",
   background: "none",
   border: "none",
   color: "var(--accent-info)",
-  fontSize: 12,
-  lineHeight: "16px",
+  fontSize: "clamp(11px, 2.6vw, 12px)",
+  lineHeight: 1.4,
+  fontWeight: 500,
   cursor: "pointer",
   textDecoration: "none",
 };
 
 
 
-const formCol = {
+const getFormCol =(isShort) => ({
 
   
   display: "flex",
   flexDirection: "column",
   
-  gap: 16,
+  gap: isShort ? 10 : 14,
   color: "border-color",
   
   
-};
+});
 
 const rowBetween = {
   display: "flex",
@@ -329,19 +364,19 @@ const checkbox = {
   display:"inline-flex",
 };
 
-const cta = {
+const getCta =(isShort, isNarrow) => ({
   
   display:"flex",
   alignItems:"center",
   justifyContent:"center",
 
   width: "100%",
-  height: 48,
+  height:  "clamp(44px, 6.2vh, 50px)",
   
-  margin: "6dvh auto",
+  margin:isShort||isNarrow? "clamp(18px, 4vh, 24px) auto": "clamp(24px, 6vh, 36px) auto",
   borderRadius: 12,
   boxShadow: "0px 4px 8px rgba(0,0,0,0.20)",
-};
+});
 
 const dividerRow = {
   display: "flex",
@@ -354,27 +389,27 @@ const dividerRow = {
 const hr = {
   flex: "1 1 0",
   height: 0,
-  borderTop: "1px solid #E5E5E5",
+  borderTop: "1px solid var(--neutral-300)",
 };
 
 const socialBtn = {
   height: 48,
   borderRadius: 10,
-  outline: "1px solid #EFF0F6",
-  boxShadow: "inset 0px -3px 6px rgba(244, 246, 250, 0.60)",
+  outline: "1px solid var(--neutral-300)",
+  boxShadow: "inset 0px -3px 6px var(--text-gray-200)",
   display: "inline-flex",
   justifyContent: "center",
   alignItems: "center",
   gap: 10,
-  background: "#fff",
+  background: "var(--neutral-100)",
 };
 
 const socialText = {
   fontFamily: "Inter, sans-serif",
   fontWeight: 600,
-  fontSize: 14,
-  lineHeight: "19.6px",
-  color: "var(--text-black, #1A1A1A)",
+  fontSize: "clamp(13px, 3vw, 14px)",
+  lineHeight: 1.4,
+  color: "var(--text-black,var(--text-black))",
 };
 
 const socialIconGoogle = {
@@ -402,18 +437,18 @@ const socialIconFacebook = {
 };
 
 const errorBox = {
-  background: "#fdecea",
-  color: "#b00020",
-  border: "1px solid #f5c6cb",
+  background: "var(--neutral-200)",
+  color: "var(--accent-danger)",
+  border: "1px solid var(--accent-danger-100)",
   borderRadius: 8,
   padding: "8px 10px",
   fontSize: 13,
 };
 
-const bottomRow = {
-  marginTop: 16,
+const getBottomRow =(isShort) => ({
+  marginTop: isShort ? 8 : 16,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   gap: 8,
-};
+});
