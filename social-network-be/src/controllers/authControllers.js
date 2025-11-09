@@ -1,10 +1,12 @@
-require("dotenv").config();
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const driver = require("../config/neo4j");
+import dotenv from 'dotenv';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import driver from '../config/neo4j.js';
+
+dotenv.config();
 
 // ===== ĐĂNG KÝ NGƯỜI DÙNG MỚI =====
-async function registerUser({ username, email, phone, password }) {
+export async function registerUser({ username, email, phone, password }) {
     const session = driver.session();
     try {
         // Kiểm tra trùng email hoặc số điện thoại
@@ -16,7 +18,7 @@ async function registerUser({ username, email, phone, password }) {
         const checkResult = await session.run(checkQuery, { email, phone });
 
         if (checkResult.records.length > 0) {
-            throw new Error("Email hoặc số điện thoại đã tồn tại!");
+            throw new Error('Email hoặc số điện thoại đã tồn tại!');
         }
 
         // Mã hóa mật khẩu
@@ -37,14 +39,14 @@ async function registerUser({ username, email, phone, password }) {
     `;
         await session.run(createQuery, { username, email, phone, hashed });
 
-        return { message: "Đăng ký thành công!" };
+        return { message: 'Đăng ký thành công!' };
     } finally {
         await session.close();
     }
 }
 
 // ===== ĐĂNG NHẬP BẰNG EMAIL / SĐT =====
-async function loginUser({ identifier, password }) {
+export async function loginUser({ identifier, password }) {
     const session = driver.session();
     try {
         const query = `
@@ -55,22 +57,22 @@ async function loginUser({ identifier, password }) {
         const result = await session.run(query, { identifier });
 
         if (result.records.length === 0) {
-            throw new Error("Không tìm thấy tài khoản!");
+            throw new Error('Không tìm thấy tài khoản!');
         }
 
-        const user = result.records[0].get("u").properties;
+        const user = result.records[0].get('u').properties;
 
         // So khớp mật khẩu
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            throw new Error("Sai mật khẩu!");
+            throw new Error('Sai mật khẩu!');
         }
 
         // Sinh JWT
         const token = jwt.sign(
             { id: user.id, username: user.username },
             process.env.SECRET_KEY,
-            { expiresIn: "3d" }
+            { expiresIn: '3d' }
         );
 
         return { token, user };
@@ -80,7 +82,7 @@ async function loginUser({ identifier, password }) {
 }
 
 // ===== ĐĂNG NHẬP QUA MẠNG XÃ HỘI =====
-async function socialLogin({ provider, socialId, username, email }) {
+export async function socialLogin({ provider, socialId, username, email }) {
     const session = driver.session();
     try {
         // Kiểm tra user đã tồn tại chưa
@@ -105,17 +107,22 @@ async function socialLogin({ provider, socialId, username, email }) {
         })
         RETURN u
       `;
-            const createRes = await session.run(createQuery, { username, email, provider, socialId });
-            user = createRes.records[0].get("u").properties;
+            const createRes = await session.run(createQuery, {
+                username,
+                email,
+                provider,
+                socialId,
+            });
+            user = createRes.records[0].get('u').properties;
         } else {
-            user = result.records[0].get("u").properties;
+            user = result.records[0].get('u').properties;
         }
 
         // Sinh JWT
         const token = jwt.sign(
             { id: user.id, username: user.username },
             process.env.SECRET_KEY,
-            { expiresIn: "3d" }
+            { expiresIn: '3d' }
         );
 
         return { message: `Đăng nhập ${provider} thành công!`, token, user };
@@ -123,5 +130,3 @@ async function socialLogin({ provider, socialId, username, email }) {
         await session.close();
     }
 }
-
-module.exports = { registerUser, loginUser, socialLogin };

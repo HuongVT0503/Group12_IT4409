@@ -1,14 +1,9 @@
-const express = require("express");
+import express from "express";
+import { registerUser, loginUser, socialLogin } from "../controllers/authControllers.js";
+
 const router = express.Router();
 
-// Import controller
-const {
-    registerUser,
-    loginUser,
-    socialLogin
-} = require("../controllers/authControllers");
-
-// ĐĂNG KÝ TÀI KHOẢN MỚI
+// ===== ĐĂNG KÝ TÀI KHOẢN MỚI =====
 router.post("/register", async (req, res) => {
     try {
         const { username, email, phone, password } = req.body;
@@ -26,7 +21,7 @@ router.post("/register", async (req, res) => {
     }
 });
 
-// ĐĂNG NHẬP (EMAIL HOẶC SĐT)
+// ===== ĐĂNG NHẬP (EMAIL HOẶC SĐT) =====
 router.post("/login", async (req, res) => {
     try {
         const { identifier, password } = req.body;
@@ -44,7 +39,7 @@ router.post("/login", async (req, res) => {
     }
 });
 
-// ĐĂNG NHẬP QUA MẠNG XÃ HỘI (FB / GOOGLE)
+// ===== ĐĂNG NHẬP QUA MẠNG XÃ HỘI (FB / GOOGLE) =====
 router.post("/social-login", async (req, res) => {
     try {
         const { provider, socialId, username, email } = req.body;
@@ -62,4 +57,4 @@ router.post("/social-login", async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;
