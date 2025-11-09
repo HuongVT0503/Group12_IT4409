@@ -1,0 +1,66 @@
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 48px;
+  padding: 0 20px;
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 18px;
+  border: 1px solid transparent;
+  cursor: pointer;
+
+  transition: transform .02s ease, box-shadow .2s ease, opacity .2s ease;
+ 
+  -webkit-user-select:none;/*safari*/ 
+  user-select: none;
+}
+
+.btn:active { transform: translateY(1px); }
+
+/* sizes */
+.btn--sm { height: 36px; padding: 0 14px; font-size: 14px; }
+.btn--md { height: 44px; padding: 0 18px; font-size: 15px; }
+.btn--lg { height: 52px; padding: 0 22px; font-size: 16px; }
+
+/* variants */
+.btn--primary {
+  background: var(--gradient-primary);
+  color: #fff;
+  box-shadow: var(--shadow-md);
+}
+
+.btn--outline {
+  background: #fff;
+  color: var(--primary-purple-500);
+  border-color: var(--primary-purple-500);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--primary-purple-500);
+}
+
+/* disabled / loading */
+.btn[disabled],
+.btn[aria-busy="true"] {
+  opacity: .65;
+  cursor: not-allowed;
+}
+
+.btn__spinner {
+  display: inline-block;
+  width: 1em; height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  margin-right: 8px;
+  animation: btn-spin .7s linear infinite;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
