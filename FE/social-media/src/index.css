@@ -45,8 +45,8 @@ body {
   background: var(--neutral-300);
   min-width:320px; min-height: 100vh; /*...*/
   margin:0;
-  display:flex;
-  place-items: center; 
+  /*display:flex; 
+  place-items: center; */  
   
   
 }
@@ -125,7 +125,7 @@ table {
 
 
 :root {
-  display:flex;
+  /*display:flex;*/
   line-height: 1.5;
   font-weight: 400;
 
@@ -170,5 +170,13 @@ button:focus-visible {
   }
   button {
     background-color: #f9f9f9;
+  }
+}
+
+
+@media (min-width: 1024px) {
+  body {
+    font-size: 18px; 
+    line-height: 1.65; /*more breathing room*/
   }
 }
