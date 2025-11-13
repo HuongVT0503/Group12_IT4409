@@ -202,7 +202,32 @@ export default function Login({ onSwitch, onSuccess, onForgot }) {
             <span style={socialIconFacebook} aria-hidden />
             <span style={socialText}>Continue with Facebook</span>
           </Button>
+          <div style={dividerRow}>
+            <div style={hrSolid} />
+            
+          </div>
+
+
+          {isWide&& (
+        <div>
+          <Button
+              variant="primary"
+              size="lg"
+              loading={loading}
+              className="w-100"
+              style={getCta(isShort, isNarrow, isWide)}
+              type="button"
+              onClick={onSwitch}
+            >
+              Create A New Account
+            </Button>
+        </div>
+      )}
         </form>
+
+        
+
+        
       </div>
 
       {/* Bottom signup row*/}
@@ -214,6 +239,7 @@ export default function Login({ onSwitch, onSuccess, onForgot }) {
           </button>
         </div>
       )}
+      
     </div>
   );
 }
@@ -486,10 +512,17 @@ const dividerRow = {
   margin: "2px 0 12px",
 };
 
+
 const hr = {
   flex: "1 1 0",
   height: 0,
   borderTop: "1px solid var(--neutral-300)",
+};
+const hrSolid = {
+  ...hr,
+  //borderTop: "1px solid var(--neutral-500)", 
+  borderTopColor: "var(--neutral-500)",
+  marginTop:30,
 };
 
 const socialBtn = (isWide) => ({
