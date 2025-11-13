@@ -202,13 +202,14 @@ export default function Login({ onSwitch, onSuccess, onForgot }) {
             <span style={socialIconFacebook} aria-hidden />
             <span style={socialText}>Continue with Facebook</span>
           </Button>
-          <div style={dividerRow}>
-            <div style={hrSolid} />
-            
-          </div>
+         
 
 
           {isWide&& (
+        <div style={dividerRow}>
+            <div style={hrSolid} />
+            
+        </div>
         <div>
           <Button
               variant="primary"
