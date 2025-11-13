@@ -10,7 +10,8 @@
   --gradient-primary: linear-gradient(90deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%);
 
   /*neutral (text + background) colors*/
-  --primary-background: #e9edc8;
+  --primary-background-2: #e9edc8;
+--primary-background: #e6dcff;
   --text-black: #1A1A1A;
   --text-gray:  #5A5A5A;
 
