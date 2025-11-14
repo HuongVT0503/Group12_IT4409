@@ -1,20 +1,42 @@
-import driver from '../config/neo4j.js';
-import fs from 'fs';
 
-async function runCypherFile(path) {
-  const session = driver.session();
-  const cypher = fs.readFileSync(path, 'utf8');
+require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
+const { getSession, driver } = require('../config/neo4j');
+
+async function runFile(filePath) {
+  const content = fs.readFileSync(filePath, 'utf8');
+  const statements = content.split(/;\s*$/m).filter(Boolean);
+  const session = getSession();
   try {
-    await session.run(cypher);
-    console.log(`✅ Executed ${path}`);
-  } catch (err) {
-    console.error(`❌ Error executing ${path}:`, err);
+    for (const stmt of statements) {
+      const trimmed = stmt.trim();
+      if (!trimmed) continue;
+      await session.run(trimmed);
+      console.log('Ran statement:', trimmed.split('\n')[0]);
+    }
   } finally {
     await session.close();
   }
 }
 
-await runCypherFile('src/db/schema.cypher');
-await runCypherFile('src/db/seed.cypher');
+async function main() {
+  try {
+    const schemaPath = path.join(__dirname, 'schema.cypher');
+    const seedPath = path.join(__dirname, 'seed.cypher');
+    await runFile(schemaPath);
+    console.log('Schema applied.');
+    // optional seed
+    if (fs.existsSync(seedPath)) {
+      await runFile(seedPath);
+      console.log('Seed applied.');
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    await driver.close();
+    process.exit(0);
+  }
+}
 
-process.exit(0);
+main();
