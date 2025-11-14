@@ -1,11 +1,135 @@
+/*global styles, typography*/
+
+
+
+
+/*global reset*/
+
+*,
+*::before,
+*::after {
+  margin: 0; /*removes default margin n padding*/
+  padding: 0;
+  width: auto;
+  height: auto;
+  box-sizing: border-box;/*ensures PADDING n BORDER r included in an elements total width/ height
+  -> predictable layout math      e.g.     a width: 200px box wont grow larger after padding /border is added*/
+}
+
+html,body,#root{
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%; 
+
+}
+
+html {
+  scroll-behavior: smooth;
+
+  height: 100%; 
+  
+  text-rendering: optimizeLegibility; /* Prevent font scaling*/
+
+}
+
+
+body {
+  height: 100%; 
+  line-height: 1.5;
+  font-family: var(--font-sans,'Inter',Arial,sans-serif,system-ui);
+  color:var(--text-black,#1A1A1A);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeSpeed;
+  background: var(--neutral-300);
+  min-width:320px; min-height: 100vh; /*...*/
+  margin:0;
+  /*display:flex; 
+  place-items: center; */  
+  
+  
+}
+
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit; /* consistent font styles */
+  color:inherit;
+}
+
+:focus{
+  outline: none;
+}
+
+:focus-visible{
+  outline:2px solid var(--primary-purple-500,#7A3E9D);
+  outline-offset: 2px;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+
+a[href]{
+  cursor: pointer;
+}
+
+a[href]:where(:hover,:focus-visible){
+  text-decoration: underline;
+}
+
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+
+ul,
+ol {
+  list-style: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /*display:flex;*/
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -13,27 +137,9 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
+
 
 button {
   border-radius: 8px;
@@ -64,5 +170,13 @@ button:focus-visible {
   }
   button {
     background-color: #f9f9f9;
+  }
+}
+
+
+@media (min-width: 1024px) {
+  body {
+    font-size: 18px; 
+    line-height: 1.65; /*more breathing room*/
   }
 }
