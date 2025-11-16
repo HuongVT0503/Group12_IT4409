@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const ctrl = require('../controllers/post.controller');
-const auth = require('../middlewares/auth.middleware');
+const ctrl = require('../controllers/postController');
+const auth = require('../middlewares/authMiddleware.js');
 
 router.get('/', ctrl.getFeed);
 router.get('/:id', ctrl.getPost);
