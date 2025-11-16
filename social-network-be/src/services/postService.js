@@ -42,4 +42,8 @@ async function unlikePost(userId, postId) {
   return { liked: false, likes_count: count };
 }
 
-module.exports = { createPost, getPost, deletePost, getFeed, likePost, unlikePost };
+async function countLikes(postId) {
+  return await postRepo.countLikes(postId);
+}
+
+module.exports = { createPost, getPost, deletePost, getFeed, likePost, unlikePost, countLikes };
