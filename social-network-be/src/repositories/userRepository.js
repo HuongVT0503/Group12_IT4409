@@ -66,7 +66,7 @@ async function updateProfile(id, patch) {
 async function followUser(followerId, followeeId) {
   const session = getSession();
   try {
-    const res = await session.run(
+    await session.run(
       `MATCH (a:User {id:$followerId}), (b:User {id:$followeeId})
        MERGE (a)-[r:FOLLOW]->(b)
        RETURN r`,

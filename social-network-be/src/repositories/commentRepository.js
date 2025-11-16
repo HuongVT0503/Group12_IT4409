@@ -12,6 +12,7 @@ async function createComment({ id, authorId, postId, content, parentCommentId = 
        RETURN c, u, p`,
       { id, authorId, postId, content }
     );
+
     return res.records[0].get('c').properties;
   } finally {
     await session.close();
