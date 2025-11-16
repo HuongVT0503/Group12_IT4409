@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
-const postRepo = require('../repositories/post.repository');
-const notificationRepo = require('../repositories/notification.repository');
+const postRepo = require('../repositories/postRepository');
+const notificationRepo = require('../repositories/notificationRepository');
 
 async function createPost({ authorId, content, media, privacy }) {
   const id = uuidv4();
