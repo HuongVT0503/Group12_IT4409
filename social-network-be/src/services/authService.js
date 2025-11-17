@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
-const userRepo = require('../repositories/user.repository');
-const tokenRepo = require('../repositories/token.repository');
+const userRepo = require('../repositories/userRepository');
+const tokenRepo = require('../repositories/tokenRepository');
 const { sha256 } = require('../utils/hash');
 const { signAccessToken } = require('../utils/JWT');
 
@@ -15,8 +15,8 @@ async function register({ username, email, password, display_name }) {
 
   const id = uuidv4();
   const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
-  const user = await userRepo.createUser({ id, username, email, password_hash, display_name });
-  return user;
+  return await userRepo.createUser({ id, username, email, password_hash, display_name });
+
 }
 
 async function login({ email, password }) {

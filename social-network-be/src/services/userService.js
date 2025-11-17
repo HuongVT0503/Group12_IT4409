@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-const userRepo = require('../repositories/user.repository');
+const userRepo = require('../repositories/userRepository');
 
 async function getProfile(usernameOrId) {
   // allow id or username

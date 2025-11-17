@@ -1,4 +1,4 @@
-function errorHandler(err, req, res, next) {
+function errorHandler(err, req, res, _next) {
   console.error('Unhandled error:', err);
   const status = err.status || 500;
   const code = err.code || (status === 500 ? 'server_error' : 'error');

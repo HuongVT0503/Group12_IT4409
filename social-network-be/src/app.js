@@ -4,14 +4,14 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
 
-const authRoutes = require('./routes/auth.routes');
-const userRoutes = require('./routes/user.routes');
-const postRoutes = require('./routes/post.routes');
-const commentRoutes = require('./routes/comment.routes');
-const notificationRoutes = require('./routes/notification.routes');
-const adminRoutes = require('./routes/admin.routes');
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+const postRoutes = require('./routes/postRoutes');
+const commentRoutes = require('./routes/commentRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
-const errorHandler = require('./middlewares/error.middleware');
+const errorHandler = require('./middlewares/errorMiddleware');
 
 const app = express();
 app.use(cors());
@@ -28,6 +28,7 @@ app.use('/api/v1/posts', postRoutes);
 app.use('/api/v1/comments', commentRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/admin', adminRoutes);
+
 
 app.use(errorHandler);
 
