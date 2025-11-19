@@ -10,6 +10,7 @@ export default function SignUpPage({ onSwitch, onSuccess, onBack }) {
     lastName: "",
     email: "",
     dob: "",
+    gender: "",
     phone: "",
     password: "",
     confirmPassword: "",
@@ -53,6 +54,9 @@ export default function SignUpPage({ onSwitch, onSuccess, onBack }) {
       !form.firstName ||
       !form.lastName ||
       !form.email ||
+      !form.dob ||
+      !form.gender ||
+      !form.phone ||
       !form.password ||
       !form.confirmPassword
     ) {
@@ -78,6 +82,7 @@ export default function SignUpPage({ onSwitch, onSuccess, onBack }) {
           password: form.password,
           phone: form.phone,
           dob: form.dob,
+          gender: form.gender,
         }),
       });
 
@@ -209,6 +214,26 @@ export default function SignUpPage({ onSwitch, onSuccess, onBack }) {
             required
             size={isWide ? "xl" : "md"}
           />
+          <div style={getNameRow(isNarrow)}>
+            <div style={customInputWrapper}>
+              <label style={customLabel}>Gender</label>
+              <select
+                name="gender"
+                value={form.gender}
+                onChange={handleChange}
+                required
+                style={getSelectStyle(isWide)}
+              >
+                <option value="" disabled>
+                  Select
+                </option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+                <option value="prefer_not_to_say">Prefer not to say</option>
+              </select>
+            </div>
+          </div>
 
           <InputField
             label="Phone Number"
@@ -508,6 +533,36 @@ const getNameRow = (isNarrow) => ({
 const nameField = {
   flex: 1,
 };
+
+const customInputWrapper = {
+  flex: 1,
+  display: "flex",
+  flexDirection: "column",
+  gap: 6, // Gap between label and input
+};
+
+const customLabel = {
+  fontSize: 14,
+  fontWeight: 600,
+  color: "var(--text-black)",
+  fontFamily: "Inter, sans-serif",
+  marginLeft: 2,
+};
+
+
+const getSelectStyle = (isWide) => ({
+  width: "100%",
+  padding: isWide ? "14px 16px" : "12px 14px",
+  borderRadius: 10,
+  border: "1px solid var(--neutral-300)",
+  background: "var(--primary-background)",
+  color: "var(--text-black)",
+  fontSize: isWide ? 16 : 14,
+  fontFamily: "Inter, sans-serif",
+  cursor: "pointer",
+  outline: "none",
+  appearance: "none", //removes default arrow, you might want to add a background-image arrow here if strictly needed
+});
 
 const getCta = (isShort, isNarrow, isWide) => ({
   display: "flex",

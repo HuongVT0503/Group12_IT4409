@@ -5,6 +5,7 @@ import "./styles/tokens.css";     //variables/tokens
 import "./index.css";             //reset + base uses Inter
 import "./styles/typography.css"; //TYPOGRAPHY utilities
 import "./styles/utilities.css";  //COLORs utilities
+import React from "react";
 
 
 createRoot(document.getElementById('root')).render(
