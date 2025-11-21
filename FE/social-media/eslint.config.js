@@ -1,18 +1,10 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import { defineConfig, globalIgnores } from 'eslint/config'
+import js from '@eslint/js';
+import globals from 'globals';
+import react from 'eslint-plugin-react';
 
-export default defineConfig([
-  globalIgnores(['dist']),
+export default [
   {
-    files: ['**/*.{js,jsx}'],
-    extends: [
-      js.configs.recommended,
-      reactHooks.configs['recommended-latest'],
-      reactRefresh.configs.vite,
-    ],
+    files: ['**/*.{js,mjs,cjs,jsx}'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
@@ -22,8 +14,27 @@ export default defineConfig([
         sourceType: 'module',
       },
     },
+    settings: {
+        react: {
+            version: 'detect' // Automatically detect React version
+        }
+    }
+  },
+  // 1. Base JavaScript rules
+  js.configs.recommended,
+  // 2. React Rules
+  {
+    files: ['**/*.{js,mjs,cjs,jsx}'],
+    plugins: {
+      react,
+    },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // Spread the recommended rules from the plugin
+      ...react.configs.recommended.rules,
+      ...react.configs['jsx-runtime'].rules, // Add this if you are using React 17+ (no import React required)
+      
+      // You can override specific rules here, for example:
+      'react/prop-types': 'off', 
     },
   },
-])
+];
