@@ -1,31 +1,36 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import dotenv from 'dotenv';
-import driver from './config/neo4j.js';
-import authRoutes from "./routes/authRoutes.js";
-dotenv.config();
+require('dotenv').config();
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const path = require('path');
+
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+const postRoutes = require('./routes/postRoutes');
+const commentRoutes = require('./routes/commentRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+
+const errorHandler = require('./middlewares/errorMiddleware');
 
 const app = express();
-app.use(helmet());
 app.use(cors());
-app.use(express.json());
-app.use(morgan('dev'));
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true }));
 
-app.get('/health', (req, res) => res.json({ ok: true }));
-app.get('/db-test', async (req, res) => {
-  const session = driver.session();
-  try {
-    const r = await session.run('RETURN "connected" AS msg');
-    res.json({ msg: r.records[0].get('msg') });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  } finally {
-    await session.close();
-  }
-});
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use('/api/auth', authRoutes);
+app.get('/', (req, res) => res.json({ ok: true, version: '0.2' }));
 
-export default app;
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/posts', postRoutes);
+app.use('/api/v1/comments', commentRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/admin', adminRoutes);
+
+
+app.use(errorHandler);
+
+const port = process.env.PORT || 4000;
+app.listen(port, () => console.log(`Server listening on ${port}`));

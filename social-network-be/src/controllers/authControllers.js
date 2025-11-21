@@ -1,132 +1,57 @@
-import dotenv from 'dotenv';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import driver from '../config/neo4j.js';
+import authService from '../services/authService.js';
 
-dotenv.config();
-
-// ===== ĐĂNG KÝ NGƯỜI DÙNG MỚI =====
-export async function registerUser({ username, email, phone, password }) {
-    const session = driver.session();
+export async function registerUser(req, res, next) {
     try {
-        // Kiểm tra trùng email hoặc số điện thoại
-        const checkQuery = `
-      MATCH (u:User)
-      WHERE u.email = $email OR u.phone = $phone
-      RETURN u
-    `;
-        const checkResult = await session.run(checkQuery, { email, phone });
-
-        if (checkResult.records.length > 0) {
-            throw new Error('Email hoặc số điện thoại đã tồn tại!');
+        const { username, email, password, display_name } = req.body;
+        if (!username || !email || !password) {
+            return res.status(400).json({ message: 'Thiếu thông tin đăng ký!' });
         }
 
-        // Mã hóa mật khẩu
-        const hashed = await bcrypt.hash(password, 10);
-
-        // Tạo node User mới
-        const createQuery = `
-      CREATE (u:User {
-        id: randomUUID(),
-        username: $username,
-        email: $email,
-        phone: $phone,
-        password: $hashed,
-        provider: "local",
-        createdAt: datetime()
-      })
-      RETURN u
-    `;
-        await session.run(createQuery, { username, email, phone, hashed });
-
-        return { message: 'Đăng ký thành công!' };
-    } finally {
-        await session.close();
+        const user = await authService.register({ username, email, password, display_name });
+        res.status(201).json({ message: 'Đăng ký thành công!', user });
+    } catch (err) {
+        next(err);
     }
 }
 
-// ===== ĐĂNG NHẬP BẰNG EMAIL / SĐT =====
-export async function loginUser({ identifier, password }) {
-    const session = driver.session();
+export async function loginUser(req, res, next) {
     try {
-        const query = `
-      MATCH (u:User)
-      WHERE u.email = $identifier OR u.phone = $identifier
-      RETURN u
-    `;
-        const result = await session.run(query, { identifier });
-
-        if (result.records.length === 0) {
-            throw new Error('Không tìm thấy tài khoản!');
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Thiếu email hoặc mật khẩu!' });
         }
 
-        const user = result.records[0].get('u').properties;
-
-        // So khớp mật khẩu
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            throw new Error('Sai mật khẩu!');
-        }
-
-        // Sinh JWT
-        const token = jwt.sign(
-            { id: user.id, username: user.username },
-            process.env.SECRET_KEY,
-            { expiresIn: '3d' }
-        );
-
-        return { token, user };
-    } finally {
-        await session.close();
+        const result = await authService.login({ email, password });
+        res.status(200).json(result);
+    } catch (err) {
+        next(err);
     }
 }
 
-// ===== ĐĂNG NHẬP QUA MẠNG XÃ HỘI =====
-export async function socialLogin({ provider, socialId, username, email }) {
-    const session = driver.session();
+export async function refreshToken(req, res, next) {
     try {
-        // Kiểm tra user đã tồn tại chưa
-        const query = `
-      MATCH (u:User)
-      WHERE u.socialId = $socialId AND u.provider = $provider
-      RETURN u
-    `;
-        const result = await session.run(query, { socialId, provider });
-
-        let user;
-        if (result.records.length === 0) {
-            // Tạo mới nếu chưa có
-            const createQuery = `
-        CREATE (u:User {
-          id: randomUUID(),
-          username: $username,
-          email: $email,
-          provider: $provider,
-          socialId: $socialId,
-          createdAt: datetime()
-        })
-        RETURN u
-      `;
-            const createRes = await session.run(createQuery, {
-                username,
-                email,
-                provider,
-                socialId,
-            });
-            user = createRes.records[0].get('u').properties;
-        } else {
-            user = result.records[0].get('u').properties;
+        const { refreshToken } = req.body;
+        if (!refreshToken) {
+            return res.status(400).json({ message: 'Thiếu refresh token!' });
         }
 
-        // Sinh JWT
-        const token = jwt.sign(
-            { id: user.id, username: user.username },
-            process.env.SECRET_KEY,
-            { expiresIn: '3d' }
-        );
+        const result = await authService.refresh({ refreshToken });
+        res.status(200).json(result);
+    } catch (err) {
+        next(err);
+    }
+}
 
-        return { message: `Đăng nhập ${provider} thành công!`, token, user };
-    } finally {
-        await session.close();
+export async function logoutUser(req, res, next) {
+    try {
+        const { refreshToken } = req.body;
+        if (!refreshToken) {
+            return res.status(400).json({ message: 'Thiếu refresh token!' });
+        }
+
+        await authService.logout({ refreshToken });
+        res.status(200).json({ message: 'Đăng xuất thành công!' });
+    } catch (err) {
+        next(err);
     }
 }
