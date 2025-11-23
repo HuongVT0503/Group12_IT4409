@@ -1,6 +1,6 @@
 import app from './src/app.js';
 import dotenv from 'dotenv';
-import http from 'http';
+//import http from 'http';
 import { socketAuthMiddleware } from './src/middlewares/socketMiddleware.js';
 import { Server } from 'socket.io';
 
