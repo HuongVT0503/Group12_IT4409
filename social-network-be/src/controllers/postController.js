@@ -1,4 +1,5 @@
 import postService from '../services/postService.js';
+import { emitNewPost, emitPostUpdate } from '../services/realtimeService.js';
 
 // Tạo bài viết mới
 async function createPost(req, res, next) {
@@ -6,6 +7,13 @@ async function createPost(req, res, next) {
         const authorId = req.user.id; // Lấy từ JWT
         const { content, media, privacy } = req.body;
         const post = await postService.createPost({ authorId, content, media, privacy });
+
+        //Lấy danh sách follower
+        const followers = await userService.getFollowers(authorId);
+        // Emit cho followers để cập nhật newsfeed
+        emitNewPost(post.post, followers.map(f => f.id));
+        emitPostUpdate(post.post.id, { newPost: post });
+
         res.status(201).json({ post });
     } catch (err) {
         next(err);
@@ -30,6 +38,9 @@ async function deletePost(req, res, next) {
         const id = req.params.id;
         const userId = req.user.id; // Lấy từ JWT
         await postService.deletePost(id, userId);
+
+        emitPostUpdate(id, { deleted: true });
+
         res.json({ message: "Post deleted successfully" });
     } catch (err) {
         next(err);
@@ -53,6 +64,10 @@ async function likePost(req, res, next) {
         const userId = req.user.id;
         const postId = req.params.id;
         const result = await postService.likePost(userId, postId);
+
+        // Like bài viết
+        emitPostUpdate(postId, { likedBy: userId });
+
         res.json(result);
     } catch (err) {
         next(err);
@@ -65,6 +80,10 @@ async function unlikePost(req, res, next) {
         const userId = req.user.id;
         const postId = req.params.id;
         const result = await postService.unlikePost(userId, postId);
+
+        // Unlike
+        emitPostUpdate(postId, { unlikedBy: userId });
+
         res.json(result);
     } catch (err) {
         next(err);

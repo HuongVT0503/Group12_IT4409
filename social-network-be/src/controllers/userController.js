@@ -1,4 +1,5 @@
 const userService = require('../services/userService');
+import { emitNotification, emitFollowUpdate } from '../services/realtimeService.js';
 
 async function getProfile(req, res, next) {
   try {
@@ -21,6 +22,15 @@ async function follow(req, res, next) {
     const followerId = req.user.id;
     const followeeId = req.params.id;
     await userService.follow(followerId, followeeId);
+
+    // Emit realtime
+    emitNotification(followeeId, {
+      type: 'follow',
+      from: followerId
+    });
+
+    emitFollowUpdate(followeeId, { newFollower: followerId });
+
     res.json({ following: true });
   } catch (err) { next(err); }
 }
@@ -30,6 +40,10 @@ async function unfollow(req, res, next) {
     const followerId = req.user.id;
     const followeeId = req.params.id;
     await userService.unfollow(followerId, followeeId);
+
+    // Emit realtime
+    emitFollowUpdate(followeeId, { removedFollower: followerId });
+
     res.json({ following: false });
   } catch (err) { next(err); }
 }
