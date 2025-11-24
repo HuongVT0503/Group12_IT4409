@@ -1,4 +1,6 @@
-const commentService = require('../services/commentService');
+import commentService from '../services/commentService.js';
+import { emitNotification, emitPostUpdate } from '../services/realtimeService.js';
+import postRepo from '../repositories/postRepository.js';
 
 async function createComment(req, res, next) {
   try {
@@ -6,6 +8,20 @@ async function createComment(req, res, next) {
     const postId = req.params.postId;
     const { content, parent_comment_id } = req.body;
     const comment = await commentService.createComment({ authorId, postId, content, parentCommentId: parent_comment_id });
+
+    //Lấy thông tin tác giả và emit notification cho tác giả nếu có cmt
+    const postData = await postRepo.getPostById(postId);
+    if (postData?.author && postData.author.id !== authorId) {
+      emitNotification(postData.author.id, {
+        type: 'comment',
+        postId,
+        comment,
+        from: authorId,
+      });
+    }
+    // Emit update realtime cho post
+    emitPostUpdate(postId, { newComment: comment });
+
     res.status(201).json({ comment });
   } catch (err) { next(err); }
 }
@@ -18,4 +34,4 @@ async function getComments(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { createComment, getComments };
+export default { createComment, getComments };

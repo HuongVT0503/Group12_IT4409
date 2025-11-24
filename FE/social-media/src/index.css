@@ -1,21 +1,69 @@
 /*global styles, typography*/
 
+@import "tailwindcss";
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
+
+@theme {
+  --font-sans: "Plus Jakarta Sans","Inter", system-ui, sans-serif;
 
 
+  --color-bg: #e6dcff;
+  --color-bg-card: #ffffff;
+  
+  --color-primary-300: #C79AF5;
+  --color-primary-400: #9D63C9;
+  --color-primary-500: #7A3E9D;
+
+  --color-primary-hover: #693587;
+
+  --color-neutral-100: #FFFFFF;
+  --color-neutral-200: #F5F5F8;
+  --color-neutral-300: #E5E5E5;
+
+  --background-image-gradient-primary: linear-gradient(90deg, #7A3E9D 0%, #C79AF5 100%);
+
+  --radius-box: 14px;
+  --radius-btn: 16px;
+}
+
+html, body {
+  @apply h-full w-full antialiased text-gray-900 bg-bg font-sans;
+}
+
+#root {
+  @apply h-full w-full;
+
+  font-family: var(--font-sans);
+  background-color: var(--color-bg-main);
+  color: #1A1A1A;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar*/
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply bg-gray-300 rounded-full; }
+
+
+.bg-gradient-primary {
+  background: linear-gradient(90deg, #7A3E9D 0%, #C79AF5 100%);
+}
 
 /*global reset*/
 
-*,
+/* *,
 *::before,
 *::after {
-  margin: 0; /*removes default margin n padding*/
-  padding: 0;
+  margin: 0;      removes default margin n padding */
+  /* padding: 0;
   width: auto;
   height: auto;
   box-sizing: border-box;/*ensures PADDING n BORDER r included in an elements total width/ height
   -> predictable layout math      e.g.     a width: 200px box wont grow larger after padding /border is added*/
-}
-
+/* } */ 
+/* 
 html,body,#root{
   margin: 0;
   padding: 0;
@@ -29,12 +77,12 @@ html {
 
   height: 100%; 
   
-  text-rendering: optimizeLegibility; /* Prevent font scaling*/
+  text-rendering: optimizeLegibility; Prevent font scaling
 
-}
+} */
 
 
-body {
+/* body {
   height: 100%; 
   line-height: 1.5;
   font-family: var(--font-sans,'Inter',Arial,sans-serif,system-ui);
@@ -43,32 +91,32 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeSpeed;
   background: var(--neutral-300);
-  min-width:320px; min-height: 100vh; /*...*/
-  margin:0;
+  min-width:320px; min-height: 100vh; 
+  margin:0; */
   /*display:flex; 
   place-items: center; */  
   
   
-}
+/* } */
 
 
-img,
+/* img,
 picture,
 video,
 canvas,
 svg {
   display: block;
   max-width: 100%;
-}
+} */
 
-input,
+/* input,
 button,
 textarea,
 select {
-  font: inherit; /* consistent font styles */
+  font: inherit; consistent font styles
   color:inherit;
-}
-
+} */
+/* 
 :focus{
   outline: none;
 }
@@ -81,9 +129,9 @@ select {
 a {
   text-decoration: none;
   color: inherit;
-}
+} */
 
-
+/* 
 a[href]{
   cursor: pointer;
 }
@@ -96,9 +144,9 @@ a[href]:where(:hover,:focus-visible){
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
-}
+} */
 
-
+/* 
 ul,
 ol {
   list-style: none;
@@ -110,6 +158,7 @@ table {
 }
 
 
+ */
 
 
 
@@ -122,10 +171,9 @@ table {
 
 
 
-
-
+/* 
 :root {
-  /*display:flex;*/
+  
   line-height: 1.5;
   font-weight: 400;
 
@@ -135,12 +183,12 @@ table {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
+} */
 
 
 
 
-
+/* 
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -151,15 +199,15 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
-}
-button:hover {
+} */
+/* button:hover {
   border-color: #646cff;
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-}
-
+} */
+/* 
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -171,12 +219,12 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
-}
+} */
 
-
+/* 
 @media (min-width: 1024px) {
   body {
     font-size: 18px; 
-    line-height: 1.65; /*more breathing room*/
+    line-height: 1.65; 
   }
-}
+} */
