@@ -1,5 +1,11 @@
 //import React from "react";
-import {cn} from "../utils/cn";
+import {cn} from "../../utils/cn";
+import {useState} from "react";
+//import eyeOffIcon from "../assets/img/icons/eye-off.svg";
+// import eyeOpen from "../../assets/img/icons/eye-open.svg";
+// import eyeClose from "../../assets/img/icons/eye-close.svg";
+
+import { Eye, EyeOff } from "lucide-react";
 
 export default function InputField({
   label,
@@ -21,56 +27,14 @@ export default function InputField({
   error,
   ...props
 }) {
-  //subtle multiplier
-  // const sizeMul = size === "xl" ? 1.25 : size === "lg" ? 1.12 : size === "sm" ? 0.93 : 1;
-  // const wrapStyle = {
-  //   display: "flex",
-  //   flexDirection: "column",
-  //   gap: 6 * sizeMul, //small, responsive spacing
-  //   width: fullWidth ? "100%" : "auto",
-  //   ...style,
-  // };
 
-  // const labelBase = {
-  //   color: "var(--Text---Gray, var(--text-gray))",
+  //const [isFocused, setIsFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  //   fontSize: `calc(${sizeMul} * clamp(13px, 1.2vw, 18px))`,
-  //   fontFamily: "Inter, sans-serif",
-  //   fontWeight: 500,
-  //   lineHeight: 1.35,
-  //   textAlign: "left",
-  // };
+  const isPassword = type === "password";
 
-  // const inputBase = {
-  //   height: `calc(${sizeMul} * clamp(44px, 5.2vh, 60px))`,
-  //   borderRadius: `calc(${sizeMul} * clamp(8px, 1vw, 12px))`,
-  //   border: "1px solid var(--neutral-300)",
-  //   padding: `0 calc(${sizeMul} * clamp(12px, 1.4vw, 18px))`,
+  const inputType = isPassword ? (showPassword ? "text" : "password") : type;
 
-  //   fontSize: `calc(${sizeMul} * clamp(16px, 1.1vw, 20px))`,
-  //   fontFamily: "Inter, sans-serif",
-  //   color: "var(--text-black)",
-  //   outline: "none",
-  //   transition: "border-color 0.18s ease, box-shadow 0.18s ease",
-  //   width: "100%", //fill the container, control container width outside
-  //   background: disabled ? "var(--neutral-100)" : "white",
-  // };
-
-  // const handleFocus = (e) => {
-  //   e.target.style.borderColor = "var(--primary-purple-500)";
-  //   e.target.style.boxShadow = "0 0 0 3px rgba(122,62,157,0.12)";
-  // };
-  // const handleBlur = (e) => {
-  //   e.target.style.borderColor = "var(--text-gray)";
-  //   e.target.style.boxShadow = "none";
-  // };
-
-
-  // const sizes = {
-  //   sm: "h-10 px-3 text-sm",
-  //   md: "h-12 px-4 text-base lg:text-lg lg:h-14",
-  //   lg: "h-14 px-5 text-xl lg:text-2xl lg:h-16",
-  // };
   const sizes = {
       sm: "h-10 px-4 text-sm font-medium",
       md: "h-12 px-6 text-base lg:text-lg lg:h-14",
@@ -86,10 +50,12 @@ export default function InputField({
         </label>
       )}
 
+      <div className="relative">
+
       <input
         id={name}
         name={name}
-        type={type}
+        type={inputType}
         // value={value}
         // placeholder={placeholder}
         // onChange={onChange}
@@ -113,7 +79,20 @@ export default function InputField({
         {...props}
 
       />
+      {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          >
+            <img src={showPassword ? Eye : EyeOff} alt={showPassword ? "Hide password" : "Show password"} 
+            className="w-6 h-6 opacity-60 hover:opacity-100 transition-opacity"/>
+            
+
+          </button>
+        )}
       {error && <span className="text-xs text-red-500 ml-1">{error}</span>}
+    </div>
     </div>
   );
 }

@@ -1,22 +1,64 @@
-import { useState } from 'react'
+//import { useState } from 'react'
 // import reactLogo from './assets/react.svg'
 // import viteLogo from '/vite.svg'
 //import './App.css'
-import Login from "./pages/LogInPage"
-import Signup from "./pages/SignUpPage"
+import Login from "./pages/auth/LogInPage"
+import Signup from "./pages/auth/SignUpPage"
+import Feed from "./pages/feed/FeedPage"
+
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+import MainLayout from './components/layout/MainLayout';
+
+
+const Placeholder = ({ title }) => (
+  <div className="p-8 text-center">
+    <h1 className="text-2xl font-bold text-gray-400">{title}</h1>
+    <p className="text-gray-500">This page is under construction.</p>
+  </div>
+);
+
 
 function App() {
   //toplvl component
 
-  const [view, setView] = useState("login"); //default view
+  const isAuthenticated = true;
+
+  //const [view, setView] = useState("login"); //default view
 
   return (
-    <main className="w-full min-h-screen">
-      {view === "login" 
-        ? <Login onSwitch={() => setView("signup")} /> 
-        : <Signup onSwitch={() => setView("login")} onBack={() => setView("login")} />
-      }
-    </main>
+
+    <BrowserRouter>
+      <Routes>
+        {/* PUBLIC ROUTES (No Layout) */}
+        <Route path="/login" element={<Login onSwitch={() => {}} />} />
+        <Route path="/signup" element={<Signup onSwitch={() => {}} />} />
+
+        {/* PROTECTED APP ROUTES (Wrapped in MainLayout) */}
+        <Route 
+          path="/" 
+          element={isAuthenticated ? <MainLayout /> : <Navigate to="/login" />}
+        >
+          {/* The <Outlet /> in MainLayout renders these children: */}
+          <Route index element={<Feed />} /> 
+          
+          <Route path="profile" element={<Placeholder title="Profile Page" />} />
+          <Route path="chat" element={<Placeholder title="Chat / Messages" />} />
+          <Route path="connections" element={<Placeholder title="Connections" />} />
+          <Route path="create" element={<Placeholder title="Create Post" />} />
+        </Route>
+
+        {/* 404 CATCH ALL */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </BrowserRouter>
+  
+    // <main className="w-full min-h-screen">
+    //   {view === "login" 
+    //     ? <Login onSwitch={() => setView("signup")} /> 
+    //     : <Signup onSwitch={() => setView("login")} onBack={() => setView("login")} />
+    //   }
+    // </main>
   );
   
   

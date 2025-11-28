@@ -1,0 +1,1 @@
+//getPosts,createPost,updatePost,deletePost,likePost,unlikePost

@@ -1,4 +1,5 @@
 /*global styles, typography*/
+/*tailwind import*/
 
 @import "tailwindcss";
 /* @tailwind base;
@@ -49,6 +50,12 @@ html, body {
 
 .bg-gradient-primary {
   background: linear-gradient(90deg, #7A3E9D 0%, #C79AF5 100%);
+}
+
+/* Hide the default eye icon in Edge/IE */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
 }
 
 /*global reset*/
