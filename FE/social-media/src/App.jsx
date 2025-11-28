@@ -6,7 +6,7 @@ import Login from "./pages/auth/LogInPage"
 import Signup from "./pages/auth/SignUpPage"
 import Feed from "./pages/feed/FeedPage"
 
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate , useNavigate} from "react-router-dom";
 
 import MainLayout from './components/layout/MainLayout';
 
@@ -19,25 +19,45 @@ const Placeholder = ({ title }) => (
 );
 
 
-function App() {
+function AppRouter() {
   //toplvl component
 
-  const isAuthenticated = true;
+  const isAuthenticated = false;
+  const navigate = useNavigate();
 
   //const [view, setView] = useState("login"); //default view
 
   return (
 
-    <BrowserRouter>
+    
       <Routes>
         {/* PUBLIC ROUTES (No Layout) */}
-        <Route path="/login" element={<Login onSwitch={() => {}} />} />
-        <Route path="/signup" element={<Signup onSwitch={() => {}} />} />
+        <Route path="/login" element={<Login 
+            onSwitch={() => navigate("/signup")} 
+            onForgot={() => alert("Forgot password clicked")}
+          />} />
+        <Route path="/signup" element={
+          <Signup 
+            onSwitch={() => navigate("/login")} 
+            onBack={() => navigate("/login")} 
+          />
+        }  />
+
+
+
+        {/*PREVIEW ROUTE*/}
+        <Route path="/preview" element={<MainLayout />}>
+        <Route index element={<Feed />} />
+      </Route>
+      {/*PREVIEW ROUTE*/}
+
+
+
 
         {/* PROTECTED APP ROUTES (Wrapped in MainLayout) */}
         <Route 
           path="/" 
-          element={isAuthenticated ? <MainLayout /> : <Navigate to="/login" />}
+          element={isAuthenticated ? <MainLayout /> : <Navigate to="/login"  replace />}
         >
           {/* The <Outlet /> in MainLayout renders these children: */}
           <Route index element={<Feed />} /> 
@@ -49,9 +69,9 @@ function App() {
         </Route>
 
         {/* 404 CATCH ALL */}
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
-    </BrowserRouter>
+    
   
     // <main className="w-full min-h-screen">
     //   {view === "login" 
@@ -90,4 +110,10 @@ function App() {
   // )
 }
 
-export default App
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRouter />
+    </BrowserRouter>
+  );
+}
