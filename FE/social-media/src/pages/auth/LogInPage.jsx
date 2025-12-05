@@ -1,0 +1,190 @@
+import { useState } from "react";
+import Button from "../../components/common/ButtonComponent.jsx";
+import InputField from "../../components/common/InputField.jsx";
+//import logo from "../../assets/img/logo/logo.png";
+import logo from "../../assets/img/logo/logo.png";
+
+//import { useEffect } from "react";
+
+import { loginUser } from "../../services/authService.js";
+import { useAuth } from "../../context/AuthContext.jsx";
+import { useNavigate } from "react-router-dom";
+
+export default function Login({ onSwitch, onForgot }) { //onSuccess?
+  const [form, setForm] = useState({ identifier: "", password: "" });
+  const [remember, setRemember] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  // const [layout, setLayout] = useState({
+  //   isShort: false,
+  //   isNarrow: false,
+  //   isWide: false,
+  // }); //for tall/short n large/narrow devices
+
+  // useEffect(() => {
+  //   const check = () => {
+  //     if (typeof window === "undefined") return;
+  //     const h = window.innerHeight;
+  //     const w = window.innerWidth;
+  //     setLayout({
+  //       isShort: h < 680,
+  //       isNarrow: w <= 480, //threshold
+  //       isWide: w >= 1024, // desktops
+  //     });
+  //   };
+  //   check();
+  //   window.addEventListener("resize", check);
+  //   return () => window.removeEventListener("resize", check);
+  // }, []);
+
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setForm((f) => ({ ...f, [name]: value }));
+  // };
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setErr("");
+
+    if (!form.identifier || !form.password) {
+      setErr("Missing email or password.");
+      return;
+    }
+    setLoading(true);
+
+    try {
+      // const res = await fetch("/api/auth/login", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ ...form, remember }),
+      // }); ////
+      const data = await loginUser({ identifier: form.identifier, password: form.password });
+
+      login(data.user, data.accessToken);
+      navigate("/"); //feed
+
+      //const data = await res.json();
+      // if (!res.ok)
+      //   throw new Error(data?.error || data?.message || "Login failed.");
+
+      // localStorage.setItem("token", data.token);
+      // if (typeof onSuccess === "function") onSuccess(data);
+    } catch (e2) {
+      setErr(e2.message||"Login failed");
+    } finally {
+      setLoading(false);
+    }
+  
+  
+  
+  }
+
+
+
+  return (
+    <div className="min-h-dvh w-full flex flex-col items-center p-4 lg:p-12 lg:flex-row lg:justify-center lg:items-center bg-bg-main ">
+      
+      {/* Mobile Header */}
+      <div className="mb-6 flex items-center gap-2 lg:hidden">
+        <img src={logo} alt="Logo" className="h-10 w-10 object-contain" />
+        <span className="font-bold text-2xl text-primary">SocioICT</span>
+      </div>
+
+      {/* Desktop Hero */}
+      <div className="hidden lg:flex flex-col justify-center max-w-[500px] mr-20 mt-20">
+        <div className="flex items-center gap-3 mb-6">
+          <img src={logo} alt="Logo" className="h-16 w-16" />
+          <span className="font-bold text-5xl text-primary">SocioICT</span>
+        </div>
+        <h2 className="text-8xl font-extrabold text-black leading-tight mb-4">Welcome back</h2>
+        <p className="text-3xl text-gray-600 leading-relaxed">
+          Log in to reconnect with friends, classmates, and communities in your faculty.
+        </p>
+      </div>
+
+      {/* Login Card */}
+      <div className="w-full max-w-md lg:max-w-[540px] bg-bg-card rounded-box shadow-xl p-6 lg:p-10 lg:mt-10">
+        <h1 className="text-4xl lg:text-5xl font-bold text-center mb-8 text-black">Log In</h1>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <InputField
+            label="Email"
+            name="identifier"
+            type="email"
+            placeholder="Enter your email"
+            value={form.identifier}
+            onChange={(e) => setForm({ ...form, identifier: e.target.value })}
+            required
+            size="lg"
+            
+          />
+          <InputField
+            label="Password"
+            name="password"
+            type="password"
+            placeholder="Enter your password"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            required
+            size="lg"
+          />
+
+          <div className="flex items-center justify-between mt-1">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={remember} 
+                onChange={(e) => setRemember(e.target.checked)}
+                className="w-5 h-5 lg:w-6 lg:h-6 accent-primary"
+                
+              />
+              <span className="text-base lg:text-lg text-gray-600">Remember me</span>
+            </label>
+            <button type="button" onClick={onForgot} className="text-base lg:text-lg font-semibold text-blue-600 hover:underline">
+              Forgot Password?
+            </button>
+          </div>
+
+          {err && <div className="bg-red-50 text-red-600 border border-red-200 rounded-lg p-3 text-sm">{err}</div>}
+
+          <Button type="submit" size="lg" loading={loading} className="mt-2">
+            Log In
+          </Button>
+
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-gray-300" /></div>
+            <div className="relative flex justify-center text-sm"><span className="bg-white px-4 text-gray-500">Or</span></div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <Button variant="outline" size="md" type="button" className="gap-3">
+              <div className="h-7 w-7 bg-center bg-no-repeat bg-contain" style={{ backgroundImage: "url('https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg')" }} />
+              Continue with Google
+            </Button>
+            <Button variant="outline" size="md" type="button" className="gap-3">
+              <div className="h-7 w-7 bg-center bg-no-repeat bg-contain" style={{ backgroundImage: "url('https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg')" }} />
+              Continue with Facebook
+            </Button>
+          </div>
+
+          {/* Desktop Signup Button */}
+          <div className="hidden lg:block mt-6 pt-6 border-t border-gray-300">
+             <Button variant="primary" size="lg" type="button" onClick={onSwitch}>Create A New Account</Button>
+          </div>
+        </form>
+
+        {/* Mobile Bottom Link */}
+        <div className="mt-6 text-center lg:hidden">
+          <span className="text-gray-600 text-sm">Don’t have an account? </span>
+          <button onClick={onSwitch} className="text-blue-600 font-semibold text-sm hover:underline">Sign Up</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+
