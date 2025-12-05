@@ -1,81 +1,112 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PostCard from "../../components/feed/PostCard";
-import Button from "../../components/common/ButtonComponent";
+//import Button from "../../components/common/ButtonComponent";
+import CreatePost from "../../components/feed/CeatePost.jsx";
+import { getFeed } from "../../services/postService";
+import {useSocket} from "../../context/SocketContext";
 
-//MOCKDATA
-const MOCK_POSTS = [
-  {
-    id: 1,
-    author: {
-      name: "Nguyen Van A",
-      handle: "nguyenvana16",
-      avatar: "https://i.pravatar.cc/150?u=hung", //placeholder avatar
-    },
-    timestamp: "36 mins ago",
-    content:
-      "Mèo là động vật có vú, nhỏ nhắn và chuyên ăn thịt, sống chung với loài người, được nuôi để săn vật gây hại hoặc làm thú nuôi cùng với chó. Mèo đã sống gần gũi với loài người ít nhất 9.500 năm, và hiện nay chúng là con vật cưng phổ biến nhất trên thế giới.",
-    image:
-      "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=2043&auto=format&fit=crop", // Cat looking at camera
-    stats: { likes: 0, comments: 0, shares: 0 },
-    comments: [],
-  },
-  {
-    id: 2,
-    author: {
-      name: "Nguyen Van B",
-      handle: "nguyenvanb16",
-      avatar: "https://i.pravatar.cc/150?u=huong",
-    },
-    timestamp: "36 mins ago",
-    content:
-      "Mèo là động vật có vú, nhỏ nhắn và chuyên ăn thịt, sống chung với loài người, được nuôi để săn vật gây hại hoặc làm thú nuôi cùng với chó. Mèo đã sống gần gũi với loài người ít nhất 9.500 năm, và hiện nay chúng là con vật cưng phổ biến nhất trên thế giới.",
-    image:
-      "https://images.unsplash.com/photo-1543852786-1cf6624b9987?q=80&w=1887&auto=format&fit=crop", //cat w glasses/costume placeholder
-    stats: { likes: 3, comments: 6, shares: 0 },
-    comments: [
-      {
-        id: 101,
-        author: {
-          name: "Sơn Tùng MTP",
-          avatar: "https://i.pravatar.cc/150?u=son",
-        },
-        text: "Mèo đẹp quá em ơi:)))",
-        timestamp: "36 mins ago",
-        replies: [
-          {
-            id: 201,
-            author: {
-              name: "Jack J97",
-              avatar: "https://i.pravatar.cc/150?u=jack",
-            },
-            text: "Ok cậu nha:)))",
-            timestamp: "39 mins ago",
-          },
-        ],
-      },
-      {
-        id: 102,
-        author: { name: "Anh Duy", avatar: "https://i.pravatar.cc/150?u=duy" },
-        text: "Mèo đẹp quá em ơi:)))",
-        timestamp: "35 mins ago",
-      },
-    ],
-  },
-];
 
 export default function FeedPage() {
-  const [posts] = useState(MOCK_POSTS);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const socket = useSocket();
 
+  //helper to format raw BE data to fe
+  //postRepository.js: { post: {...}, author: {...} }
+  //map backend data structure to frontend component expectations
+  const formatPostData = (data) => {
+    const postObj = data.post || data; 
+    const authorObj = data.author || {};
+
+    return {
+      id: postObj.id,
+      content: postObj.content,
+      timestamp: postObj.created_at, //keep ISO string, format will done by PostCard   //.toLocaleString(),
+      image: postObj.media && postObj.media.length > 0 ? postObj.media[0] : null,
+      author: {
+        id: authorObj.id,
+        name: authorObj.display_name || authorObj.username || "Unknown",
+        handle: authorObj.username || "user",
+        avatar: authorObj.avatar_url || `https://ui-avatars.com/api/?name=${authorObj.display_name || 'User'}`
+      },
+      stats: { likes: 0, comments: 0, shares: 0 }, //be doesn't send counts in feed yet, defaulting///////
+      comments: []
+    };
+  };
+
+  const fetchPosts = async () => {
+    try {
+      const data = await getFeed();
+      //be returns: { posts: [...] }
+      //map backend data structure to frontend component expectations
+      const formattedPosts = data.posts.map ( formatPostData );
+      setPosts(formattedPosts);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load feed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //initialize
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const handlePostCreated = (newPostData) => {
+   
+
+    const formatted = formatPostData(newPostData);
+    setPosts(prev => {
+        if (prev.some(p => p.id === formatted.id)) return prev;
+        return [formatted, ...prev];
+    });
+  };
+
+  const handlePostDelete = (postId) => {
+    setPosts(prev => prev.filter(p => p.id !== postId));
+  }
+
+  // Realtime listener for new posts
+  useEffect(() => {
+    if(!socket) return;
+
+    //listener for 'new_post' event by be realtimeService.js
+    const handleNewPost = (newPostData) => {
+      const newPostFormatted = formatPostData(newPostData);
+      
+      //prepend
+      setPosts((prevPosts) => {
+        // Prevent duplicates
+        if (prevPosts.some(p => p.id === newPostFormatted.id)) return prevPosts;
+        return [newPostFormatted, ...prevPosts];
+      });
+    };
+
+    socket.on('new_post', (handleNewPost));
+    return () => socket.off('new_post', handleNewPost);
+  }, [socket]);
+
+
+
+  if (loading) return <div className="text-center pt-10">Loading feed...</div>;
+  if (error)
+    return <div className="text-center pt-10 text-red-500">{error}</div>;
+
+
+  //////////////////////////////
   return (
     <div className="w-full min-h-screen bg-[#F3F4F6] pb-20 lg:pb-0">
-      {/*       
-      *layout logic (Sidebar/RightPanel) is in MainLayout.jsx
-        This div is ONLYthe CENTER column
       
-       */}
       <div className="max-w-xl mx-auto pt-6 px-4">
-        {/* Create Post Input (Visual Placeholder) */}
-        <div className="bg-white rounded-2xl shadow-sm p-4 mb-6 flex gap-3 items-center">
+        {/* Create Post Input */}
+
+        <CreatePost onPostCreated={handlePostCreated} />
+
+
+        {/*<div className="bg-white rounded-2xl shadow-sm p-4 mb-6 flex gap-3 items-center">
           <img
             src="https://i.pravatar.cc/150?u=me"
             className="w-10 h-10 rounded-full bg-gray-200"
@@ -87,13 +118,21 @@ export default function FeedPage() {
           <Button size="sm" className="hidden sm:flex">
             Post
           </Button>
-        </div>
+        </div>*/}
+
 
         {/* Feed List */}
         <div className="flex flex-col gap-2">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
+            <PostCard key={post.id} post={post} onDelete={handlePostDelete}/>
           ))}
+
+        
+
+          {posts.length === 0 && (
+            <p className="text-center text-gray-500 mt-10">No posts yet. Be the first!</p>
+          )}
+
         </div>
       </div>
     </div>

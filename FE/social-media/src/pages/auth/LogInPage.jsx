@@ -7,12 +7,16 @@ import logo from "../../assets/img/logo/logo.png";
 //import { useEffect } from "react";
 
 import { loginUser } from "../../services/authService.js";
+import { useAuth } from "../../context/AuthContext.jsx";
+import { useNavigate } from "react-router-dom";
 
-export default function Login({ onSwitch, onSuccess, onForgot }) {
+export default function Login({ onSwitch, onForgot }) { //onSuccess?
   const [form, setForm] = useState({ identifier: "", password: "" });
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
   // const [layout, setLayout] = useState({
   //   isShort: false,
   //   isNarrow: false,
@@ -56,16 +60,19 @@ export default function Login({ onSwitch, onSuccess, onForgot }) {
       //   headers: { "Content-Type": "application/json" },
       //   body: JSON.stringify({ ...form, remember }),
       // }); ////
-      const data = await loginUser({ ...form, remember });
+      const data = await loginUser({ identifier: form.identifier, password: form.password });
+
+      login(data.user, data.accessToken);
+      navigate("/"); //feed
 
       //const data = await res.json();
       // if (!res.ok)
       //   throw new Error(data?.error || data?.message || "Login failed.");
 
-      localStorage.setItem("token", data.token);
-      if (typeof onSuccess === "function") onSuccess(data);
+      // localStorage.setItem("token", data.token);
+      // if (typeof onSuccess === "function") onSuccess(data);
     } catch (e2) {
-      setErr(e2.message);
+      setErr(e2.message||"Login failed");
     } finally {
       setLoading(false);
     }

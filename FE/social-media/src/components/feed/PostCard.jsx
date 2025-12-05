@@ -1,13 +1,147 @@
-import { useState } from "react";
-//import { formatDistanceToNow } from "date-fns"; //?date-fns
-import { Heart, MessageSquare, Share2, MoreHorizontal } from "lucide-react"; 
+import { useState,useEffect } from "react";
+import { formatDistanceToNow } from "date-fns"; //?date-fns
+import { Heart, MessageSquare,  Trash2 } from "lucide-react"; //share2
 //import Button from "../common/ButtonComponent"; 
+import { likePost, unlikePost,deletePost } from "../../services/postService";
+import{getComments,createComment} from "../../services/commentService";
+import { useAuth } from "../../context/AuthContext";
+import { useSocket } from "../../context/SocketContext";
 
+export default function PostCard({ post,onDelete }) {
+  const { user } = useAuth();
+  const socket = useSocket();
 
-
-export default function PostCard({ post }) {
   const [isLiked, setIsLiked] = useState(false);
-  const [showComments, setShowComments] = useState(post.comments && post.comments.length > 0);
+  //??INITIAL LIKE STATE NOT AVAILABLE IN BE
+  const [showComments, setShowComments] = useState(false);
+  const [likeCount, setLikeCount] = useState(post.stats?.likes || 0);
+  const [commentCount, setCommentCount] = useState(post.stats?.comments || 0);
+
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [loadingComments, setLoadingComments] = useState(false);
+
+  //initialize
+  useEffect(()=>{
+    //default to 0 bc be getFeed'' doent return like count or islike status
+
+  },[post]);
+
+  //listen for real-time update
+  useEffect(() => {
+    if (!socket) return;
+
+    //modify backend to emit to a global feed OR the frontend needs to join specific post rooms
+    //listen globally?
+    const handleUpdate = (payload) => {
+      //need to emit `socket.emit('join_post', post.id)` 
+
+      if (payload.deleted) {
+        if (onDelete) onDelete(post.id);
+        return;
+      }
+
+      if (payload.likedBy) {
+        // +1 if its not me
+        if (payload.likedBy !== user?.id) {
+            setLikeCount(prev => prev + 1);
+        }
+      }
+
+      if (payload.unlikedBy) {
+        if (payload.unlikedBy !== user?.id) {
+            setLikeCount(prev => Math.max(0, prev - 1));
+        }
+      }
+
+      if (payload.newComment) {
+        // Backend payload: { newComment: commentObj }
+        commentCount;
+        setCommentCount(prev => prev + 1);
+        
+        //be 'createComment' needs author info?
+        if (showComments) {
+          
+            const incomingAuthorId = payload.newComment.authorId || payload.newComment.from; 
+            if (incomingAuthorId !== user?.id) {
+                //only push, doent fetch
+                setComments(prev => [
+                    { 
+                        comment: payload.newComment, 
+                        author: { display_name: "User", avatar_url: "" } // Placeholder if BE doesnt send author
+                    }, 
+                    ...prev
+                ]);
+            }
+        }
+      }
+    };
+
+    socket.on('post_update', handleUpdate);
+    
+    // JOIN the room for this specific post if using rooms
+    //socket.emit('join_post', post.id); //NEED THIS LISTENER IN SERVER.JS IN BE
+
+    return () => {
+      socket.off('post_update', handleUpdate);
+      socket.emit('leave_post', post.id); //cleanup room
+    };
+  }, [socket, post.id, user?.id, showComments]);
+
+
+  const toggleLike = async () => {
+    // UI update
+    const previousState = isLiked;
+    setIsLiked(!isLiked);
+    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+
+    try {
+      if (previousState) {
+        await unlikePost(post.id);
+      } else {
+        await likePost(post.id);
+      }
+    } catch (error) {
+      
+      setIsLiked(previousState);//revert
+      setLikeCount(prev => previousState ? prev + 1 : prev - 1);
+      console.error("Like failed", error);
+    }
+  };
+
+  const handleFetchComments = async () => {
+    if (!showComments && comments.length === 0) {
+      setLoadingComments(true);
+      try {
+        const res = await getComments(post.id);
+        setComments(res.data.data); // BE returns { data: [...] }
+      } catch(e) { console.error(e); }
+      setLoadingComments(false);
+    }
+    setShowComments(!showComments);
+  };
+
+  const handlePostComment = async (e) => {
+    if (e.key === 'Enter' && newComment.trim()) {
+      try {
+        const res = await createComment(post.id, newComment);
+        setComments([ { comment: res.data.comment, author: user }, ...comments ]);
+        setNewComment("");
+      } catch (err) { console.error(err); }
+    }
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm("Delete this post?")) {
+      await deletePost(post.id);
+      if (onDelete) onDelete(post.id);
+    }
+  }
+
+
+  ///
+  const isAuthor = user?.id === post.author.id || user?.id === post.author.userId;
+
 
   return (
     <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4">
@@ -15,20 +149,24 @@ export default function PostCard({ post }) {
       <div className="flex justify-between items-start mb-3">
         <div className="flex gap-3">
           <img 
-            src={post.author.avatar} 
+            src={post.author.avatar|| `https://ui-avatars.com/api/?name=${post.author.name}`} 
             alt={post.author.name} 
             className="w-10 h-10 rounded-full object-cover border border-gray-200"
           />
           <div>
             <h3 className="font-bold text-gray-900 leading-tight">{post.author.name}</h3>
             <p className="text-sm text-gray-500">
-              @{post.author.handle} • {post.timestamp}
+              @{post.author.handle} • {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
+            
             </p>
           </div>
+
         </div>
-        <button className="text-gray-400 hover:text-gray-600">
-          <MoreHorizontal size={20} />
-        </button>
+        {isAuthor && (
+          <button onClick={handleDelete} className="text-gray-400 hover:text-red-600">
+            <Trash2 size={18} />
+          </button>
+        )}
       </div>
 
       {/* Content */}
@@ -38,7 +176,7 @@ export default function PostCard({ post }) {
         </p>
       </div>
 
-      {/* Image Attachment */}
+      {/* Media */}
       {post.image && (
         <div className="mb-4 rounded-xl overflow-hidden border border-gray-100">
           <img 
@@ -49,106 +187,60 @@ export default function PostCard({ post }) {
         </div>
       )}
 
-      {/* Stats/Divider */}
+      {/* Actions */}
       <div className="flex items-center gap-4 border-t border-gray-100 pt-3 mt-2">
         <button 
-          onClick={() => setIsLiked(!isLiked)}
+          onClick={toggleLike}
           className={`flex items-center gap-2 text-sm font-medium transition-colors ${
             isLiked ? "text-red-500" : "text-gray-500 hover:text-gray-700"
           }`}
         >
           <Heart size={20} className={isLiked ? "fill-current" : ""} />
-          <span>{isLiked ? post.stats.likes + 1 : post.stats.likes}</span>
+          <span>{likeCount>0 ? likeCount : "Like"}</span>
         </button>
 
-        <button 
-          className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
-          onClick={() => setShowComments(!showComments)}
-        >
+        <button onClick={handleFetchComments} className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700">
           <MessageSquare size={20} />
-          <span>{post.stats.comments}</span>
+          <span>Comment</span>
         </button>
 
-        <button className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors ml-auto">
-          <Share2 size={20} />
-          <span>{post.stats.shares}</span>
-        </button>
-      </div>
-
-      {/* Comments Section (Matches Image 3) */}
+      {/* Comments Section  */}
       {showComments && (
         <div className="mt-4 pt-4 border-t border-gray-100 animate-in fade-in slide-in-from-top-2">
-          <h4 className="text-sm font-bold text-blue-600 mb-3">Comments:</h4>
           
-          <div className="space-y-4 mb-4">
-            {post.comments?.map((comment) => (
-              <div key={comment.id} className="flex gap-3 group">
-                {/* Vertical Line for Replies */}
-                <div className="relative">
-                    <img 
-                      src={comment.author.avatar} 
-                      alt={comment.author.name} 
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                    {/* Visual connector line if needed for nested replies */}
-                    {comment.replies && <div className="absolute left-1/2 top-8 bottom-0 w-px bg-gray-200 -translate-x-1/2 h-full" />}
-                </div>
+          <div className="flex gap-2 items-center mb-4">
+             <img src={user?.avatar_url || `https://ui-avatars.com/api/?name=${user?.display_name}`} className="w-8 h-8 rounded-full" />
+             <input 
+               type="text" 
+               value={newComment}
+               onChange={(e) => setNewComment(e.target.value)}
+               onKeyDown={handlePostComment}
+               placeholder="Write a comment..." 
+               className="w-full bg-gray-100 rounded-full py-2 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
+             />
+          </div>
 
-                <div className="flex-1">
+          {loadingComments ? <p className="text-xs text-center">Loading...</p> : (
+            <div className="space-y-4">
+              {comments.map((item) => (
+                <div key={item.comment.id} className="flex gap-3">
+                  <img src={item.author.avatar_url || `https://ui-avatars.com/api/?name=${item.author.display_name}`} className="w-8 h-8 rounded-full" />
                   <div className="bg-gray-50 rounded-2xl rounded-tl-none px-4 py-2">
-                    <div className="flex justify-between items-baseline">
-                      <span className="font-semibold text-sm text-gray-900">{comment.author.name}</span>
-                      <span className="text-xs text-gray-400">{comment.timestamp}</span>
+                    <div className="flex justify-between items-baseline gap-2">
+                      <span className="font-semibold text-sm">{item.author.display_name}</span>
+                      <span className="text-xs text-gray-400">{formatDistanceToNow(new Date(item.comment.created_at))} ago</span>
                     </div>
-                    <p className="text-sm text-gray-700 mt-1">{comment.text}</p>
+                    <p className="text-sm text-gray-700 mt-1">{item.comment.content}</p>
                   </div>
-                  
-                  {/* Comment Actions */}
-                  <div className="flex gap-4 mt-1 ml-2 text-xs text-gray-500 font-medium">
-                    <button className="hover:text-primary">1k Likes</button>
-                    <button className="hover:text-primary">Like</button>
-                    <button className="hover:text-primary">Reply</button>
-                  </div>
-
-                  {/* Nested Replies (Jack J97 Example) */}
-                  {comment.replies?.map(reply => (
-                     <div key={reply.id} className="flex gap-3 mt-3">
-                        <img 
-                          src={reply.author.avatar} 
-                          alt={reply.author.name} 
-                          className="w-6 h-6 rounded-full object-cover"
-                        />
-                        <div className="flex-1">
-                           <div className="bg-gray-50 rounded-2xl rounded-tl-none px-3 py-2">
-                              <span className="font-semibold text-sm text-gray-900 block">{reply.author.name}</span>
-                              <span className="text-sm text-gray-700">{reply.text}</span>
-                           </div>
-                           <div className="flex gap-4 mt-1 ml-2 text-xs text-gray-500">
-                              <button className="hover:text-primary">1k Likes</button>
-                              <button className="hover:text-primary">Like</button>
-                              <button className="hover:text-primary">Reply</button>
-                           </div>
-                        </div>
-                     </div>
-                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Comment Input */}
-          <div className="flex gap-2 items-center">
-             <img src="https://i.pravatar.cc/150?u=me" className="w-8 h-8 rounded-full border border-gray-200" />
-             <div className="flex-1 relative">
-                <input 
-                  type="text" 
-                  placeholder="Write a comment..." 
-                  className="w-full bg-gray-100 rounded-full py-2 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 text-gray-700 placeholder-gray-400"
-                />
-             </div>
-          </div>
+              ))}
+            </div>
+          )}
+          
         </div>
       )}
+
+      </div>
     </div>
   );
 }

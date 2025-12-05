@@ -2,8 +2,10 @@
 
 import logo from "../../assets/img/logo/logo.png";
 import { Search, Bell } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 export default function TopBar() {
+  const {user,logout}=useAuth;
   return (
     <header className="fixed top-0 left-0 w-full bg-white h-16 lg:h-20 border-b border-gray-100 z-50 px-4 lg:px-10 flex items-center justify-between shadow-sm">
       
@@ -32,13 +34,13 @@ export default function TopBar() {
             <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
         </button>
         
-        <div className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-1.5 rounded-full pr-4 transition-colors border border-transparent hover:border-gray-200">
+        <div className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-1.5 rounded-full pr-4 transition-colors border border-transparent hover:border-gray-200" onClick={logout}>
           <img 
-            src="https://i.pravatar.cc/150?u=A" 
+            src={user?.avatar_url || `https://ui-avatars.com/api/?name=${user?.display_name || 'User'}`}
             alt="User" 
             className="w-8 h-8 lg:w-10 lg:h-10 rounded-full object-cover"
           />
-          <span className="font-bold text-gray-700 hidden lg:block">Nguyen Van A</span>
+          <span className="font-bold text-gray-700 hidden lg:block">{user?.display_name}</span>
         </div>
       </div>
     </header>
