@@ -46,6 +46,8 @@ function AppRouter() {
         {/*PREVIEW ROUTE*/}
         <Route path="/preview" element={<MainLayout />}>
         <Route path="/previewprofile" element={<ProfilePage />} />
+        <Route path="/previewfeed" element={<Feed />} />
+        <Route path="/previewchat" element={<ChatPage />} />
         <Route index element={<Feed />} />
       </Route>
       
