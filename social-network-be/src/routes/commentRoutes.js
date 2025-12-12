@@ -1,9 +1,10 @@
-const express = require('express');
+import express from 'express';
+import * as ctrl from '../controllers/commentController.js';
+import auth from '../middlewares/authMiddleware.js';
+
 const router = express.Router();
-const ctrl = require('../controllers/commentController');
-const auth = require('../middlewares/authMiddleware');
 
 router.get('/posts/:postId', ctrl.getComments);
 router.post('/posts/:postId', auth, ctrl.createComment);
 
-module.exports = router;
+export default router;
