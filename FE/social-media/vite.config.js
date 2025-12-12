@@ -12,9 +12,15 @@ export default defineConfig({
     
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:4000',
         changeOrigin: true,
+        secure: false,
         //rewrite: (path) => path.replace(/^\/api/, '')
+      },
+      '/uploads': { //proxy for static img  by be
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+        
       }
     }
   }

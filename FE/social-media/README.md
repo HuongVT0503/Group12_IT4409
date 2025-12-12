@@ -1,3 +1,5 @@
+the be lacks some logic like likecount,islike in 'getFeed', global feed for , 'createcomment' needs to returns authorinfo, and no user is joinging any room to receive updates
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

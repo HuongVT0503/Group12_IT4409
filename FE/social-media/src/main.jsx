@@ -7,10 +7,17 @@ import "./index.css";             //reset + base uses Inter
 //import "./styles/utilities.css";  //COLORs utilities
 //import React from "react";
 
+import { AuthProvider } from './context/AuthContext.jsx';
+import { SocketProvider } from './context/SocketContext.jsx';
+
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <AuthProvider>
+      <SocketProvider>
+        <App />
+      </SocketProvider>
+    </AuthProvider>
   </StrictMode>,
 )
 
