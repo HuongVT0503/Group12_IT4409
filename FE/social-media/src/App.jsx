@@ -35,48 +35,64 @@ function AppRouter() {
   //const [view, setView] = useState("login"); //default view
 
   return (
+    <Routes>
+      {/* PUBLIC ROUTES (No Layout) */}
+      <Route
+        path="/login"
+        element={
+          !user ? (
+            <Login onSwitch={() => navigate("/signup")} />
+          ) : (
+            <Navigate to="/" />
+          )
+        }
+      />
+      <Route
+        path="/signup"
+        element={
+          !user ? (
+            <Signup onSwitch={() => navigate("/login")} />
+          ) : (
+            <Navigate to="/" />
+          )
+        }
+      />
 
-    
-      <Routes>
-        {/* PUBLIC ROUTES (No Layout) */}
-        <Route path="/login" element={!user ? <Login onSwitch={() => navigate("/signup")} /> : <Navigate to="/" />} />
-        <Route path="/signup" element={!user ? <Signup onSwitch={() => navigate("/login")} /> : <Navigate to="/" />} />
+      {/*PREVIEW ROUTE*/}
 
-
-        {/*PREVIEW ROUTE*/}
-        <Route path="/preview" element={<MainLayout />}>
-        <Route path="/previewprofile" element={<ProfilePage />} />
-        <Route path="/previewfeed" element={<Feed />} />
-        <Route path="/previewchat" element={<ChatPage />} />
-        <Route index element={<Feed />} />
+      <Route path="/preview" element={<MainLayout />}>
+        <Route index element={<Feed />} />{/* URL: /preview */}
+        <Route path="profile" element={<ProfilePage />} /> {/* URL: /preview/profile */}
+        <Route path="feed" element={<Feed />} />
+        <Route path="chat" element={<ChatPage />} />
       </Route>
+
       
 
 
+      {/* PROTECTED ROUTES */}
+      <Route
+        path="/"
+        element={user ? <MainLayout /> : <Navigate to="/login" replace />}
+      >
+        <Route index element={<Feed />} />
 
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="chat" element={<ChatPage />} />
+        <Route
+          path="connections"
+          element={<Placeholder title="Connections" />}
+        />
+        <Route path="create" element={<Placeholder title="Create Post" />} />
+      </Route>
 
-        {/* PROTECTED ROUTES */}
-        <Route 
-          path="/" 
-          element={user ? <MainLayout /> : <Navigate to="/login"  replace />}
-        >
-          
-          <Route index element={<Feed />} /> 
-          
-          <Route path="profile" element={<  ProfilePage  />} />
-          <Route path="chat" element={<ChatPage />} />
-          <Route path="connections" element={<Placeholder title="Connections" />} />
-          <Route path="create" element={<Placeholder title="Create Post" />} />
-        </Route>
+      {/* 404 CATCH ALL */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
 
-        {/* 404 CATCH ALL */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    
-  
     // <main className="w-full min-h-screen">
-    //   {view === "login" 
-    //     ? <Login onSwitch={() => setView("signup")} /> 
+    //   {view === "login"
+    //     ? <Login onSwitch={() => setView("signup")} />
     //     : <Signup onSwitch={() => setView("login")} onBack={() => setView("login")} />
     //   }
     // </main>

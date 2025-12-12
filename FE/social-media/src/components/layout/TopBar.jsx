@@ -15,7 +15,7 @@ const MOCK_NOTIFICATIONS = [
 //
 
 export default function TopBar() {
-  const {user,logout}=useAuth;
+  const {user,logout}=useAuth();
   
   const [showNoti, setShowNoti] = useState(false);
   const [notis] = useState(MOCK_NOTIFICATIONS);
