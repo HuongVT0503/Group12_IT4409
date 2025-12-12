@@ -3,11 +3,14 @@
 import Login from "./pages/auth/LogInPage"
 import Signup from "./pages/auth/SignUpPage"
 import Feed from "./pages/feed/FeedPage"
+import ChatPage from "./pages/chat/ChatPage";
 
 import { BrowserRouter, Routes, Route, Navigate , useNavigate} from "react-router-dom";
 
 import MainLayout from './components/layout/MainLayout';
 import ProfilePage from "./pages/profile/ProfilePage";
+
+
 
 import { useAuth } from "./context/AuthContext";
 
@@ -45,7 +48,7 @@ function AppRouter() {
         <Route path="/previewprofile" element={<ProfilePage />} />
         <Route index element={<Feed />} />
       </Route>
-      {/*PREVIEW ROUTE*/}
+      
 
 
 
@@ -59,7 +62,7 @@ function AppRouter() {
           <Route index element={<Feed />} /> 
           
           <Route path="profile" element={<  ProfilePage  />} />
-          <Route path="chat" element={<Placeholder title="Chat / Messages" />} />
+          <Route path="chat" element={<ChatPage />} />
           <Route path="connections" element={<Placeholder title="Connections" />} />
           <Route path="create" element={<Placeholder title="Create Post" />} />
         </Route>

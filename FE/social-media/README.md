@@ -33,3 +33,14 @@ npm audit fix
 rm -rf node_modules package-lock.json
 
 npm install
+
+## urls
+
+### public 
+http://localhost:5173/login
+
+http://localhost:5173/signup
+
+### protected
+
+http://localhost:5173/
