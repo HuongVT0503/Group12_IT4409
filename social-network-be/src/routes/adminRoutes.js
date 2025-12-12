@@ -1,9 +1,9 @@
 import express from 'express';
-import ctrl from '../controllers/adminController.js';
-import auth from '../middlewares/authMiddleware.js';
+import { deletePost } from '../controllers/adminController.js';
+import { verifyToken } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.delete('/posts/:id', auth, ctrl.deletePost);
+router.delete('/posts/:id', verifyToken, deletePost);
 
 export default router;
