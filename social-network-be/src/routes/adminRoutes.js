@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import ctrl from '../controllers/adminController.js';
+import auth from '../middlewares/authMiddleware.js';
+
 const router = express.Router();
-const ctrl = require('../controllers/adminController');
-const auth = require('../middlewares/authMiddleware');
 
 router.delete('/posts/:id', auth, ctrl.deletePost);
 
-module.exports = router;
+export default router;

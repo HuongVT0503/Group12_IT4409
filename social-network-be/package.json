@@ -21,7 +21,8 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
-    "neo4j-driver": "^6.0.1"
+    "neo4j-driver": "^6.0.1",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "eslint": "^9.39.0",
@@ -30,4 +31,3 @@
     "supertest": "^7.1.4"
   }
 }
-
