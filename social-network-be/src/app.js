@@ -32,5 +32,7 @@ app.use('/api/v1/admin', adminRoutes);
 
 app.use(errorHandler);
 
-const port = process.env.PORT || 4000;
-app.listen(port, () => console.log(`Server listening on ${port}`));
+// const port = process.env.PORT || 4000;
+// app.listen(port, () => console.log(`Server listening on ${port}`));
+
+module.exports = app;

@@ -1,10 +1,9 @@
-import app from './src/app.js';
-import dotenv from 'dotenv';
-//import http from 'http';
-import { socketAuthMiddleware } from './src/middlewares/socketMiddleware.js';
-import { Server } from 'socket.io';
+require('dotenv').config();
+const http = require('http');
+const app = require('./src/app'); // Imports the app we just exported
+const { socketAuthMiddleware } = require('./src/middlewares/socketMiddleware');
+const { Server } = require('socket.io');
 
-dotenv.config();
 const PORT = process.env.PORT || 4000;
 const server = http.createServer(app);
 
@@ -16,7 +15,8 @@ const io = new Server(server, {
     },
 });
 
-export { io };
+exports = { io };
+
 io.use(socketAuthMiddleware);
 
 // Socket.io

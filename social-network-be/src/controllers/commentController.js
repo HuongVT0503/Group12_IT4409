@@ -1,6 +1,6 @@
-import commentService from '../services/commentService.js';
-import { emitNotification, emitPostUpdate } from '../services/realtimeService.js';
-import postRepo from '../repositories/postRepository.js';
+const commentService = require('../services/commentService');
+const { emitNotification, emitPostUpdate } = require('../services/realtimeService');
+const postRepo = require('../repositories/postRepository');
 
 async function createComment(req, res, next) {
   try {
@@ -34,4 +34,4 @@ async function getComments(req, res, next) {
   } catch (err) { next(err); }
 }
 
-export default { createComment, getComments };
+module.exports = { createComment, getComments };
