@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import PostCard from "../../components/feed/PostCard";
 //import Button from "../../components/common/ButtonComponent";
-import CreatePost from "../../components/feed/CeatePost.jsx";
+import CreatePost from "../../components/feed/CreatePost.jsx";
 import { getFeed } from "../../services/postService";
 import {useSocket} from "../../context/SocketContext";
 
@@ -37,10 +37,10 @@ export default function FeedPage() {
 
   const fetchPosts = async () => {
     try {
-      const data = await getFeed();
+      const response = await getFeed();
       //be returns: { posts: [...] }
       //map backend data structure to frontend component expectations
-      const formattedPosts = data.posts.map ( formatPostData );
+      const formattedPosts = response.data.posts.map ( formatPostData );
       setPosts(formattedPosts);
     } catch (err) {
       console.error(err);
