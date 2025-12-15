@@ -1,5 +1,4 @@
-
-const { getSession, neo4j } = require('../config/neo4j');
+import { getSession, neo4j } from '../config/neo4j.js';
 
 async function createPost({ id, authorId, content, media = [], privacy = 'public' }) {
   const session = getSession();
@@ -102,4 +101,4 @@ async function countLikes(postId) {
   }
 }
 
-module.exports = { createPost, getPostById, deletePost, getRecentPublicPosts, likePost, unlikePost, countLikes };
+export { createPost, getPostById, deletePost, getRecentPublicPosts, likePost, unlikePost, countLikes };

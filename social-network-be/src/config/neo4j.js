@@ -1,5 +1,7 @@
-require('dotenv').config();
-const neo4j = require('neo4j-driver');
+import dotenv from 'dotenv';
+import neo4j from 'neo4j-driver';
+
+dotenv.config();
 
 const uri = process.env.NEO4J_URI || 'bolt://localhost:7687';
 const user = process.env.NEO4J_USERNAME || 'neo4j';
@@ -13,4 +15,4 @@ function getSession(mode = neo4j.session.WRITE) {
   return driver.session({ defaultAccessMode: mode });
 }
 
-module.exports = { driver, getSession, neo4j };
+export { driver, getSession, neo4j };

@@ -1,17 +1,15 @@
-const express = require('express');
+import express from 'express';
+import * as ctrl from '../controllers/postController.js';
+import { verifyToken } from '../middlewares/authMiddleware.js';
+
 const router = express.Router();
-const ctrl = require('../controllers/postController');
-const auth = require('../middlewares/authMiddleware.js');
 
 router.get('/', ctrl.getFeed);
 router.get('/:id', ctrl.getPost);
-router.post('/', auth, ctrl.createPost);
-router.delete('/:id', auth, ctrl.deletePost);
-router.post('/:id/like', auth, ctrl.likePost);
-router.delete('/:id/like', auth, ctrl.unlikePost);
+router.post('/', verifyToken, ctrl.createPost);
+router.delete('/:id', verifyToken, ctrl.deletePost);
+router.post('/:id/like', verifyToken, ctrl.likePost);
+router.delete('/:id/like', verifyToken, ctrl.unlikePost);
 router.get('/:id/likes', ctrl.countLikes);
 
-router.post('/', verifyToken, createPost);
-router.delete('/:id', verifyToken, deletePost);
-
-module.exports = router;
+export default router;

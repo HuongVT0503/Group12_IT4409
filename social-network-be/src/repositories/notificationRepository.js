@@ -1,4 +1,4 @@
-const { getSession } = require('../config/neo4j');
+import { getSession } from '../config/neo4j.js';
 
 async function createNotification({ id, userId, type, data }) {
   const session = getSession();
@@ -37,4 +37,4 @@ async function markAsRead(notificationId) {
   }
 }
 
-module.exports = { createNotification, getNotifications, markAsRead };
+export { createNotification, getNotifications, markAsRead };

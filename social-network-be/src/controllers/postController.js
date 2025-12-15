@@ -1,4 +1,5 @@
-import postService from '../services/postService.js';
+import * as postService from '../services/postService.js';
+import * as userService from '../services/userService.js';
 import { emitNewPost, emitPostUpdate } from '../services/realtimeService.js';
 
 // Tạo bài viết mới
@@ -101,4 +102,4 @@ async function countLikes(req, res, next) {
     }
 }
 
-export default { createPost, getPost, deletePost, getFeed, likePost, unlikePost, countLikes };
+export { createPost, getPost, deletePost, getFeed, likePost, unlikePost, countLikes };

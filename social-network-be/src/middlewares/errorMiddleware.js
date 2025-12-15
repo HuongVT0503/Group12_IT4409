@@ -8,4 +8,4 @@ function errorHandler(err, req, res, _next) {
   res.status(status).json(body);
 }
 
-module.exports = errorHandler;
+export default errorHandler;

@@ -1,6 +1,6 @@
-const { v4: uuidv4 } = require('uuid');
-const postRepo = require('../repositories/postRepository');
-const notificationRepo = require('../repositories/notificationRepository');
+import { v4 as uuidv4 } from 'uuid';
+import * as postRepo from '../repositories/postRepository.js';
+import * as notificationRepo from '../repositories/notificationRepository.js';
 
 async function createPost({ authorId, content, media, privacy }) {
   const id = uuidv4();
@@ -25,7 +25,7 @@ async function likePost(userId, postId) {
   const post = await postRepo.getPostById(postId);
   if (post && post.author) {
     const notif = {
-      id: require('uuid').v4(),
+      id: uuidv4(),
       userId: post.author.id,
       type: 'like',
       data: JSON.stringify({ from: userId, postId })
@@ -46,4 +46,4 @@ async function countLikes(postId) {
   return await postRepo.countLikes(postId);
 }
 
-module.exports = { createPost, getPost, deletePost, getFeed, likePost, unlikePost, countLikes };
+export { createPost, getPost, deletePost, getFeed, likePost, unlikePost, countLikes };

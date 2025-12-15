@@ -1,5 +1,4 @@
-
-const { getSession } = require('../config/neo4j');
+import { getSession } from '../config/neo4j.js';
 
 async function createComment({ id, authorId, postId, content, parentCommentId = null }) {
   const session = getSession();
@@ -33,4 +32,4 @@ async function getCommentsForPost(postId, limit = 50) {
   }
 }
 
-module.exports = { createComment, getCommentsForPost };
+export { createComment, getCommentsForPost };

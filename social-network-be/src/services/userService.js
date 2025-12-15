@@ -1,5 +1,5 @@
-const { v4: uuidv4 } = require('uuid');
-const userRepo = require('../repositories/userRepository');
+import { v4 as uuidv4 } from 'uuid';
+import * as userRepo from '../repositories/userRepository.js';
 
 async function getProfile(usernameOrId) {
   // allow id or username
@@ -33,4 +33,4 @@ async function unfollow(followerId, followeeId) {
 async function getFollowers(userId, limit) { return userRepo.getFollowers(userId, limit); }
 async function getFollowing(userId, limit) { return userRepo.getFollowing(userId, limit); }
 
-module.exports = { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing };
+export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing };
