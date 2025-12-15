@@ -1,4 +1,4 @@
-const userService = require('../services/userService');
+import * as userService from '../services/userService.js';
 import { emitNotification, emitFollowUpdate } from '../services/realtimeService.js';
 
 async function getProfile(req, res, next) {
@@ -64,4 +64,4 @@ async function getFollowing(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing };
+export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing };

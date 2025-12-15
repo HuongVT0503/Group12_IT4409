@@ -7,4 +7,5 @@ function validateBody(handler) {
     }
   };
 }
-module.exports = { validateBody };
+
+export { validateBody };

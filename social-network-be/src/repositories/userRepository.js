@@ -1,4 +1,4 @@
-const { getSession } = require('../config/neo4j');
+import { getSession } from '../config/neo4j.js';
 
 async function createUser({ id, username, email, password_hash, display_name }) {
   const session = getSession();
@@ -117,7 +117,7 @@ async function getFollowing(userId, limit = 50) {
   }
 }
 
-module.exports = {
+export {
   createUser, findByEmail, findByUsername, findById, updateProfile,
   followUser, unfollowUser, getFollowers, getFollowing
 };

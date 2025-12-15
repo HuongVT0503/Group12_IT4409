@@ -1,4 +1,4 @@
-const { getSession } = require('../config/neo4j');
+import { getSession } from '../config/neo4j.js';
 
 async function saveRefreshToken(userId, tokenHash, expiresAtISO) {
   const session = getSession();
@@ -33,4 +33,4 @@ async function findRefreshToken(tokenHash) {
   }
 }
 
-module.exports = { saveRefreshToken, revokeRefreshToken, findRefreshToken };
+export { saveRefreshToken, revokeRefreshToken, findRefreshToken };
