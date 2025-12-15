@@ -12,7 +12,7 @@ async function createPost(req, res, next) {
         //Lấy danh sách follower
         const followers = await userService.getFollowers(authorId);
         // Emit cho followers để cập nhật newsfeed
-        emitNewPost(post.post, followers.map(f => f.id));
+        emitNewPost(post, followers.map(f => f.id));
         emitPostUpdate(post.post.id, { newPost: post });
 
         res.status(201).json({ post });
