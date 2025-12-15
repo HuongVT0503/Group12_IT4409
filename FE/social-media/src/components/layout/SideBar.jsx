@@ -1,7 +1,7 @@
 //desktop left sidebar // nav links
 
 import { Home, User, MessageCircle, Users, PlusCircle } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import Button from "../common/ButtonComponent";
 
 export default function SideBar() {
@@ -38,9 +38,14 @@ export default function SideBar() {
 
       {/* 'New Post' Button */}
       <div className="mt-8 px-2">
-        <Button size="lg" className="w-full shadow-lg shadow-primary/30 py-4 text-lg">
-          <PlusCircle className="mr-2" size={24} /> New Post
-        </Button>
+        <Link to="/create" className="block w-full">
+          <Button
+            size="lg"
+            className="w-full shadow-lg shadow-primary/30 py-4 text-lg"
+          >
+            <PlusCircle className="mr-2" size={24} /> New Post
+          </Button>
+        </Link>
       </div>
     </div>
   );
