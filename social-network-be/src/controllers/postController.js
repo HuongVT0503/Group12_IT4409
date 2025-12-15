@@ -1,6 +1,5 @@
-const postService = require('../services/postService');
-const { emitNewPost, emitPostUpdate } = require('../services/realtimeService');
-const userService = require('../services/userService'); // Was missing in original file but used in createPost
+import postService from '../services/postService.js';
+import { emitNewPost, emitPostUpdate } from '../services/realtimeService.js';
 
 // Tạo bài viết mới
 async function createPost(req, res, next) {
@@ -102,4 +101,4 @@ async function countLikes(req, res, next) {
     }
 }
 
-module.exports = { createPost, getPost, deletePost, getFeed, likePost, unlikePost, countLikes };
+export default { createPost, getPost, deletePost, getFeed, likePost, unlikePost, countLikes };

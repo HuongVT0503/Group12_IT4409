@@ -1,7 +1,9 @@
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 
-function verifyToken(req, res, next) {
+dotenv.config();
+
+export function verifyToken(req, res, next) {
     const token = req.headers['authorization']?.split(' ')[1];
     if (!token) return res.status(401).json({ message: 'Thiếu token!' });
 
@@ -11,5 +13,3 @@ function verifyToken(req, res, next) {
         next();
     });
 }
-
-module.exports = { verifyToken };

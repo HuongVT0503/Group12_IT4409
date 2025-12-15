@@ -1,45 +1,23 @@
-let io;
+import { io } from '../../server.js';
 
-function getIo() {
-    if (!io) {
-        io = require('../../server').io;
-    }
-    return io;
+export function emitNotification(userId, payload) {
+    io.to(userId).emit('notification', payload);
 }
 
-function emitNotification(userId, payload) {
-    const socketIo = getIo();
-    if (socketIo) socketIo.to(userId).emit('notification', payload);
+export function emitNewPost(post, followers = []) {
+    followers.forEach(followerId => {
+        io.to(followerId).emit('new_post', post);
+    });
 }
 
-function emitNewPost(post, followers = []) {
-    const socketIo = getIo();
-    if (socketIo) {
-        followers.forEach(followerId => {
-            socketIo.to(followerId).emit('new_post', post);
-        });
-    }
+export function emitPostUpdate(postId, payload) {
+    io.to(`post_${postId}`).emit('post_update', payload);
 }
 
-function emitPostUpdate(postId, payload) {
-    const socketIo = getIo();
-    if (socketIo) socketIo.to(`post_${postId}`).emit('post_update', payload);
+export function emitFollowUpdate(followeeId, payload) {
+    io.to(followeeId).emit('follow_update', payload);
 }
 
-function emitFollowUpdate(followeeId, payload) {
-    const socketIo = getIo();
-    if (socketIo) socketIo.to(followeeId).emit('follow_update', payload);
+export function emitNotificationRead(userId, notificationId) {
+    io.to(userId).emit('notification_read', { id: notificationId });
 }
-
-function emitNotificationRead(userId, notificationId) {
-    const socketIo = getIo();
-    if (socketIo) socketIo.to(userId).emit('notification_read', { id: notificationId });
-}
-
-module.exports = { 
-    emitNotification, 
-    emitNewPost, 
-    emitPostUpdate, 
-    emitFollowUpdate, 
-    emitNotificationRead 
-};

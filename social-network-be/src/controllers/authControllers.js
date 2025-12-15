@@ -1,11 +1,12 @@
-const authService = require('../services/authService');
+import authService from '../services/authService.js';
 
-async function registerUser(req, res, next) {
+export async function registerUser(req, res, next) {
     try {
         const { username, email, password, display_name } = req.body;
         if (!username || !email || !password) {
             return res.status(400).json({ message: 'Thiếu thông tin đăng ký!' });
         }
+
         const user = await authService.register({ username, email, password, display_name });
         res.status(201).json({ message: 'Đăng ký thành công!', user });
     } catch (err) {
@@ -13,7 +14,7 @@ async function registerUser(req, res, next) {
     }
 }
 
-async function loginUser(req, res, next) {
+export async function loginUser(req, res, next) {
     try {
         const { email, password } = req.body;
         if (!email || !password) {
@@ -27,7 +28,7 @@ async function loginUser(req, res, next) {
     }
 }
 
-async function refreshToken(req, res, next) {
+export async function refreshToken(req, res, next) {
     try {
         const { refreshToken } = req.body;
         if (!refreshToken) {
@@ -41,7 +42,7 @@ async function refreshToken(req, res, next) {
     }
 }
 
-async function logoutUser(req, res, next) {
+export async function logoutUser(req, res, next) {
     try {
         const { refreshToken } = req.body;
         if (!refreshToken) {
@@ -54,5 +55,3 @@ async function logoutUser(req, res, next) {
         next(err);
     }
 }
-
-module.exports = { registerUser, loginUser, refreshToken, logoutUser };

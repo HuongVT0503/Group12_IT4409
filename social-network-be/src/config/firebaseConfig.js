@@ -1,7 +1,9 @@
-const { initializeApp } = require("firebase/app");
-const { getDatabase } = require("firebase/database");
-const { getAuth } = require("firebase/auth");
-require("dotenv").config();
+import { initializeApp } from "firebase/app";
+import { getDatabase } from "firebase/database";
+import { getAuth } from "firebase/auth";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const firebaseConfig = {
     apiKey: process.env.FIREBASE_API_KEY,
@@ -17,4 +19,4 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const auth = getAuth(app);
 
-module.exports = { app, database, auth };
+export { app, database, auth };

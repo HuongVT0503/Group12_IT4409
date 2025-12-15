@@ -1,5 +1,5 @@
 const notificationService = require('../services/notificationService');
-const { emitNotificationRead } = require('../services/realtimeService');
+import {emitNotificationRead} from "../services/realtimeService.js";
 
 async function getNotifications(req, res, next) {
   try {

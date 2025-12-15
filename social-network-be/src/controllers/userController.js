@@ -1,8 +1,5 @@
-// const userService = require('../services/userService');
-// import { emitNotification, emitFollowUpdate } from '../services/realtimeService.js';
-
 const userService = require('../services/userService');
-const { emitNotification, emitFollowUpdate } = require('../services/realtimeService');
+import { emitNotification, emitFollowUpdate } from '../services/realtimeService.js';
 
 async function getProfile(req, res, next) {
   try {
