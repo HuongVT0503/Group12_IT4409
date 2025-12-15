@@ -1,6 +1,6 @@
-import commentService from '../services/commentService.js';
+import * as commentService from '../services/commentService.js';
 import { emitNotification, emitPostUpdate } from '../services/realtimeService.js';
-import postRepo from '../repositories/postRepository.js';
+import * as postRepo from '../repositories/postRepository.js';
 
 async function createComment(req, res, next) {
   try {
@@ -34,4 +34,4 @@ async function getComments(req, res, next) {
   } catch (err) { next(err); }
 }
 
-export default { createComment, getComments };
+export { createComment, getComments };

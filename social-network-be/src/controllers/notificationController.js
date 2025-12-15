@@ -1,5 +1,5 @@
-const notificationService = require('../services/notificationService');
-import {emitNotificationRead} from "../services/realtimeService.js";
+import * as notificationService from '../services/notificationService.js';
+import { emitNotificationRead } from '../services/realtimeService.js';
 
 async function getNotifications(req, res, next) {
   try {
@@ -22,4 +22,4 @@ async function markAsRead(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { getNotifications, markAsRead };
+export { getNotifications, markAsRead };

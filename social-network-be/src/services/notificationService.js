@@ -1,4 +1,4 @@
-const notificationRepo = require('../repositories/notificationRepository');
+import * as notificationRepo from '../repositories/notificationRepository.js';
 
 async function getNotifications(userId, limit) {
   return await notificationRepo.getNotifications(userId, limit);
@@ -8,4 +8,4 @@ async function markAsRead(notificationId) {
   await notificationRepo.markAsRead(notificationId);
 }
 
-module.exports = { getNotifications, markAsRead };
+export { getNotifications, markAsRead };

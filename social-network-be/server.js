@@ -1,14 +1,16 @@
-import app from './src/app.js';
 import dotenv from 'dotenv';
-//import http from 'http';
-import { socketAuthMiddleware } from './src/middlewares/socketMiddleware.js';
+dotenv.config();
+
+import http from 'http';
 import { Server } from 'socket.io';
 
-dotenv.config();
+import app from './src/app.js';
+import { socketAuthMiddleware } from './src/middlewares/socketMiddleware.js';
+
 const PORT = process.env.PORT || 4000;
+
 const server = http.createServer(app);
 
-// Cấu hình Socket.io
 const io = new Server(server, {
     cors: {
         origin: '*',
@@ -17,11 +19,12 @@ const io = new Server(server, {
 });
 
 export { io };
+
 io.use(socketAuthMiddleware);
 
-// Socket.io
 io.on('connection', (socket) => {
     console.log('New client connected:', socket.id);
+
     socket.on('join', (userId) => {
         socket.join(userId);
         console.log(`User ${userId} joined room`);
@@ -32,4 +35,6 @@ io.on('connection', (socket) => {
     });
 });
 
-server.listen(PORT, () => console.log(`Server running on ${PORT}`));
+server.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+});
