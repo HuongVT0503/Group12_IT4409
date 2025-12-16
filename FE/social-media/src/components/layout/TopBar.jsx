@@ -5,28 +5,43 @@ import { Search, Bell, LogOut, User, Settings } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useSocket } from "../../context/SocketContext";
+import { getNotifications, markAsRead } from "../../services/notificationService";
+import { formatDistanceToNow } from "date-fns";
+import { getProfile } from "../../services/userService";
 
-//mock noti
-const MOCK_NOTIFICATIONS = [
-  { id: 1, text: "Sarah liked your post.", time: "2m ago", read: false },
-  { id: 2, text: "John commented: 'Great shot!'", time: "1h ago", read: false },
-  { id: 3, text: "Welcome to SocioICT!", time: "1d ago", read: true },
-];
 
 //
+//validate date b4 passing it to formatDistanceToNow
+const getRelativeTime = (dateInput) => {
+  if (!dateInput) return "Just now";
+  try {
+    const date = new Date(dateInput);
+    //valid?
+    if (isNaN(date.getTime())) return "Just now"; 
+    return formatDistanceToNow(date, { addSuffix: true });
+  } catch (error) {
+    console.error(error);
+    return "Just now";
+  }
+};
 
 export default function TopBar() {
   const { user, logout } = useAuth();
 
-
   const [showNoti, setShowNoti] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [notis] = useState(MOCK_NOTIFICATIONS);
+  
+  const [notis, setNotis] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [senderNames, setSenderNames] = useState({});
 
   //refs for click outside detection
   const notiRef = useRef(null);
   const userMenuRef = useRef(null);
+
   const navigate = useNavigate();
+  const socket = useSocket();
 
   const unreadCount = notis.filter((n) => !n.read).length;
 
@@ -44,9 +59,153 @@ export default function TopBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  //fetch notis
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchNotis = async () => {
+      setLoading(true);
+      try {
+        const res = await getNotifications();
+        //be:  { data: [...] }
+        const formatted = res.data.data.map((n) => ({
+          ...n,
+          data: typeof n.data === "string" ? JSON.parse(n.data) : n.data,
+        }));
+        setNotis(formatted);
+      } catch (err) {
+        console.error("Failed to load notifications", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotis();
+  }, [user]);
+
+  //realtime noti
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewNotification = (payload) => {
+      //emitNotification
+      const newNoti = {
+        id: Date.now(), //temp id until refreshed
+        type: payload.type,
+        read: false,
+        created_at: new Date().toISOString(),
+        data: payload, // direct payload
+      };
+
+      setNotis((prev) => [newNoti, ...prev]);
+    };
+
+    socket.on("notification", handleNewNotification);
+
+    return () => {
+      socket.off("notification", handleNewNotification);
+    };
+  }, [socket]);
+
+  //fetch sender names when noti change
+  useEffect(() => {
+    const fetchMissingSenders = async () => {
+    
+      const uniqueIds = [...new Set(notis.map(n => n.data?.from || n.data?.userId))]
+        .filter(id => id && !senderNames[id] && id !== user?.id);
+
+      if (uniqueIds.length === 0) return;
+
+      const newNames = {};
+      
+      //fetch profiles in parallel
+      await Promise.all(uniqueIds.map(async (id) => {
+        try {
+          const res = await getProfile(id); 
+          //be -> { user: ... }        inside axios response.data
+          newNames[id] = res.data.user.display_name; 
+        } catch (err) {
+          console.error(`Failed to fetch user ${id}`, err);
+          newNames[id] = "Unknown User";
+        }
+      }));
+
+      setSenderNames(prev => ({ ...prev, ...newNames }));
+    };
+
+    if (notis.length > 0) {
+      fetchMissingSenders();
+    }
+  }, [notis, senderNames, user?.id]);
+
+
+  /////////
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const handleMarkRead = async (notification) => {
+    if (notification.read) return;
+
+    setNotis((prev) =>
+      prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
+    );
+
+    try {
+      await markAsRead(notification.id);
+    } catch (error) {
+      console.error("Failed to mark as read", error);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    const unreadNotis = notis.filter(n => !n.read);
+    if (unreadNotis.length === 0) return;
+
+    setNotis(prev => prev.map(n => ({ ...n, read: true })));
+
+    //send req in parallel ( be doesnt have read-all endpoint)
+    try {
+        await Promise.all(unreadNotis.map(n => markAsRead(n.id)));
+    } catch (error) {
+        console.error("Failed to mark all as read", error);
+    }
+  };
+
+  //navigate
+  const handleNotificationClick = (n) => {
+    handleMarkRead(n);
+    setShowNoti(false); //close dropdown
+
+    const fromId = n.data?.from || n.data?.userId;
+    const postId = n.data?.postId;
+
+    if (n.type === 'follow' && fromId) {
+        navigate(`/profile/${fromId}`);
+    } else if ((n.type === 'like' || n.type === 'comment') && postId) {
+        navigate(`/post/${postId}`);
+    }
+  };
+
+
+
+  //render noti txt based on type
+  const renderNotificationText = (n) => {
+    //missing 'data' or different format
+    const fromId = n.data?.from || n.data?.userId;
+    const senderName =  senderNames[fromId] || "Someone";
+
+    switch (n.type) {
+      case "like":
+        return `${senderName} liked your post.`;
+      case "comment":
+        return `${senderName} commented on your post.`;
+      case "follow":
+        return `${senderName} started following you.`;
+      default:
+        return n.data?.text || "New notification";
+    }
   };
 
   return (
@@ -80,7 +239,7 @@ export default function TopBar() {
       {/* Right User Actions */}
       <div className="flex items-center gap-3 lg:gap-6">
         {/* Notification Dropdown */}
-        <div className="relative">
+        <div className="relative" ref={notiRef}>
           <button
             onClick={() => setShowNoti(!showNoti)}
             className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
@@ -94,25 +253,47 @@ export default function TopBar() {
           {showNoti && (
             <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
               <div className="p-4 border-b border-gray-100 font-bold text-gray-900">
-                Notifications
+                <span>Notifications</span>
+                {unreadCount > 0 && (
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                    {unreadCount} new
+                  </span>
+                )}
               </div>
               <div className="max-h-[300px] overflow-y-auto">
+                {loading && (
+                  <div className="p-4 text-center text-sm text-gray-500">
+                    Loading...
+                  </div>
+                )}
+
+                {!loading && notis.length === 0 && (
+                  <div className="p-4 text-center text-sm text-gray-500">
+                    No notifications yet.
+                  </div>
+                )}
+
                 {notis.map((n) => (
                   <div
                     key={n.id}
+                    onClick={() => handleNotificationClick(n)}
                     className={`p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 ${
                       !n.read ? "bg-blue-50/50" : ""
                     }`}
                   >
-                    <p className="text-sm text-gray-800">{n.text}</p>
+                    <p className="text-sm text-gray-800">
+                      {renderNotificationText(n)}
+                    </p>
                     <span className="text-xs text-gray-400 mt-1 block">
-                      {n.time}
+                      {getRelativeTime(n.created_at)}
                     </span>
                   </div>
                 ))}
               </div>
               <div className="p-2 text-center border-t border-gray-100">
-                <button className="text-xs text-primary font-semibold hover:underline">
+                <button 
+                onClick={handleMarkAllAsRead}
+                className="text-xs text-primary font-semibold hover:underline">
                   Mark all as read
                 </button>
               </div>
@@ -164,7 +345,7 @@ export default function TopBar() {
               </Link>
 
               <Link
-                to="/settings" 
+                to="/settings"
                 onClick={() => setShowUserMenu(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
               >

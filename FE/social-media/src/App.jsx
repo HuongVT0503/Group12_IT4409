@@ -7,6 +7,7 @@ import ChatPage from "./pages/chat/ChatPage";
 import CreatePostPage from "./pages/feed/CreatePostPage";
 import ConnectionsPage from "./pages/connections/ConnectionPage";
 import SettingsPage from './pages/settings/SettingsPage';
+import PostDetailsPage from "./pages/feed/PostDetailsPage";
 
 import {
   BrowserRouter,
@@ -77,6 +78,10 @@ function AppRouter() {
         <Route index element={<Feed />} />
 
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="profile/:id" element={<ProfilePage />} />
+
+        <Route path="post/:id" element={<PostDetailsPage />} />
+        
         <Route path="chat" element={<ChatPage />} />
         <Route path="connections" element={<ConnectionsPage />} />
         <Route path="create" element={<CreatePostPage />} />

@@ -22,7 +22,14 @@ async function getNotifications(userId, limit = 50) {
        RETURN n ORDER BY n.created_at DESC LIMIT $limit`,
       { userId, limit: neo4j.int(limit) }
     );
-    return res.records.map(r => r.get('n').properties);
+    return res.records.map((r) => {
+      const props = r.get("n").properties;
+      if (props.created_at) {
+        //convert to string
+        props.created_at = new Date(props.created_at).toISOString();
+      }
+      return props;
+    });
   } finally {
     await session.close();
   }

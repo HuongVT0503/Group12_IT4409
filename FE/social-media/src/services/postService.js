@@ -1,4 +1,4 @@
-//getPosts,createPost,updatePost,deletePost,likePost,unlikePost
+//getUserPosts,createPost,updatePost,deletePost,likePost,unlikePost,getFeed, getPost
 
 
 import api from './api';
@@ -19,6 +19,10 @@ export const createPost = async (content, mediaUrl = null) => {
 
 export const getUserPosts = async (userId) => {
   return await api.get(`/posts/user/${userId}`);
+};
+
+export const getPost = async (id) => {
+  return await api.get(`/posts/${id}`);
 };
 
 export const likePost = async (postId) => {

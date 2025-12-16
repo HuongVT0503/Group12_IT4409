@@ -4,27 +4,34 @@ import { useAuth } from "../../context/AuthContext";
 import EditProfileModal from "../../components/profile/EditProfile";
 import PostCard from "../../components/feed/PostCard";
 import { getUserPosts } from "../../services/postService";
+import { useParams } from "react-router-dom"; 
+
 
 export default function ProfilePage() {
+  const { id } = useParams();//id from url
+
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { user } = useAuth();
   const [posts, setPosts] = useState([]);
 
+  const targetId = id || user?.id;//url id or user id
+
   //fetch user profile
   useEffect(() => {
-    const userId = user?.id;
-    if (!userId) return;
+    if (!targetId) return;
+    setLoading(true);
 
-    getProfile(userId)
+
+    getProfile(targetId)
       .then((res) => setProfile(res.data.user))
       .catch((err) => {
         console.error("Profile fetch error", err);
-        setProfile({ ...user });
+        //setProfile({ ...user });
       })
       .finally(() => setLoading(false));
-  }, [user]);
+  }, [targetId]);
 
   //fetch posts
   useEffect(() => {
@@ -61,6 +68,8 @@ export default function ProfilePage() {
     );
   if (!profile) return <div className="p-8 text-center">User not found</div>;
 
+  const isOwnProfile = profile.id === user?.id;
+
   return (
     <div className="max-w-2xl mx-auto bg-white min-h-screen shadow-sm border-x border-gray-100 pb-10">
       <div
@@ -83,12 +92,13 @@ export default function ProfilePage() {
             alt="Avatar"
             className="w-32 h-32 rounded-full border-4 border-white object-cover bg-white shadow-sm"
           />
+          {isOwnProfile&&(
           <button
             onClick={() => setIsEditModalOpen(true)}
             className="mb-2 px-6 py-2 bg-white border border-gray-200 hover:bg-gray-50 rounded-full font-bold text-sm transition-colors shadow-sm text-gray-700"
           >
             Edit Profile
-          </button>
+          </button>)}
         </div>
 
         <div className="mb-6">
