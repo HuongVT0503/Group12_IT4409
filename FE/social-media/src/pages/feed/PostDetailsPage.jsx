@@ -1,0 +1,65 @@
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import PostCard from "../../components/feed/PostCard";
+import { getPost } from "../../services/postService";
+import { ArrowLeft } from "lucide-react";
+
+export default function PostDetailsPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        const res = await getPost(id);
+        //format similar to FeedPage
+        const raw = res.data.post;
+        const formatted = {
+            id: raw.post.id,
+            content: raw.post.content,
+            timestamp: raw.post.created_at,
+            image: raw.post.media?.[0] || null,
+            author: {
+                id: raw.author.id,
+                name: raw.author.display_name || raw.author.username,
+                handle: raw.author.username,
+                avatar: raw.author.avatar_url,
+            },
+            stats: { likes: 0, comments: 0 }
+        };
+        setPost(formatted);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load post.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) fetchPost();
+  }, [id]);
+
+  return (
+    <div className="max-w-xl mx-auto pt-6 px-4 pb-20">
+      <button 
+        onClick={() => navigate(-1)} 
+        className="flex items-center gap-2 text-gray-500 hover:text-primary mb-4 font-medium transition-colors"
+      >
+        <ArrowLeft size={20} /> Back
+      </button>
+
+      {loading && <div className="text-center py-10">Loading post...</div>}
+      
+      {error && (
+        <div className="text-center py-10 bg-red-50 text-red-600 rounded-xl">
+            {error}
+        </div>
+      )}
+
+      {post && <PostCard post={post} />}
+    </div>
+  );
+}

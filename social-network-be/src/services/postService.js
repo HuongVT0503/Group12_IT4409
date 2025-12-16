@@ -20,6 +20,10 @@ async function getFeed(limit) {
   return await postRepo.getRecentPublicPosts(limit);
 }
 
+async function getPostsByUser(userId, limit) {
+  return await postRepo.getPostsByAuthor(userId, limit);
+}
+
 async function likePost(userId, postId) {
   await postRepo.likePost(userId, postId);
   const post = await postRepo.getPostById(postId);
@@ -46,4 +50,4 @@ async function countLikes(postId) {
   return await postRepo.countLikes(postId);
 }
 
-export { createPost, getPost, deletePost, getFeed, likePost, unlikePost, countLikes };
+export { createPost, getPost, deletePost, getFeed, getPostsByUser,  likePost, unlikePost, countLikes };

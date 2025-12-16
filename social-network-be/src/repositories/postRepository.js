@@ -86,6 +86,25 @@ async function getRecentPublicPosts(limit = 20) {
   }
 }
 
+async function getPostsByAuthor(authorId, limit = 20) {
+  const session = getSession();
+  try {
+    const res = await session.run(
+      `MATCH (u:User {id:$authorId})-[:AUTHORED]->(p:Post)
+       RETURN p, u ORDER BY p.created_at DESC LIMIT $limit`,
+      { authorId, limit: neo4j.int(limit) }
+    );
+    return res.records.map((r) => {
+      const post = r.get("p").properties;
+      const author = r.get("u").properties;
+      if (post.created_at) post.created_at = new Date(post.created_at).toISOString();
+      return { post, author };
+    });
+  } finally {
+    await session.close();
+  }
+}
+
 async function likePost(userId, postId) {
   const session = getSession();
   try {
@@ -133,6 +152,7 @@ export {
   getPostById,
   deletePost,
   getRecentPublicPosts,
+  getPostsByAuthor, //
   likePost,
   unlikePost,
   countLikes,
