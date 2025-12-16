@@ -9,17 +9,9 @@ export default function ProfilePage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { user } = useAuth();
   
-  // Use URL param or current user, fallback to preview
-  const isPreview = window.location.pathname.includes('preview');
-
+ 
   useEffect(() => {
-    if (isPreview) {
-      setTimeout(() => {
-        setProfile();
-        setLoading(false);
-      }, 500);
-      return;
-    }
+    
 
     const userId = user?.id;
     if (!userId) return;
@@ -31,7 +23,7 @@ export default function ProfilePage() {
         setProfile({  ...user }); // Fallback to mock mixed with user auth data
       })
       .finally(() => setLoading(false));
-  }, [user, isPreview]);
+  }, [user]);
 
   const handleProfileUpdate = (updatedUser) => {
     setProfile(prev => ({ ...prev, ...updatedUser }));

@@ -1,4 +1,4 @@
-import { getSession } from '../config/neo4j.js';
+import { getSession, neo4j } from '../config/neo4j.js';
 
 async function createComment({ id, authorId, postId, content, parentCommentId = null }) {
   const session = getSession();
@@ -24,7 +24,7 @@ async function getCommentsForPost(postId, limit = 50) {
     const res = await session.run(
       `MATCH (u)-[:COMMENTED]->(c)-[:ON]->(p:Post {id:$postId})
        RETURN c, u ORDER BY c.created_at DESC LIMIT $limit`,
-      { postId, limit: Number(limit) }
+      { postId, limit: neo4j.int(limit) }
     );
     return res.records.map(r => ({ comment: r.get('c').properties, author: r.get('u').properties }));
   } finally {

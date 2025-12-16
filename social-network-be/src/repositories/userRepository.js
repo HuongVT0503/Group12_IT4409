@@ -1,4 +1,4 @@
-import { getSession } from '../config/neo4j.js';
+import { getSession, neo4j } from '../config/neo4j.js';
 
 async function createUser({ id, username, email, password_hash, display_name }) {
   const session = getSession();
@@ -96,7 +96,7 @@ async function getFollowers(userId, limit = 50) {
   try {
     const res = await session.run(
       `MATCH (u:User {id:$userId})<-[:FOLLOW]-(f:User)
-       RETURN f LIMIT $limit`, { userId, limit: Number(limit) }
+       RETURN f LIMIT $limit`, { userId, limit: neo4j.int(limit) }
     );
     return res.records.map(r => r.get('f').properties);
   } finally {
@@ -109,7 +109,7 @@ async function getFollowing(userId, limit = 50) {
   try {
     const res = await session.run(
       `MATCH (u:User {id:$userId})-[:FOLLOW]->(f:User)
-       RETURN f LIMIT $limit`, { userId, limit: Number(limit) }
+       RETURN f LIMIT $limit`, { userId, limit: neo4j.int(limit) }
     );
     return res.records.map(r => r.get('f').properties);
   } finally {
