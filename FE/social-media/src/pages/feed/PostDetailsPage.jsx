@@ -15,8 +15,9 @@ export default function PostDetailsPage() {
     const fetchPost = async () => {
       try {
         const res = await getPost(id);
+        const raw = res.data.post; // {post, author, stats}
         //format similar to FeedPage
-        const raw = res.data.post;
+        
         const formatted = {
             id: raw.post.id,
             content: raw.post.content,
@@ -28,7 +29,11 @@ export default function PostDetailsPage() {
                 handle: raw.author.username,
                 avatar: raw.author.avatar_url,
             },
-            stats: { likes: 0, comments: 0 }
+            stats: {
+                likes: raw.stats.likes || 0,
+                comments: raw.stats.comments || 0,
+                shares: 0
+            },
         };
         setPost(formatted);
       } catch (err) {

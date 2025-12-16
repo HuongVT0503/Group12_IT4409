@@ -14,10 +14,11 @@ export default function FeedPage() {
 
   //helper to format raw BE data to fe
   //postRepository.js: { post: {...}, author: {...} }
-  //map backend data structure to frontend component expectations
+  //map be data structure to frontend component expectations
   const formatPostData = (data) => {
     const postObj = data.post || data; 
     const authorObj = data.author || {};
+    const statsObj = data.stats || {};
 
     return {
       id: postObj.id,
@@ -30,7 +31,11 @@ export default function FeedPage() {
         handle: authorObj.username || "user",
         avatar: authorObj.avatar_url || `https://ui-avatars.com/api/?name=${authorObj.display_name || 'User'}`
       },
-      stats: { likes: 0, comments: 0, shares: 0 }, //be doesn't send counts in feed yet, defaulting///////
+      stats: {
+        likes: statsObj.likes || 0,
+        comments: statsObj.comments || 0,
+        shares: 0
+      },
       comments: []
     };
   };
