@@ -6,6 +6,7 @@ import { Server } from 'socket.io';
 
 import app from './src/app.js';
 import { socketAuthMiddleware } from './src/middlewares/socketMiddleware.js';
+import { setIO } from './src/services/realtimeService.js';
 
 const PORT = process.env.PORT || 4000;
 
@@ -17,6 +18,8 @@ const io = new Server(server, {
         methods: ['GET', 'POST'],
     },
 });
+
+setIO(io);
 
 export { io };
 

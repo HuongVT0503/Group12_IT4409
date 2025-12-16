@@ -17,6 +17,10 @@ export const createPost = async (content, mediaUrl = null) => {
   });
 };
 
+export const getUserPosts = async (userId) => {
+  return await api.get(`/posts/user/${userId}`);
+};
+
 export const likePost = async (postId) => {
   return await api.post(`/posts/${postId}/like`);
 };

@@ -59,6 +59,17 @@ async function getFeed(req, res, next) {
     }
 }
 
+async function getUserPosts(req, res, next) {
+    try {
+        const userId = req.params.userId;
+        const limit = parseInt(req.query.limit) || 20;
+        const posts = await postService.getPostsByUser(userId, limit);
+        res.json({ posts });
+    } catch (err) {
+        next(err);
+    }
+}
+
 // Like bài viết
 async function likePost(req, res, next) {
     try {
@@ -102,4 +113,4 @@ async function countLikes(req, res, next) {
     }
 }
 
-export { createPost, getPost, deletePost, getFeed, likePost, unlikePost, countLikes };
+export { createPost, getPost, deletePost, getFeed, getUserPosts , likePost, unlikePost, countLikes };
