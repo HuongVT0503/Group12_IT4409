@@ -6,6 +6,7 @@ import Feed from "./pages/feed/FeedPage";
 import ChatPage from "./pages/chat/ChatPage";
 import CreatePostPage from "./pages/feed/CreatePostPage";
 import ConnectionsPage from "./pages/connections/ConnectionPage";
+import SettingsPage from './pages/settings/SettingsPage';
 
 import {
   BrowserRouter,
@@ -79,7 +80,10 @@ function AppRouter() {
         <Route path="chat" element={<ChatPage />} />
         <Route path="connections" element={<ConnectionsPage />} />
         <Route path="create" element={<CreatePostPage />} />
+        <Route path="settings" element={<SettingsPage />} />
       </Route>
+
+      
 
       {/* 404 CATCH ALL */}
       <Route path="*" element={<Navigate to="/login" replace />} />
