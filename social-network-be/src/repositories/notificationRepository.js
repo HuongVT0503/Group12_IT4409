@@ -1,4 +1,4 @@
-import { getSession } from '../config/neo4j.js';
+import { getSession, neo4j } from '../config/neo4j.js';
 
 async function createNotification({ id, userId, type, data }) {
   const session = getSession();
@@ -20,7 +20,7 @@ async function getNotifications(userId, limit = 50) {
     const res = await session.run(
       `MATCH (u:User {id:$userId})-[:HAS_NOTIFICATION]->(n:Notification)
        RETURN n ORDER BY n.created_at DESC LIMIT $limit`,
-      { userId, limit: Number(limit) }
+      { userId, limit: neo4j.int(limit) }
     );
     return res.records.map(r => r.get('n').properties);
   } finally {

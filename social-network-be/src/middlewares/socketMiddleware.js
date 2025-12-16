@@ -5,7 +5,7 @@ export function socketAuthMiddleware(socket, next) {
         const token = socket.handshake.auth?.token;
         if (!token) return next(new Error('Authentication error'));
 
-        socket.user = jwt.verify(token, process.env.SECRET_KEY);
+        socket.user = jwt.verify(token, process.env.JWT_SECRET);
         next();
     } catch (err) {
         next(new Error('Authentication error'));

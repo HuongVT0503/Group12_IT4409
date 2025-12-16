@@ -66,16 +66,7 @@ function AppRouter() {
         }
       />
 
-      {/*PREVIEW ROUTE*/}
-
-      <Route path="/preview" element={<MainLayout />}>
-        <Route index element={<Feed />} />
-        {/* URL: /preview */}
-        <Route path="profile" element={<ProfilePage />} />{" "}
-        {/* URL: /preview/profile */}
-        <Route path="feed" element={<Feed />} />
-        <Route path="chat" element={<ChatPage />} />
-      </Route>
+      
 
       {/* PROTECTED ROUTES */}
       <Route
