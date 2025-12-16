@@ -51,7 +51,11 @@ export default function ProfilePage() {
             handle: item.author.username,
             avatar: item.author.avatar_url,
           },
-          stats: { likes: 0, comments: 0 },
+          stats: { 
+            likes: item.stats.likes || 0,
+            comments: item.stats.comments || 0,
+            shares: 0
+          },
         }));
         setPosts(formatted);
       })

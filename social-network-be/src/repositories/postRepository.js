@@ -32,16 +32,26 @@ async function getPostById(id) {
   const session = getSession();
   try {
     const res = await session.run(
-      `MATCH (u)-[:AUTHORED]->(p:Post {id:$id}) RETURN p, u LIMIT 1`,
+      `MATCH (u)-[:AUTHORED]->(p:Post {id:$id})
+      OPTIONAL MATCH (:User)-[l:LIKED]->(p)
+      OPTIONAL MATCH (c:Comment)-[:ON]->(p)
+      RETURN p, u,count(DISTINCT l) as likes, count(DISTINCT c) as comments LIMIT 1`,
       { id }
     );
     if (!res.records.length) return null;
-    const post = res.records[0].get('p').properties;
-    const author = res.records[0].get('u').properties;
+    const record = res.records[0];
+
+    const post = record.get('p').properties;
+    const author = record.get('u').properties;
     
+    const stats = {
+        likes: record.get('likes').toNumber(),
+        comments: record.get('comments').toNumber()
+    };
+
     if (post.created_at) post.created_at = new Date(post.created_at).toISOString();
 
-    return { post, author };
+    return { post, author, stats };
   } finally {
     await session.close();
   }
@@ -68,18 +78,27 @@ async function getRecentPublicPosts(limit = 20) {
     const res = await session.run(
       `MATCH (u)-[:AUTHORED]->(p:Post)
        WHERE p.privacy='public'
-       RETURN p, u ORDER BY p.created_at DESC LIMIT $limit`,
+       OPTIONAL MATCH (:User)-[l:LIKED]->(p)
+       OPTIONAL MATCH (c:Comment)-[:ON]->(p)
+       RETURN p, u, count(DISTINCT l) as likes, count(DISTINCT c) as comments
+       ORDER BY p.created_at DESC LIMIT $limit`,
       { limit: neo4j.int(limit) }
     );
     return res.records.map((r) => {
       const post = r.get("p").properties;
       const author = r.get("u").properties;
 
+      
+      const stats = {
+          likes: r.get('likes').toNumber(),
+          comments: r.get('comments').toNumber()
+      };
+
       if (post.created_at) {
         post.created_at = new Date(post.created_at).toISOString();
       }
 
-      return { post, author };
+      return { post, author, stats };
     });
   } finally {
     await session.close();
@@ -91,14 +110,22 @@ async function getPostsByAuthor(authorId, limit = 20) {
   try {
     const res = await session.run(
       `MATCH (u:User {id:$authorId})-[:AUTHORED]->(p:Post)
-       RETURN p, u ORDER BY p.created_at DESC LIMIT $limit`,
+      OPTIONAL MATCH (:User)-[l:LIKED]->(p)
+      OPTIONAL MATCH (c:Comment)-[:ON]->(p)
+      RETURN p, u, count(DISTINCT l) as likes, count(DISTINCT c) as comments
+      ORDER BY p.created_at DESC LIMIT $limit`,
       { authorId, limit: neo4j.int(limit) }
     );
     return res.records.map((r) => {
       const post = r.get("p").properties;
       const author = r.get("u").properties;
+      const stats = {
+          likes: r.get('likes').toNumber(),
+          comments: r.get('comments').toNumber()
+      };
+
       if (post.created_at) post.created_at = new Date(post.created_at).toISOString();
-      return { post, author };
+      return { post, author, stats };
     });
   } finally {
     await session.close();
