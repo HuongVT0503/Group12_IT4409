@@ -1,28 +1,37 @@
 import { useEffect, useState } from "react";
-import { getProfile } from "../../services/userService";
+import {
+  getProfile,
+  followUser,
+  unfollowUser,
+  getFollowing,
+  getFollowers,
+} from "../../services/userService";
 import { useAuth } from "../../context/AuthContext";
 import EditProfileModal from "../../components/profile/EditProfile";
 import PostCard from "../../components/feed/PostCard";
 import { getUserPosts } from "../../services/postService";
-import { useParams } from "react-router-dom"; 
-
+import { useParams } from "react-router-dom";
+import Button from "../../components/common/ButtonComponent"; //
+import { UserPlus, UserCheck } from "lucide-react";
 
 export default function ProfilePage() {
-  const { id } = useParams();//id from url
+  const { id } = useParams(); //id from url
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [posts, setPosts] = useState([]);
 
-  const targetId = id || user?.id;//url id or user id
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+
+  const targetId = id || user?.id; //url id or user id
 
   //fetch user profile
   useEffect(() => {
     if (!targetId) return;
     setLoading(true);
-
 
     getProfile(targetId)
       .then((res) => setProfile(res.data.user))
@@ -33,14 +42,18 @@ export default function ProfilePage() {
       .finally(() => setLoading(false));
   }, [targetId]);
 
-  //fetch posts
+  //fetch posts &stats
   useEffect(() => {
     if (!profile?.id) return;
 
-    getUserPosts(profile.id)
-      .then((res) => {
+    Promise.all([
+        getUserPosts(profile.id),
+        getFollowers(profile.id),
+        getFollowing(profile.id)
+    ])
+      .then(([postsRes, followersRes, followingRes]) => {
         //similar to feedpage
-        const formatted = res.data.posts.map((item) => ({
+        const formattedPosts = postsRes.data.posts.map((item) => ({
           id: item.post.id,
           content: item.post.content,
           timestamp: item.post.created_at,
@@ -51,19 +64,98 @@ export default function ProfilePage() {
             handle: item.author.username,
             avatar: item.author.avatar_url,
           },
-          stats: { 
+          stats: {
             likes: item.stats.likes || 0,
             comments: item.stats.comments || 0,
-            shares: 0
+            shares: 0,
           },
         }));
-        setPosts(formatted);
+        setPosts(formattedPosts);
+
+        //update w stats
+        setProfile(prev => ({
+            ...prev,
+            stats: {
+                ...prev?.stats,
+                posts: formattedPosts.length, //count from posts array
+                followers: followersRes.data.data.length, //count from api
+                following: followingRes.data.data.length  //count from api
+            }
+        }));
+
       })
       .catch(console.error);
-  }, [profile]);
+  }, [profile?.id]);
 
+  //check follow status
+  useEffect(() => {
+    //logged in, profile loaded, AND looking at so else'
+    if (user?.id && profile?.id && user.id !== profile.id) {
+      //fetch list of everyone I follow
+      getFollowing(user.id)
+        .then((res) => {
+          const myFollowing = res.data.data || [];
+          const isFound = myFollowing.some((u) => u.id === profile.id);
+          setIsFollowing(isFound);
+        })
+        .catch((err) => console.error("Failed to check follow status", err));
+    }
+  }, [user?.id, profile?.id]);
+
+
+  //////////////////////////////
   const handleProfileUpdate = (updatedUser) => {
     setProfile((prev) => ({ ...prev, ...updatedUser }));
+    if (user.id === updatedUser.id) updateUser(updatedUser); //
+  };
+
+  const handlePostDelete = (deletedPostId) => {
+    setPosts((prevPosts) => prevPosts.filter((p) => p.id !== deletedPostId));
+    
+  
+    setProfile((prev) => ({
+        ...prev,
+        stats: {
+            ...prev.stats,
+            posts: Math.max(0, (prev.stats?.posts || 0) - 1)
+        }
+    }));
+  };
+
+
+
+  ///
+  const handleFollowToggle = async () => {
+    if (!profile?.id) return;
+    setFollowLoading(true);
+
+    try {
+      if (isFollowing) {
+        await unfollowUser(profile.id);
+        setIsFollowing(false);
+
+        setProfile((prev) => ({
+          ...prev,
+          stats: {
+            ...prev.stats,
+            followers: Math.max(0, (prev.stats?.followers || 0) - 1),
+          },
+        }));
+      } else {
+        await followUser(profile.id);
+        setIsFollowing(true);
+
+        setProfile((prev) => ({
+          ...prev,
+          stats: { ...prev.stats, followers: (prev.stats?.followers || 0) + 1 },
+        }));
+      }
+    } catch (error) {
+      console.error("Follow action failed", error);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setFollowLoading(false);
+    }
   };
 
   if (loading)
@@ -96,13 +188,39 @@ export default function ProfilePage() {
             alt="Avatar"
             className="w-32 h-32 rounded-full border-4 border-white object-cover bg-white shadow-sm"
           />
-          {isOwnProfile&&(
-          <button
-            onClick={() => setIsEditModalOpen(true)}
-            className="mb-2 px-6 py-2 bg-white border border-gray-200 hover:bg-gray-50 rounded-full font-bold text-sm transition-colors shadow-sm text-gray-700"
-          >
-            Edit Profile
-          </button>)}
+          {isOwnProfile ? (
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="mb-2 px-6 py-2 bg-white border border-gray-200 hover:bg-gray-50 rounded-full font-bold text-sm transition-colors shadow-sm text-gray-700"
+            >
+              Edit Profile
+            </button>
+          ) : (
+            <div className="mb-2">
+              <Button
+                onClick={handleFollowToggle}
+                loading={followLoading}
+                variant={isFollowing ? "outline" : "primary"}
+                className={`rounded-full px-6 h-10 text-sm ${
+                  isFollowing
+                    ? "border-red-200 text-red-600 hover:bg-red-50"
+                    : ""
+                }`}
+              >
+                {isFollowing ? (
+                  <>
+                    <UserCheck size={18} className="mr-2" />
+                    Following
+                  </>
+                ) : (
+                  <>
+                    <UserPlus size={18} className="mr-2" />
+                    Follow
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="mb-6">
@@ -139,7 +257,7 @@ export default function ProfilePage() {
 
         <div className="flex flex-col gap-4 mt-6">
           {posts.length > 0 ? (
-            posts.map((post) => <PostCard key={post.id} post={post} />)
+            posts.map((post) => <PostCard key={post.id} post={post} onDelete={handlePostDelete}/>)
           ) : (
             <div className="text-center text-gray-400 py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
               No posts yet.
