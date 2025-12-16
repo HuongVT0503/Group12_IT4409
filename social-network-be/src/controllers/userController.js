@@ -1,5 +1,7 @@
 import * as userService from '../services/userService.js';
 import { emitNotification, emitFollowUpdate } from '../services/realtimeService.js';
+import { v4 as uuidv4 } from 'uuid';
+import * as notificationRepo from '../repositories/notificationRepository.js';
 
 async function getProfile(req, res, next) {
   try {
@@ -23,10 +25,21 @@ async function follow(req, res, next) {
     const followeeId = req.params.id;
     await userService.follow(followerId, followeeId);
 
+    //save to db
+    await notificationRepo.createNotification({
+      id: uuidv4(),
+      userId: followeeId,
+      type: "follow",
+      data: JSON.stringify({
+        from: followerId,
+        text: "started following you",
+      }),
+    });
+
     // Emit realtime
     emitNotification(followeeId, {
-      type: 'follow',
-      from: followerId
+      type: "follow",
+      from: followerId,
     });
 
     emitFollowUpdate(followeeId, { newFollower: followerId });

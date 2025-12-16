@@ -215,7 +215,7 @@ export default function PostCard({ post,onDelete }) {
 
         <button onClick={handleFetchComments} className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700">
           <MessageSquare size={20} />
-          <span>Comment</span>
+          <span>{commentCount>0 ? commentCount : "Comment"}</span>
         </button>
 
       {/* Comments Section  */}

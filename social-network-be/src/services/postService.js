@@ -27,7 +27,7 @@ async function getPostsByUser(userId, limit) {
 async function likePost(userId, postId) {
   await postRepo.likePost(userId, postId);
   const post = await postRepo.getPostById(postId);
-  if (post && post.author) {
+  if (post && post.author && post.author.id !== userId) {
     const notif = {
       id: uuidv4(),
       userId: post.author.id,

@@ -47,9 +47,9 @@ export default function ProfilePage() {
     if (!profile?.id) return;
 
     Promise.all([
-        getUserPosts(profile.id),
-        getFollowers(profile.id),
-        getFollowing(profile.id)
+      getUserPosts(profile.id),
+      getFollowers(profile.id),
+      getFollowing(profile.id),
     ])
       .then(([postsRes, followersRes, followingRes]) => {
         //similar to feedpage
@@ -73,16 +73,15 @@ export default function ProfilePage() {
         setPosts(formattedPosts);
 
         //update w stats
-        setProfile(prev => ({
-            ...prev,
-            stats: {
-                ...prev?.stats,
-                posts: formattedPosts.length, //count from posts array
-                followers: followersRes.data.data.length, //count from api
-                following: followingRes.data.data.length  //count from api
-            }
+        setProfile((prev) => ({
+          ...prev,
+          stats: {
+            ...prev?.stats,
+            posts: formattedPosts.length, //count from posts array
+            followers: followersRes.data.data.length, //count from api
+            following: followingRes.data.data.length, //count from api
+          },
         }));
-
       })
       .catch(console.error);
   }, [profile?.id]);
@@ -102,7 +101,6 @@ export default function ProfilePage() {
     }
   }, [user?.id, profile?.id]);
 
-
   //////////////////////////////
   const handleProfileUpdate = (updatedUser) => {
     setProfile((prev) => ({ ...prev, ...updatedUser }));
@@ -111,18 +109,15 @@ export default function ProfilePage() {
 
   const handlePostDelete = (deletedPostId) => {
     setPosts((prevPosts) => prevPosts.filter((p) => p.id !== deletedPostId));
-    
-  
+
     setProfile((prev) => ({
-        ...prev,
-        stats: {
-            ...prev.stats,
-            posts: Math.max(0, (prev.stats?.posts || 0) - 1)
-        }
+      ...prev,
+      stats: {
+        ...prev.stats,
+        posts: Math.max(0, (prev.stats?.posts || 0) - 1),
+      },
     }));
   };
-
-
 
   ///
   const handleFollowToggle = async () => {
@@ -257,7 +252,9 @@ export default function ProfilePage() {
 
         <div className="flex flex-col gap-4 mt-6">
           {posts.length > 0 ? (
-            posts.map((post) => <PostCard key={post.id} post={post} onDelete={handlePostDelete}/>)
+            posts.map((post) => (
+              <PostCard key={post.id} post={post} onDelete={handlePostDelete} />
+            ))
           ) : (
             <div className="text-center text-gray-400 py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
               No posts yet.
