@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function CreatePost({ onPostCreated }) {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
-  const user = useAuth();  //JSON.parse(localStorage.getItem('user')) || {};
+  const {user} = useAuth();  //JSON.parse(localStorage.getItem('user')) || {};
 
   const handleSubmit = async () => {
     if (!content.trim()) return;

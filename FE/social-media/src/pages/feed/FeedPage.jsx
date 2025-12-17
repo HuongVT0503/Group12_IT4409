@@ -14,24 +14,53 @@ export default function FeedPage() {
 
   //helper to format raw BE data to fe
   //postRepository.js: { post: {...}, author: {...} }
-  //map backend data structure to frontend component expectations
+  //map be data structure to frontend component expectations
   const formatPostData = (data) => {
-    const postObj = data.post || data; 
+    const postObj = data.post || data;
     const authorObj = data.author || {};
+    const statsObj = data.stats || {};
+    const sharedObj = data.sharedPost || null;
 
     return {
       id: postObj.id,
       content: postObj.content,
       timestamp: postObj.created_at, //keep ISO string, format will done by PostCard   //.toLocaleString(),
-      image: postObj.media && postObj.media.length > 0 ? postObj.media[0] : null,
+      image:
+        postObj.media && postObj.media.length > 0 ? postObj.media[0] : null,
       author: {
         id: authorObj.id,
         name: authorObj.display_name || authorObj.username || "Unknown",
         handle: authorObj.username || "user",
-        avatar: authorObj.avatar_url || `https://ui-avatars.com/api/?name=${authorObj.display_name || 'User'}`
+        avatar:
+          authorObj.avatar_url ||
+          `https://ui-avatars.com/api/?name=${
+            authorObj.display_name || "User"
+          }`,
       },
-      stats: { likes: 0, comments: 0, shares: 0 }, //be doesn't send counts in feed yet, defaulting///////
-      comments: []
+      stats: {
+        likes: statsObj.likes || 0,
+        comments: statsObj.comments || 0,
+        shares: 0,
+      },
+      //map shared post
+      sharedPost: sharedObj
+        ? {
+            id: sharedObj.id,
+            content: sharedObj.content,
+            image:
+              sharedObj.media && sharedObj.media.length > 0
+                ? sharedObj.media[0]
+                : null,
+            timestamp: sharedObj.created_at,
+            author: {
+              id: sharedObj.author.id,
+              name: sharedObj.author.display_name || sharedObj.author.username,
+              avatar: sharedObj.author.avatar_url,
+            },
+          }
+        : null,
+
+      comments: [],
     };
   };
 
@@ -104,21 +133,6 @@ export default function FeedPage() {
         {/* Create Post Input */}
 
         <CreatePost onPostCreated={handlePostCreated} />
-
-
-        {/*<div className="bg-white rounded-2xl shadow-sm p-4 mb-6 flex gap-3 items-center">
-          <img
-            src="https://i.pravatar.cc/150?u=me"
-            className="w-10 h-10 rounded-full bg-gray-200"
-            alt="Me"
-          />
-          <button className="flex-1 text-left bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-full py-3 px-5 transition-colors text-sm font-medium">
-            Whats on your mind?
-          </button>
-          <Button size="sm" className="hidden sm:flex">
-            Post
-          </Button>
-        </div>*/}
 
 
         {/* Feed List */}

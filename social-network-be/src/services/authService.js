@@ -35,7 +35,7 @@ export async function login({ email, password }) {
   const ok = await bcrypt.compare(password, user.password_hash || '');
   if (!ok) throw { status: 401, message: 'Invalid credentials' };
 
-  const accessToken = signAccessToken({ sub: user.id });
+  const accessToken = signAccessToken({ sub: user.id, id: user.id });
   const rawRefresh = uuidv4() + '.' + uuidv4();
   const tokenHash = sha256(rawRefresh);
 
@@ -59,11 +59,11 @@ export async function refresh({ refreshToken }) {
   const stored = await tokenRepo.findRefreshToken(hash);
   if (!stored) throw { status: 401, message: 'Invalid refresh token' };
 
-  // TODO: Check expiry here
+  // TODO: Check expiry
   const user = await userRepo.findById(stored.user_id || stored.userId);
   if (!user) throw { status: 401, message: 'User not found' };
 
-  const accessToken = signAccessToken({ sub: user.id });
+  const accessToken = signAccessToken({ sub: user.id, id: user.id });
 
   return { accessToken, user };
 }

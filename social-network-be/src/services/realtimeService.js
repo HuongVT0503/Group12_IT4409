@@ -1,4 +1,10 @@
-import { io } from '../../server.js';
+//import { io } from '../../server.js';
+
+let io; //local var
+
+export const setIO = (socketInstance) => {
+    io = socketInstance;
+};
 
 export function emitNotification(userId, payload) {
     io.to(userId).emit('notification', payload);
