@@ -10,7 +10,7 @@ import { useAuth } from "../../context/AuthContext";
 import EditProfileModal from "../../components/profile/EditProfile";
 import PostCard from "../../components/feed/PostCard";
 import { getUserPosts } from "../../services/postService";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import Button from "../../components/common/ButtonComponent"; //
 import { UserPlus, UserCheck } from "lucide-react";
 
@@ -27,6 +27,7 @@ export default function ProfilePage() {
   const [followLoading, setFollowLoading] = useState(false);
 
   const targetId = id || user?.id; //url id or user id
+
 
   //fetch user profile
   useEffect(() => {
@@ -53,7 +54,9 @@ export default function ProfilePage() {
     ])
       .then(([postsRes, followersRes, followingRes]) => {
         //similar to feedpage
-        const formattedPosts = postsRes.data.posts.map((item) => ({
+        const formattedPosts = postsRes.data.posts.map((item) => {
+          const sharedObj = item.sharedPost;
+          return{
           id: item.post.id,
           content: item.post.content,
           timestamp: item.post.created_at,
@@ -69,7 +72,25 @@ export default function ProfilePage() {
             comments: item.stats.comments || 0,
             shares: 0,
           },
-        }));
+          //map shared post
+      sharedPost: sharedObj
+        ? {
+            id: sharedObj.id,
+            content: sharedObj.content,
+            image:
+              sharedObj.media && sharedObj.media.length > 0
+                ? sharedObj.media[0]
+                : null,
+            timestamp: sharedObj.created_at,
+            author: {
+              id: sharedObj.author.id,
+              name: sharedObj.author.display_name || sharedObj.author.username,
+              avatar: sharedObj.author.avatar_url,
+            },
+          }
+        : null,
+          };
+        });
         setPosts(formattedPosts);
 
         //update w stats
@@ -236,18 +257,22 @@ export default function ProfilePage() {
             </span>
             <span className="text-gray-500 text-sm">Posts</span>
           </div>
-          <div className="text-center cursor-pointer hover:opacity-75">
+          <Link  to="/connections" 
+          state={{targetId:profile.id,initialTab:"followers"}}
+          className="text-center cursor-pointer hover:opacity-75">
             <span className="font-bold block text-lg text-black">
               {profile.stats?.followers || 0}
             </span>
             <span className="text-gray-500 text-sm">Followers</span>
-          </div>
-          <div className="text-center cursor-pointer hover:opacity-75">
+          </Link>
+          <Link to="/connections"
+          state={{targetId:profile.id,initialTab:"following"}}
+          className="text-center cursor-pointer hover:opacity-75">
             <span className="font-bold block text-lg text-black">
               {profile.stats?.following || 0}
             </span>
             <span className="text-gray-500 text-sm">Following</span>
-          </div>
+          </Link>
         </div>
 
         <div className="flex flex-col gap-4 mt-6">

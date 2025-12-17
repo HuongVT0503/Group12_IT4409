@@ -181,10 +181,16 @@ export default function TopBar() {
     const fromId = n.data?.from || n.data?.userId;
     const postId = n.data?.postId;
 
-    if (n.type === 'follow' && fromId) {
-        navigate(`/profile/${fromId}`);
-    } else if ((n.type === 'like' || n.type === 'comment') && postId) {
-        navigate(`/post/${postId}`);
+    if (n.type === "follow" && fromId) {
+      navigate(`/profile/${fromId}`);
+    } else if (
+      (n.type === "like" ||
+        n.type === "comment" ||
+        n.type === "new_post" ||
+        n.type === "share_post") &&
+      postId
+    ) {
+      navigate(`/post/${postId}`);
     }
   };
 
@@ -194,7 +200,7 @@ export default function TopBar() {
   const renderNotificationText = (n) => {
     //missing 'data' or different format
     const fromId = n.data?.from || n.data?.userId;
-    const senderName =  n.data?.senderName || senderNames[fromId] || "Someone";
+    const senderName =  senderNames[fromId] ||n.data?.senderName ||  "Someone";
 
     switch (n.type) {
       case "like":
@@ -203,6 +209,10 @@ export default function TopBar() {
         return `${senderName} commented on your post.`;
       case "follow":
         return `${senderName} started following you.`;
+      case "new_post":
+        return `${senderName} posted a new update.`;
+      case "share_post":
+        return `${senderName} ${n.data?.text|| "shared a post"}.`;
       default:
         return n.data?.text || "New notification";
     }

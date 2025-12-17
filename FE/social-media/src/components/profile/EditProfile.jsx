@@ -38,13 +38,16 @@ export default function EditProfileModal({ isOpen, onClose, currentUser, onUpdat
     try {
       //call api to update db
       const res = await updateProfile(formData);
-      
-      //update Global Auth State-> header/sidebar update immediately
-      updateUser(res.user);
+
+      //access data.user from wrapped resp
+      const updatedUserData = res.data.user;
+
+      // update Global Auth State -> header/sidebar update immediately
+      updateUser(updatedUserData);
 
       //notify parent component -> refresh local view
-      if (onUpdateSuccess) onUpdateSuccess(res.user);
-      
+      if (onUpdateSuccess) onUpdateSuccess(updatedUserData);
+
       onClose();
     } catch (error) {
       console.error("Failed to update profile", error);
