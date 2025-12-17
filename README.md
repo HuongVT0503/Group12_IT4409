@@ -1,10 +1,9 @@
 # Group12_IT4409
 
 
-dob, age, phone, gender? in ggister but be dont save
+upload media, 
 
-
-upload media, admin page, search by username 
+admin page
 
 
 
