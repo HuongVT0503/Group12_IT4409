@@ -194,7 +194,7 @@ export default function TopBar() {
   const renderNotificationText = (n) => {
     //missing 'data' or different format
     const fromId = n.data?.from || n.data?.userId;
-    const senderName =  n.data?.senderName || senderNames[fromId] || "Someone";
+    const senderName =  senderNames[fromId] ||n.data?.senderName ||  "Someone";
 
     switch (n.type) {
       case "like":

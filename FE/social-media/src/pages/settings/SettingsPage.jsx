@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import { User, MapPin, Link as LinkIcon, Save, AlertCircle, CheckCircle } from 'lucide-react';
+import { User,Link as  Save, AlertCircle, CheckCircle } from 'lucide-react';
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
@@ -11,8 +11,7 @@ export default function SettingsPage() {
   const [formData, setFormData] = useState({
     display_name: '',
     bio: '',
-    location: '',
-    website: ''
+    
   });
 
   //load current user data into form
@@ -21,8 +20,7 @@ export default function SettingsPage() {
       setFormData({
         display_name: user.display_name || '',
         bio: user.bio || '',
-        location: user.location || '',
-        website: user.website || ''
+        
       });
     }
   }, [user]);
@@ -37,15 +35,14 @@ export default function SettingsPage() {
     setMessage({ type: '', text: '' });
 
     try {
-      // be expects: displayName, bio, location, website
-      // formData.display_name -> displayName
-      //userRepo.updateProfile-> { displayName, bio, location, website, avatarUrl }
+      // be expects: display_name, bio
+      // formData.display_name -> display_name
+      //userRepo.updateProfile-> { display_name, bio, cover_url, avatar_url }
       
       const payload = {
-        displayName: formData.display_name,
+        display_name: formData.display_name,
         bio: formData.bio,
-        location: formData.location,
-        website: formData.website
+        
       };
 
       await api.put('/users/me', payload);
@@ -113,41 +110,9 @@ export default function SettingsPage() {
             />
           </div>
 
-          {/* Location */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <MapPin size={18} className="text-gray-400" />
-              </div>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                placeholder="City, Country"
-              />
-            </div>
-          </div>
+          
 
-          {/* Website */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <LinkIcon size={18} className="text-gray-400" />
-              </div>
-              <input
-                type="text"
-                name="website"
-                value={formData.website}
-                onChange={handleChange}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                placeholder="https://yourwebsite.com"
-              />
-            </div>
-          </div>
+          
 
           <div className="pt-4 flex items-center justify-end gap-4">
             <button

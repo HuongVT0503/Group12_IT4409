@@ -10,7 +10,7 @@ import { useAuth } from "../../context/AuthContext";
 import EditProfileModal from "../../components/profile/EditProfile";
 import PostCard from "../../components/feed/PostCard";
 import { getUserPosts } from "../../services/postService";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import Button from "../../components/common/ButtonComponent"; //
 import { UserPlus, UserCheck } from "lucide-react";
 
@@ -236,18 +236,22 @@ export default function ProfilePage() {
             </span>
             <span className="text-gray-500 text-sm">Posts</span>
           </div>
-          <div className="text-center cursor-pointer hover:opacity-75">
+          <Link  to="/connections" 
+          state={{targetId:profile.id,initialTab:"followers"}}
+          className="text-center cursor-pointer hover:opacity-75">
             <span className="font-bold block text-lg text-black">
               {profile.stats?.followers || 0}
             </span>
             <span className="text-gray-500 text-sm">Followers</span>
-          </div>
-          <div className="text-center cursor-pointer hover:opacity-75">
+          </Link>
+          <Link to="/connections"
+          state={{targetId:profile.id,initialTab:"following"}}
+          className="text-center cursor-pointer hover:opacity-75">
             <span className="font-bold block text-lg text-black">
               {profile.stats?.following || 0}
             </span>
             <span className="text-gray-500 text-sm">Following</span>
-          </div>
+          </Link>
         </div>
 
         <div className="flex flex-col gap-4 mt-6">
