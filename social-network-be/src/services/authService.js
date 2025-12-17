@@ -9,7 +9,7 @@ import { signAccessToken } from '../utils/JWT.js';
 
 const SALT_ROUNDS = 10;
 
-export async function register({ username, email, password, display_name }) {
+export async function register({ username, email, password, display_name, date_of_birth, gender, phone }) {
   const existing = await userRepo.findByEmail(email);
   if (existing) throw { status: 400, message: 'Email already in use' };
 
@@ -24,7 +24,10 @@ export async function register({ username, email, password, display_name }) {
     username,
     email,
     password_hash,
-    display_name
+    display_name,
+    date_of_birth,
+    gender,
+    phone
   });
 }
 
