@@ -5,6 +5,8 @@ import {
   emitPostUpdate,
   emitNotification,
 } from "../services/realtimeService.js";
+import { v4 as uuidv4 } from "uuid";
+import * as notificationRepo from "../repositories/notificationRepository.js";
 
 // Tạo bài viết mới
 async function createPost(req, res, next) {
@@ -25,6 +27,35 @@ async function createPost(req, res, next) {
       post,
       followers.map((f) => f.id)
     );
+
+    //create noti for FOLLOWERS
+    followers.forEach(async (follower) => {
+        const notifId = uuidv4();
+        const notifData = {
+            from: authorId,
+            postId: post.post.id,
+            text: "posted a new update",
+            senderName: req.user.display_name, 
+            senderAvatar: req.user.avatar_url
+        };
+        //save to db
+        await notificationRepo.createNotification({
+            id: notifId,
+            userId: follower.id,
+            type: "new_post",
+            data: JSON.stringify(notifData),
+        });
+        //emit REALTIME noti
+        emitNotification(follower.id, {
+            type: "new_post",
+            id: notifId,
+            created_at: new Date().toISOString(),
+            read: false,
+            data: notifData
+        });
+    });
+
+
     emitPostUpdate(post.post.id, { newPost: post });
 
     res.status(201).json({ post });
@@ -154,12 +185,72 @@ async function sharePost(req, res, next) {
     //call service
     const result = await postService.sharePost(userId, originalPostId, content);
 
+    const originalAuthorId=result.sharedPost?.author?.id;
+
     //notify folloers
     const followers = await userService.getFollowers(userId);
     emitNewPost(
       result,
       followers.map((f) => f.id)
     );
+
+    //noti shared post
+    followers.forEach(async (follower) => {
+      if (originalAuthorId&&follower.id===originalAuthorId) return;// skip if og author is a follower
+
+        const notifId = uuidv4();
+        const notifData = {
+            from: userId,
+            postId: result.post.id, //id of the NEW share post
+            text: "shared a post",
+            senderName: req.user.display_name,
+            senderAvatar: req.user.avatar_url
+        };
+
+        await notificationRepo.createNotification({
+            id: notifId,
+            userId: follower.id,
+            type: "share_post", 
+            data: JSON.stringify(notifData),
+        });
+
+        emitNotification(follower.id, {
+            type: "share_post",
+            id: notifId,
+            created_at: new Date().toISOString(),
+            read: false,
+            data: notifData
+        });
+    });
+
+
+    if (originalAuthorId && originalAuthorId !== userId) {
+      const authorNotifId = uuidv4();
+        const authorNotifData = {
+            from: userId,
+            postId: result.post.id,
+            text: "shared your post", 
+            senderName: req.user.display_name,
+            senderAvatar: req.user.avatar_url
+        };
+
+        //save to db
+        await notificationRepo.createNotification({
+            id: authorNotifId,
+            userId: originalAuthorId,
+            type: "share_post",
+            data: JSON.stringify(authorNotifData),
+        });
+
+
+        emitNotification(originalAuthorId, {
+            type: "share_post",
+            id: authorNotifId, //temp ID
+            created_at: new Date().toISOString(),
+            read: false,
+            data: authorNotifData
+        });
+    }
 
     res.status(201).json({ post: result });
   } catch (err) {

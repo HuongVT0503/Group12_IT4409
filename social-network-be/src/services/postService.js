@@ -79,25 +79,6 @@ async function sharePost(userId, originalPostId, content = "") {
     sharedPostId: targetPostId,
   });
 
-  //noti og post author
-  //dont noti if sharing own post
-  const targetAuthorId = original.sharedPost
-    ? original.sharedPost.author.id
-    : original.author.id;
-    
-  if (targetAuthorId !== userId) {
-    const notif = {
-      id: uuidv4(),
-      userId: targetAuthorId,
-      type: "share",
-      data: JSON.stringify({
-        from: userId,
-        postId: id, //link to the new shared post
-        text: "shared your post",
-      }),
-    };
-    await notificationRepo.createNotification(notif);
-  }
 
   return await postRepo.getPostById(id);
 }
