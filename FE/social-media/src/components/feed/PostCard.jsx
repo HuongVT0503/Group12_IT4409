@@ -6,6 +6,17 @@ import { likePost, unlikePost,deletePost } from "../../services/postService";
 import{getComments,createComment} from "../../services/commentService";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
+import { Link} from "react-router-dom";
+
+const safeFormatDate = (dateString) => {
+  try {
+    if (!dateString) return "Just now";
+    return formatDistanceToNow(new Date(dateString)) + " ago";
+  } catch (e) {
+    console.error(e);
+    return "Just now";
+  }
+};
 
 export default function PostCard({ post,onDelete }) {
   const { user } = useAuth();
@@ -148,15 +159,18 @@ export default function PostCard({ post,onDelete }) {
       {/* Header */}
       <div className="flex justify-between items-start mb-3">
         <div className="flex gap-3">
+          <Link to={`/profile/${post.author.id}`}>
           <img 
             src={post.author.avatar|| `https://ui-avatars.com/api/?name=${post.author.name}`} 
             alt={post.author.name} 
             className="w-10 h-10 rounded-full object-cover border border-gray-200"
           />
+          </Link>
           <div>
-            <h3 className="font-bold text-gray-900 leading-tight">{post.author.name}</h3>
+            <Link to={`/profile/${post.author.id}`}>
+            <h3 className="font-bold text-gray-900 leading-tight">{post.author.name}</h3></Link>
             <p className="text-sm text-gray-500">
-              @{post.author.handle} • {formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}
+              @{post.author.handle} • {safeFormatDate(post.timestamp)}
             
             </p>
           </div>
@@ -201,7 +215,7 @@ export default function PostCard({ post,onDelete }) {
 
         <button onClick={handleFetchComments} className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700">
           <MessageSquare size={20} />
-          <span>Comment</span>
+          <span>{commentCount>0 ? commentCount : "Comment"}</span>
         </button>
 
       {/* Comments Section  */}
@@ -224,11 +238,13 @@ export default function PostCard({ post,onDelete }) {
             <div className="space-y-4">
               {comments.map((item) => (
                 <div key={item.comment.id} className="flex gap-3">
-                  <img src={item.author.avatar_url || `https://ui-avatars.com/api/?name=${item.author.display_name}`} className="w-8 h-8 rounded-full" />
+                  <Link to={`/profile/${item.author.id || item.author.userId}`}>
+                  <img src={item.author.avatar_url || `https://ui-avatars.com/api/?name=${item.author.display_name}`} className="w-8 h-8 rounded-full" /></Link>
                   <div className="bg-gray-50 rounded-2xl rounded-tl-none px-4 py-2">
                     <div className="flex justify-between items-baseline gap-2">
-                      <span className="font-semibold text-sm">{item.author.display_name}</span>
-                      <span className="text-xs text-gray-400">{formatDistanceToNow(new Date(item.comment.created_at))} ago</span>
+                      <Link to={`/profile/${item.author.id || item.author.userId}`}>
+                      <span className="font-semibold text-sm">{item.author.display_name}</span></Link>
+                      <span className="text-xs text-gray-400">{safeFormatDate(item.comment.created_at)} ago</span>
                     </div>
                     <p className="text-sm text-gray-700 mt-1">{item.comment.content}</p>
                   </div>

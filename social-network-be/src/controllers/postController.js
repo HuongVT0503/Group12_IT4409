@@ -1,6 +1,6 @@
 import * as postService from '../services/postService.js';
 import * as userService from '../services/userService.js';
-import { emitNewPost, emitPostUpdate } from '../services/realtimeService.js';
+import { emitNewPost, emitPostUpdate, emitNotification } from '../services/realtimeService.js';
 
 // Tạo bài viết mới
 async function createPost(req, res, next) {
@@ -79,6 +79,24 @@ async function likePost(req, res, next) {
 
         // Like bài viết
         emitPostUpdate(postId, { likedBy: userId });
+
+        const postData = await postService.getPost(postId); //fetch post data
+
+        const liker = await userService.getProfile(userId);
+
+        //dont notify if liking own post
+        if (postData && postData.author && postData.author.id !== userId) {
+            emitNotification(postData.author.id, {
+                type: 'like',
+                data: {
+                    from: userId,
+                    postId: postId,
+                    text: 'liked your post',  //safety fallback
+                    senderName: liker.display_name,
+                    senderAvatar: liker.avatar_url
+                }
+            });
+        }
 
         res.json(result);
     } catch (err) {
