@@ -11,6 +11,8 @@ export default function PostDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const sharedObj = post?.sharedPost;
+
   useEffect(() => {
     const fetchPost = async () => {
       try {
@@ -34,6 +36,23 @@ export default function PostDetailsPage() {
                 comments: raw.stats.comments || 0,
                 shares: 0
             },
+            //map shared post
+      sharedPost: sharedObj
+        ? {
+            id: sharedObj.id,
+            content: sharedObj.content,
+            image:
+              sharedObj.media && sharedObj.media.length > 0
+                ? sharedObj.media[0]
+                : null,
+            timestamp: sharedObj.created_at,
+            author: {
+              id: sharedObj.author.id,
+              name: sharedObj.author.display_name || sharedObj.author.username,
+              avatar: sharedObj.author.avatar_url,
+            },
+          }
+        : null,
         };
         setPost(formatted);
       } catch (err) {

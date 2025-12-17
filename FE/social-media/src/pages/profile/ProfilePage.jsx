@@ -28,6 +28,7 @@ export default function ProfilePage() {
 
   const targetId = id || user?.id; //url id or user id
 
+
   //fetch user profile
   useEffect(() => {
     if (!targetId) return;
@@ -53,7 +54,9 @@ export default function ProfilePage() {
     ])
       .then(([postsRes, followersRes, followingRes]) => {
         //similar to feedpage
-        const formattedPosts = postsRes.data.posts.map((item) => ({
+        const formattedPosts = postsRes.data.posts.map((item) => {
+          const sharedObj = item.sharedPost;
+          return{
           id: item.post.id,
           content: item.post.content,
           timestamp: item.post.created_at,
@@ -69,7 +72,25 @@ export default function ProfilePage() {
             comments: item.stats.comments || 0,
             shares: 0,
           },
-        }));
+          //map shared post
+      sharedPost: sharedObj
+        ? {
+            id: sharedObj.id,
+            content: sharedObj.content,
+            image:
+              sharedObj.media && sharedObj.media.length > 0
+                ? sharedObj.media[0]
+                : null,
+            timestamp: sharedObj.created_at,
+            author: {
+              id: sharedObj.author.id,
+              name: sharedObj.author.display_name || sharedObj.author.username,
+              avatar: sharedObj.author.avatar_url,
+            },
+          }
+        : null,
+          };
+        });
         setPosts(formattedPosts);
 
         //update w stats
