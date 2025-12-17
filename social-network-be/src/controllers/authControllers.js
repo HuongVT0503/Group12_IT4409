@@ -2,12 +2,12 @@ import * as authService from '../services/authService.js';
 
 export async function registerUser(req, res, next) {
     try {
-        const { username, email, password, display_name } = req.body;
-        if (!username || !email || !password) {
+        const { username, email, password, display_name, date_of_birth, gender, phone } = req.body;
+            if (!username || !email || !password) {
             return res.status(400).json({ message: 'Thiếu thông tin đăng ký!' });
         }
 
-        const user = await authService.register({ username, email, password, display_name });
+            const user = await authService.register({ username, email, password, display_name, date_of_birth, gender, phone });
         res.status(201).json({ message: 'Đăng ký thành công!', user });
     } catch (err) {
         next(err);

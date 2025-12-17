@@ -1,12 +1,21 @@
 import { getSession, neo4j } from '../config/neo4j.js';
 
-async function createUser({ id, username, email, password_hash, display_name }) {
+async function createUser({ id, username, email, password_hash, display_name, date_of_birth, gender, phone }) {
   const session = getSession();
   try {
     const res = await session.run(
-      `CREATE (u:User {id:$id, username:$username, email:$email, password_hash:$password_hash, display_name:$display_name, created_at: datetime()})
-       RETURN u`,
-      { id, username, email, password_hash, display_name }
+      `CREATE (u:User {
+         id:$id,
+         username:$username,
+         email:$email,
+         password_hash:$password_hash,
+         display_name:$display_name,
+         date_of_birth:$date_of_birth,
+         gender:$gender,
+         phone:$phone,
+         created_at: datetime()
+       }) RETURN u`,
+      { id, username, email, password_hash, display_name, date_of_birth, gender, phone }
     );
     return res.records[0].get('u').properties;
   } finally {
@@ -119,7 +128,7 @@ async function getFollowing(userId, limit = 50) {
 
 export {
   createUser, findByEmail, findByUsername, findById, updateProfile,
-  followUser, unfollowUser, getFollowers, getFollowing
+  followUser, unfollowUser, getFollowers, getFollowing, searchByUsername
 };
 
 async function searchByUsername(q, limit = 50, skip = 0) {
