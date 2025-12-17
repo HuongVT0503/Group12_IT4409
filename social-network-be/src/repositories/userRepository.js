@@ -121,3 +121,18 @@ export {
   createUser, findByEmail, findByUsername, findById, updateProfile,
   followUser, unfollowUser, getFollowers, getFollowing
 };
+
+async function searchByUsername(q, limit = 50, skip = 0) {
+  const session = getSession();
+  try {
+    const res = await session.run(
+      `MATCH (u:User)
+       WHERE toLower(u.username) CONTAINS toLower($q)
+       RETURN u SKIP $skip LIMIT $limit`,
+      { q, limit: neo4j.int(limit), skip: neo4j.int(skip) }
+    );
+    return res.records.map(r => r.get('u').properties);
+  } finally {
+    await session.close();
+  }
+}

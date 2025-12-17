@@ -33,4 +33,9 @@ async function unfollow(followerId, followeeId) {
 async function getFollowers(userId, limit) { return userRepo.getFollowers(userId, limit); }
 async function getFollowing(userId, limit) { return userRepo.getFollowing(userId, limit); }
 
-export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing };
+async function searchUsers(q, limit = 50, skip = 0) {
+  if (!q || !q.trim()) return [];
+  return userRepo.searchByUsername(q.trim(), limit, skip);
+}
+
+export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing, searchUsers };
