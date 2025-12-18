@@ -34,7 +34,7 @@ export default function PostDetailsPage() {
             stats: {
                 likes: raw.stats.likes || 0,
                 comments: raw.stats.comments || 0,
-                shares: 0
+                shares: raw.stats.shares || 0
             },
             //map shared post
       sharedPost: sharedObj

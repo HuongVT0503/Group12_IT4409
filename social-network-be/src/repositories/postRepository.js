@@ -50,7 +50,7 @@ const mapPostResult = (r) => {
   const stats = {
     likes: r.get("likes").toNumber(),
     comments: r.get("comments").toNumber(),
-  };
+    shares: r.get("shares").toNumber(), };
   if (post.created_at)
     post.created_at = new Date(post.created_at).toISOString();
 
@@ -74,8 +74,9 @@ async function getPostById(id) {
       `MATCH (u)-[:AUTHORED]->(p:Post {id:$id})
       OPTIONAL MATCH (:User)-[l:LIKED]->(p)
       OPTIONAL MATCH (c:Comment)-[:ON]->(p)
+      OPTIONAL MATCH (s:Post)-[:SHARES]->(p)
       OPTIONAL MATCH (p)-[:SHARES]->(sp:Post)<-[:AUTHORED]-(sa:User)
-      RETURN p, u,count(DISTINCT l) as likes, count(DISTINCT c) as comments,sp,sa LIMIT 1`,
+      RETURN p, u,count(DISTINCT l) as likes, count(DISTINCT c) as comments, count(DISTINCT s) as shares,sp,sa LIMIT 1`,
       { id }
     );
     if (!res.records.length) return null;
@@ -109,8 +110,9 @@ async function getRecentPublicPosts(limit = 20) {
        WHERE p.privacy='public'
        OPTIONAL MATCH (:User)-[l:LIKED]->(p)
        OPTIONAL MATCH (c:Comment)-[:ON]->(p)
+       OPTIONAL MATCH (s:Post)-[:SHARES]->(p)
        OPTIONAL MATCH (p)-[:SHARES]->(sp:Post)<-[:AUTHORED]-(sa:User)
-       RETURN p, u, count(DISTINCT l) as likes, count(DISTINCT c) as comments, sp, sa
+       RETURN p, u, count(DISTINCT l) as likes, count(DISTINCT c) as comments, count(DISTINCT s) as shares, sp, sa
        ORDER BY p.created_at DESC LIMIT $limit`,
       { limit: neo4j.int(limit) }
     );
@@ -127,8 +129,9 @@ async function getPostsByAuthor(authorId, limit = 20) {
       `MATCH (u:User {id:$authorId})-[:AUTHORED]->(p:Post)
       OPTIONAL MATCH (:User)-[l:LIKED]->(p)
       OPTIONAL MATCH (c:Comment)-[:ON]->(p)
+      OPTIONAL MATCH (s:Post)-[:SHARES]->(p)
       OPTIONAL MATCH (p)-[:SHARES]->(sp:Post)<-[:AUTHORED]-(sa:User)
-      RETURN p, u, count(DISTINCT l) as likes, count(DISTINCT c) as comments,sp,sa
+      RETURN p, u, count(DISTINCT l) as likes, count(DISTINCT c) as comments, count(DISTINCT s) as shares,sp,sa
       ORDER BY p.created_at DESC LIMIT $limit`,
       { authorId, limit: neo4j.int(limit) }
     );

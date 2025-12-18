@@ -69,7 +69,7 @@ export default function ProfilePage() {
             stats: {
               likes: item.stats.likes || 0,
               comments: item.stats.comments || 0,
-              shares: 0,
+              shares: item.stats.shares || 0,
             },
             //map shared post
             sharedPost: sharedObj
