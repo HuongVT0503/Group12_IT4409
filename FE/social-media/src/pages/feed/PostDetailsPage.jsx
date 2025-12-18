@@ -11,7 +11,6 @@ export default function PostDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const sharedObj = post?.sharedPost;
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -19,6 +18,8 @@ export default function PostDetailsPage() {
         const res = await getPost(id);
         const raw = res.data.post; // {post, author, stats}
         //format similar to FeedPage
+
+        const sharedObj = raw.sharedPost;
         
         const formatted = {
             id: raw.post.id,
