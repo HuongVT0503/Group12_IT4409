@@ -62,7 +62,10 @@ export async function refresh({ refreshToken }) {
   const stored = await tokenRepo.findRefreshToken(hash);
   if (!stored) throw { status: 401, message: 'Invalid refresh token' };
 
-  // TODO: Check expiry
+  if (new Date() > new Date(stored.expiresAt)) {
+    throw { status: 401, message: 'Refresh token expired' };
+  }
+  
   const user = await userRepo.findById(stored.user_id || stored.userId);
   if (!user) throw { status: 401, message: 'User not found' };
 
