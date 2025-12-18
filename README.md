@@ -2,9 +2,3 @@
 
 
 admin page
-
-
-
-
-
-clicking to noti share post dont see the shared post correctly'

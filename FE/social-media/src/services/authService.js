@@ -52,8 +52,10 @@ export const registerUser = async (payload) => {
     gender: payload.form.gender,
     phone: payload.form.phone
   };
-  
-  return await api.post('/auth/register', body);
+
+  const response = await api.post('/auth/register', body);
+  return response.data;
+  //return await api.post('/auth/register', body);
 
 
   // const res = await fetch("/api/auth/register", {

@@ -13,6 +13,7 @@ import { getUserPosts } from "../../services/postService";
 import { useParams, Link } from "react-router-dom";
 import Button from "../../components/common/ButtonComponent"; //
 import { UserPlus, UserCheck } from "lucide-react";
+import CreatePost from "../../components/feed/CreatePost";
 
 export default function ProfilePage() {
   const { id } = useParams(); //id from url
@@ -128,14 +129,51 @@ export default function ProfilePage() {
   const calculateAge = (dob) => {
     if (!dob) return null;
     const birthDate = new Date(dob);
-    const ageDifMs = Date.now() - birthDate.getTime();
-    const ageDate = new Date(ageDifMs);
+    const ageDifMs = Date.now() - birthDate.getTime(); //total duration of life in ms
+    const ageDate = new Date(ageDifMs);  //convert to years since Unix Epoch (1/1/1970) . for example 1yo=1971yo
     return Math.abs(ageDate.getUTCFullYear() - 1970);
   };
 
   const handleProfileUpdate = (updatedUser) => {
     setProfile((prev) => ({ ...prev, ...updatedUser }));
     if (user.id === updatedUser.id) updateUser(updatedUser); //
+  };
+
+
+
+  const handlePostCreated = (newPostData) => {
+      // newPostData from CreatePost -> { post: {...}, author: {...} }
+      //format to match PostCard expectations
+      const formatted = {
+          id: newPostData.post.id,
+          content: newPostData.post.content,
+          timestamp: newPostData.post.created_at,
+          image: newPostData.post.media?.[0] || null,
+          author: {
+              id: newPostData.author.id,
+              name: newPostData.author.display_name || newPostData.author.username,
+              handle: newPostData.author.username,
+              avatar: newPostData.author.avatar_url,
+          },
+          stats: { //initialize
+              likes: 0,
+              comments: 0,
+              shares: 0,
+          },
+          sharedPost: null
+      };
+
+      //add to top of list
+      setPosts(prev => [formatted, ...prev]);
+      
+      //+1 post count
+      setProfile(prev => ({
+          ...prev,
+          stats: {
+              ...prev.stats,
+              posts: (prev.stats?.posts || 0) + 1
+          }
+      }));
   };
 
   const handlePostDelete = (deletedPostId) => {
@@ -318,6 +356,11 @@ export default function ProfilePage() {
         </div>
 
         <div className="flex flex-col gap-4 mt-6">
+
+          {isOwnProfile && (
+             <CreatePost onPostCreated={handlePostCreated} />
+          )}
+
           {posts.length > 0 ? (
             posts.map((post) => (
               <PostCard key={post.id} post={post} onDelete={handlePostDelete} />
