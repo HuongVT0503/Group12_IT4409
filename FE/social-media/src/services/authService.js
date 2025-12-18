@@ -47,10 +47,10 @@ export const registerUser = async (payload) => {
     username: payload.form.email.split('@')[0]+ Math.floor(Math.random() * 1000), // user gen
     email: payload.form.email,
     password: payload.form.password,
-    display_name: `${payload.form.firstName} ${payload.form.lastName}`.trim()
-    //////
-    //!!BE doesnt save phone/dob/gender in ueRepository.js
-    /////
+    display_name: `${payload.form.firstName} ${payload.form.lastName}`.trim(),
+    date_of_birth: payload.form.dob, 
+    gender: payload.form.gender,
+    phone: payload.form.phone
   };
   
   return await api.post('/auth/register', body);

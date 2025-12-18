@@ -25,3 +25,8 @@ export const getFollowers = async (userId) => {
 export const getFollowing = async (userId) => {
   return await api.get(`/users/${userId}/following`);
 };
+
+
+export const searchUsers = async (query) => {
+  return await api.get(`/users/search?q=${query}`);
+};
