@@ -18,6 +18,7 @@ import commentRoutes from './routes/commentRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import mediaRoutes from './routes/mediaRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
 
 // Middleware
 import errorHandler from './middlewares/errorMiddleware.js';
@@ -41,6 +42,7 @@ app.use('/api/v1/comments', commentRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/media', mediaRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/chat', chatRoutes);
 
 // Error handler
 app.use(errorHandler);

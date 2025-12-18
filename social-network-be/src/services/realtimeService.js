@@ -38,3 +38,17 @@ export function emitFollowUpdate(followeeId, payload) {
 export function emitNotificationRead(userId, notificationId) {
     io.to(userId).emit('notification_read', { id: notificationId });
 }
+
+export function emitMessage(userId, payload) {
+    io.to(userId).emit('new_message', payload);
+}
+
+export function emitMessageRead(conversationId, messageId) {
+    const conversationRoomId = `conversation_${conversationId}`;
+    io.to(conversationRoomId).emit('message_read', { messageId });
+}
+
+export function emitTypingIndicator(conversationId, userId, isTyping = true) {
+    const conversationRoomId = `conversation_${conversationId}`;
+    io.to(conversationRoomId).emit('user_typing', { userId, isTyping });
+}
