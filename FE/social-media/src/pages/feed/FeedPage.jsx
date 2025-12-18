@@ -40,7 +40,7 @@ export default function FeedPage() {
       stats: {
         likes: statsObj.likes || 0,
         comments: statsObj.comments || 0,
-        shares: 0,
+        shares: statsObj.shares || 0,
       },
       //map shared post
       sharedPost: sharedObj

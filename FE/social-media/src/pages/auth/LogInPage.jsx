@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Button from "../../components/common/ButtonComponent.jsx";
 import InputField from "../../components/common/InputField.jsx";
 //import logo from "../../assets/img/logo/logo.png";
@@ -8,45 +8,39 @@ import logo from "../../assets/img/logo/logo.png";
 
 import { loginUser } from "../../services/authService.js";
 import { useAuth } from "../../context/AuthContext.jsx";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+//import { set } from "date-fns";
 
 export default function Login({ onSwitch, onForgot }) { //onSuccess?
   const [form, setForm] = useState({ identifier: "", password: "" });
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
   const { login } = useAuth();
   const navigate = useNavigate();
-  // const [layout, setLayout] = useState({
-  //   isShort: false,
-  //   isNarrow: false,
-  //   isWide: false,
-  // }); //for tall/short n large/narrow devices
+  const location = useLocation();
 
-  // useEffect(() => {
-  //   const check = () => {
-  //     if (typeof window === "undefined") return;
-  //     const h = window.innerHeight;
-  //     const w = window.innerWidth;
-  //     setLayout({
-  //       isShort: h < 680,
-  //       isNarrow: w <= 480, //threshold
-  //       isWide: w >= 1024, // desktops
-  //     });
-  //   };
-  //   check();
-  //   window.addEventListener("resize", check);
-  //   return () => window.removeEventListener("resize", check);
-  // }, []);
+  const from = location.state?.from?.pathname || "/";
 
-  // const handleChange = (e) => {
-  //   const { name, value } = e.target;
-  //   setForm((f) => ({ ...f, [name]: value }));
-  // };
+  //check for passed state on mount
+  useEffect(() => {
+    if (location.state?.email) {
+      setForm(prev => ({ ...prev, identifier: location.state.email }));
+    }
+    if (location.state?.message) {
+      setSuccessMsg(location.state.message);
+      //clear state -> msg clear after refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+  
 
   async function handleSubmit(e) {
     e.preventDefault();
     setErr("");
+    setSuccessMsg("");
 
     if (!form.identifier || !form.password) {
       setErr("Missing email or password.");
@@ -63,7 +57,7 @@ export default function Login({ onSwitch, onForgot }) { //onSuccess?
       const data = await loginUser({ identifier: form.identifier, password: form.password });
 
       login(data.user, data.accessToken);
-      navigate("/"); //feed
+      navigate(from, { replace: true }); //redirect to intended page
 
       //const data = await res.json();
       // if (!res.ok)
@@ -109,6 +103,12 @@ export default function Login({ onSwitch, onForgot }) { //onSuccess?
         <h1 className="text-4xl lg:text-5xl font-bold text-center mb-8 text-black">Log In</h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          {successMsg && (
+            <div className="bg-green-50 text-green-700 border border-green-200 rounded-lg p-3 text-sm font-medium text-center animate-in fade-in slide-in-from-top-2">
+              {successMsg}
+            </div>
+          )}
+
           <InputField
             label="Email"
             name="identifier"

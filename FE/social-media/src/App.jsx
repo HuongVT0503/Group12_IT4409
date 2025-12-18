@@ -15,6 +15,7 @@ import {
   Route,
   Navigate,
   useNavigate,
+  useLocation
 } from "react-router-dom";
 
 import MainLayout from "./components/layout/MainLayout";
@@ -33,6 +34,7 @@ function AppRouter() {
   //toplvl component
 
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   //const isAuthenticated = false;
   const navigate = useNavigate();
@@ -48,9 +50,9 @@ function AppRouter() {
         path="/login"
         element={
           !user ? (
-            <Login onSwitch={() => navigate("/signup")} />
+            <Login onSwitch={() => window.location.href = '/signup'} />
           ) : (
-            <Navigate to="/" />
+            <Navigate to="/" replace />
           )
         }
       />
@@ -59,11 +61,16 @@ function AppRouter() {
         element={
           !user ? (
             <Signup
-              onSwitch={() => navigate("/login")}
-              onSuccess={() => navigate("/login")}
+              onSwitch={() => window.location.href = '/login'}
+              onSuccess={(data) => navigate("/login", { 
+                state: { 
+                  email: data.user?.email, 
+                  message: "Account created successfully! Please log in." 
+                } 
+              })}
             />
           ) : (
-            <Navigate to="/" />
+            <Navigate to="/" replace />
           )
         }
       />
@@ -73,7 +80,7 @@ function AppRouter() {
       {/* PROTECTED ROUTES */}
       <Route
         path="/"
-        element={user ? <MainLayout /> : <Navigate to="/login" replace />}
+        element={user ? <MainLayout /> : <Navigate to="/login" state={{ from: location }} replace />}
       >
         <Route index element={<Feed />} />
 
@@ -91,7 +98,7 @@ function AppRouter() {
       
 
       {/* 404 CATCH ALL */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to={user ? "/" : "/login"} replace />} />
     </Routes>
 
     // <main className="w-full min-h-screen">
