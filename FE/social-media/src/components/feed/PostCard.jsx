@@ -252,8 +252,10 @@ export default function PostCard({ post, onDelete }) {
           <div className="p-3">
             <div className="flex items-center gap-2 mb-2">
               <img
-                src={post.sharedPost.author.avatar}
-                className="w-6 h-6 rounded-full"
+                src={post.sharedPost.author.avatar||
+                  `https://ui-avatars.com/api/?name=${post.sharedPost.author.name}`}
+                alt={post.sharedPost.author.name}
+                className="w-6 h-6 rounded-full object-cover border border-gray-200"
               />
               <span className="font-bold text-sm">
                 {post.sharedPost.author.name}

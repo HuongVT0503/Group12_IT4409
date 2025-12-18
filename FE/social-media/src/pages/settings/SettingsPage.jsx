@@ -1,13 +1,22 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
-import { User, Link as Save, AlertCircle, CheckCircle } from "lucide-react";
+import {
+  User,
+  Link as Save,
+  AlertCircle,
+  CheckCircle,
+  ArrowLeft,
+} from "lucide-react";
 //import { set } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 export default function SettingsPage() {
   const { user, logout, updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     display_name: "",
@@ -19,33 +28,38 @@ export default function SettingsPage() {
 
   const formatDateForInput = (isoDate) => {
     if (!isoDate) return "";
-    return isoDate.split('T')[0]; 
-  };//format date for input YYYY-MM-DD
+    return isoDate.split("T")[0];
+  }; //format date for input YYYY-MM-DD
 
   //load current user data FROM SERVER into form
   useEffect(() => {
     const fetchFreshUserData = async () => {
-    if (!user?.id) return;
-    try {
-
-      //fetch user profile from be
-      const res = await api.get(`/users/${user.id}`);
+      if (!user?.id) return;
+      try {
+        //fetch user profile from be
+        const res = await api.get(`/users/${user.id}`);
         const freshUser = res.data.user;
 
-
-      setFormData({
-        display_name: freshUser.display_name || "",
-        bio: freshUser.bio || "",
-        phone:  freshUser.phone || "",
-        gender: freshUser.gender || "",
-        date_of_birth:  formatDateForInput(freshUser.date_of_birth) || "",
-      });
-      updateUser(freshUser);//sync to global context/ localstorage
-    } catch (error) {
-      console.error("Failed to fetch fresh user data",error);
-      //fallback to context
-      setFormData((prev) => ({ ...prev, display_name: user.display_name || "", bio: user.bio || "", phone: user.phone || "", gender: user.gender || "", date_of_birth: formatDateForInput(user.date_of_birth) || "" }));
-    }
+        setFormData({
+          display_name: freshUser.display_name || "",
+          bio: freshUser.bio || "",
+          phone: freshUser.phone || "",
+          gender: freshUser.gender || "",
+          date_of_birth: formatDateForInput(freshUser.date_of_birth) || "",
+        });
+        updateUser(freshUser); //sync to global context/ localstorage
+      } catch (error) {
+        console.error("Failed to fetch fresh user data", error);
+        //fallback to context
+        setFormData((prev) => ({
+          ...prev,
+          display_name: user.display_name || "",
+          bio: user.bio || "",
+          phone: user.phone || "",
+          gender: user.gender || "",
+          date_of_birth: formatDateForInput(user.date_of_birth) || "",
+        }));
+      }
     };
     fetchFreshUserData();
   }, [user?.id]); //rerun if id changes
@@ -72,11 +86,11 @@ export default function SettingsPage() {
         date_of_birth: formData.date_of_birth,
       };
 
-      const res=await api.put("/users/me", payload);
+      const res = await api.put("/users/me", payload);
 
-      if(res.data&&res.data.user){
+      if (res.data && res.data.user) {
         updateUser(res.data.user);
-      }//update global user context -> sideba/ header ipdate immediately
+      } //update global user context -> sideba/ header ipdate immediately
 
       setMessage({ type: "success", text: "Profile updated successfully!" });
 
@@ -94,6 +108,12 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-2 text-gray-500 hover:text-primary mb-6 font-medium transition-colors"
+      >
+        <ArrowLeft size={20} /> Back
+      </button>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">
         Account Settings
       </h1>
