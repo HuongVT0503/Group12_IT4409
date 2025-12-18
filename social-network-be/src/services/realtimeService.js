@@ -17,7 +17,18 @@ export function emitNewPost(post, followers = []) {
 }
 
 export function emitPostUpdate(postId, payload) {
-    io.to(`post_${postId}`).emit('post_update', payload);
+    const postRoomId = `post_${postId}`;
+    io.to(postRoomId).emit('post_update', payload);
+}
+
+export function emitCommentUpdate(postId, payload) {
+    const postRoomId = `post_${postId}`;
+    io.to(postRoomId).emit('comment_update', payload);
+}
+
+export function emitLikeUpdate(postId, payload) {
+    const postRoomId = `post_${postId}`;
+    io.to(postRoomId).emit('like_update', payload);
 }
 
 export function emitFollowUpdate(followeeId, payload) {

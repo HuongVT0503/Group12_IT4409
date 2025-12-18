@@ -26,11 +26,24 @@ export { io };
 io.use(socketAuthMiddleware);
 
 io.on('connection', (socket) => {
-    console.log('New client connected:', socket.id);
+    console.log('New client connected:', socket.id, 'User:', socket.user?.id);
 
+    // Join user's personal room
     socket.on('join', (userId) => {
         socket.join(userId);
-        console.log(`User ${userId} joined room`);
+        console.log(`User ${userId} joined personal room`);
+    });
+
+    socket.on('join_post', (postId) => {
+        const postRoomId = `post_${postId}`;
+        socket.join(postRoomId);
+        console.log(`Socket ${socket.id} (User: ${socket.user?.id}) joined post room: ${postRoomId}`);
+    });
+
+    socket.on('leave_post', (postId) => {
+        const postRoomId = `post_${postId}`;
+        socket.leave(postRoomId);
+        console.log(`Socket ${socket.id} (User: ${socket.user?.id}) left post room: ${postRoomId}`);
     });
 
     socket.on('disconnect', () => {
