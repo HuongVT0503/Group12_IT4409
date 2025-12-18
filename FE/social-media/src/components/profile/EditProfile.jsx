@@ -1,13 +1,24 @@
-import { useState, useEffect } from "react";
-import { X, Camera } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, Camera, Image as ImageIcon } from "lucide-react";
 import Button from "../common/ButtonComponent";
 import InputField from "../common/InputField";
 import { updateProfile } from "../../services/userService";
 import { useAuth } from "../../context/AuthContext";
+import { uploadMedia } from "../../services/mediaService";
 
-export default function EditProfileModal({ isOpen, onClose, currentUser, onUpdateSuccess }) {
-  const { updateUser } = useAuth(); 
+export default function EditProfileModal({
+  isOpen,
+  onClose,
+  currentUser,
+  onUpdateSuccess,
+}) {
+  const { updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const avatarInputRef = useRef(null);
+  const coverInputRef = useRef(null);
+
   const [formData, setFormData] = useState({
     display_name: "",
     bio: "",
@@ -57,60 +68,89 @@ export default function EditProfileModal({ isOpen, onClose, currentUser, onUpdat
     }
   };
 
+  const handleImageUpload = async (e, field) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const uploaded = await uploadMedia(file);
+      //update form data w new url from be
+      setFormData((prev) => ({ ...prev, [field]: uploaded.url }));
+    } catch (error) {
+      console.error(`Failed to upload ${field}`, error);
+      alert("Image upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-        
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           <h2 className="text-xl font-bold text-gray-900">Edit Profile</h2>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors">
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
+          >
             <X size={24} />
           </button>
         </div>
 
         {/* Scrollable Body */}
         <div className="p-6 overflow-y-auto">
-          <form id="edit-profile-form" onSubmit={handleSubmit} className="flex flex-col gap-5">
-            
-            {/* Avatar Preview & Input */}
+          <form
+            id="edit-profile-form"
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-5"
+          >
+            {/* Avatar */}
             <div className="flex flex-col items-center gap-4">
-              <div className="relative group">
-                <img 
-                  src={formData.avatar_url || `https://ui-avatars.com/api/?name=${formData.display_name}`} 
-                  alt="Avatar Preview" 
+              <div className="relative group cursor-pointer"
+                onClick={() => !uploading && avatarInputRef.current?.click()}
+                title="Upload new avatar">
+                <img
+                  src={
+                    formData.avatar_url ||
+                    `https://ui-avatars.com/api/?name=${formData.display_name}`
+                  }
+                  alt="Avatar Preview"
                   className="w-24 h-24 rounded-full object-cover border-4 border-gray-100"
                 />
                 <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                   <Camera className="text-white" />
+                  <Camera className="text-white" />
                 </div>
+                <input
+                  type="file"
+                  ref={avatarInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, "avatar_url")}
+                />
               </div>
-              <div className="w-full">
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Avatar URL</label>
-                  <input 
-                    type="text"
-                    name="avatar_url"
-                    value={formData.avatar_url}
-                    onChange={handleChange}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                    placeholder="https://example.com/avatar.jpg"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">Paste a direct image link.</p>
-              </div>
+              
+                <p className="text-xs text-gray-400 mt-1">
+                  Click on avatar to change.
+                </p>
+              
             </div>
 
-            <InputField 
-              label="Display Name" 
-              name="display_name" 
-              value={formData.display_name} 
-              onChange={handleChange} 
+            <InputField
+              label="Display Name"
+              name="display_name"
+              value={formData.display_name}
+              onChange={handleChange}
               required
             />
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-base font-medium text-gray-600 ml-1">Bio</label>
+              <label className="text-base font-medium text-gray-600 ml-1">
+                Bio
+              </label>
               <textarea
                 name="bio"
                 value={formData.bio}
@@ -126,26 +166,60 @@ export default function EditProfileModal({ isOpen, onClose, currentUser, onUpdat
             </div>
 
             <div className="w-full">
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Cover Image URL</label>
-                <input 
-                  type="text"
-                  name="cover_url"
-                  value={formData.cover_url}
-                  onChange={handleChange}
-                  className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                  placeholder="https://example.com/cover.jpg"
-                />
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-sm font-medium text-gray-700 block">
+                  Edit Cover Photo
+                </label>
+                <div 
+                  className={`relative w-full h-32 bg-gray-50 rounded-xl overflow-hidden cursor-pointer border-2 border-dashed border-gray-200 hover:border-primary/50 transition-all group ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+                  onClick={() => coverInputRef.current?.click()}
+                  title="Click to upload new cover"
+                >
+                   {formData.cover_url ? (
+                      <>
+                        <img 
+                          src={formData.cover_url} 
+                          alt="Cover Preview" 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Camera className="text-white drop-shadow-md" />
+                        </div>
+                      </>
+                   ) : (
+                      <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
+                          <ImageIcon size={24} />
+                          <span className="text-xs font-medium">Click to upload cover photo</span>
+                      </div>
+                   )}
+                   
+                   <input 
+                      type="file" 
+                      ref={coverInputRef} 
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(e, 'cover_url')}
+                    />
+                </div>
             </div>
-
+            </div>
           </form>
         </div>
 
         {/* Footer */}
         <div className="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
-          <Button variant="ghost" onClick={onClose} type="button">Cancel</Button>
-          <Button type="submit" form="edit-profile-form" loading={loading}>Save Changes</Button>
+          <Button variant="ghost" onClick={onClose} type="button">
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form="edit-profile-form"
+            loading={loading || uploading}
+            disabled={uploading}
+          >
+            {uploading ? "Uploading..." : "Save Changes"}
+          </Button>
         </div>
-
       </div>
     </div>
   );

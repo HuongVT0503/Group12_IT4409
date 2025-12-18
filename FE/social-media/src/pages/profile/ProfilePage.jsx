@@ -13,6 +13,7 @@ import { getUserPosts } from "../../services/postService";
 import { useParams, Link } from "react-router-dom";
 import Button from "../../components/common/ButtonComponent"; //
 import { UserPlus, UserCheck } from "lucide-react";
+import CreatePost from "../../components/feed/CreatePost";
 
 export default function ProfilePage() {
   const { id } = useParams(); //id from url
@@ -27,7 +28,6 @@ export default function ProfilePage() {
   const [followLoading, setFollowLoading] = useState(false);
 
   const targetId = id || user?.id; //url id or user id
-
 
   //fetch user profile
   useEffect(() => {
@@ -56,39 +56,41 @@ export default function ProfilePage() {
         //similar to feedpage
         const formattedPosts = postsRes.data.posts.map((item) => {
           const sharedObj = item.sharedPost;
-          return{
-          id: item.post.id,
-          content: item.post.content,
-          timestamp: item.post.created_at,
-          image: item.post.media?.[0] || null,
-          author: {
-            id: item.author.id,
-            name: item.author.display_name,
-            handle: item.author.username,
-            avatar: item.author.avatar_url,
-          },
-          stats: {
-            likes: item.stats.likes || 0,
-            comments: item.stats.comments || 0,
-            shares: 0,
-          },
-          //map shared post
-      sharedPost: sharedObj
-        ? {
-            id: sharedObj.id,
-            content: sharedObj.content,
-            image:
-              sharedObj.media && sharedObj.media.length > 0
-                ? sharedObj.media[0]
-                : null,
-            timestamp: sharedObj.created_at,
+          return {
+            id: item.post.id,
+            content: item.post.content,
+            timestamp: item.post.created_at,
+            image: item.post.media?.[0] || null,
             author: {
-              id: sharedObj.author.id,
-              name: sharedObj.author.display_name || sharedObj.author.username,
-              avatar: sharedObj.author.avatar_url,
+              id: item.author.id,
+              name: item.author.display_name,
+              handle: item.author.username,
+              avatar: item.author.avatar_url,
             },
-          }
-        : null,
+            stats: {
+              likes: item.stats.likes || 0,
+              comments: item.stats.comments || 0,
+              shares: item.stats.shares || 0,
+            },
+            //map shared post
+            sharedPost: sharedObj
+              ? {
+                  id: sharedObj.id,
+                  content: sharedObj.content,
+                  image:
+                    sharedObj.media && sharedObj.media.length > 0
+                      ? sharedObj.media[0]
+                      : null,
+                  timestamp: sharedObj.created_at,
+                  author: {
+                    id: sharedObj.author.id,
+                    name:
+                      sharedObj.author.display_name ||
+                      sharedObj.author.username,
+                    avatar: sharedObj.author.avatar_url,
+                  },
+                }
+              : null,
           };
         });
         setPosts(formattedPosts);
@@ -123,9 +125,55 @@ export default function ProfilePage() {
   }, [user?.id, profile?.id]);
 
   //////////////////////////////
+
+  const calculateAge = (dob) => {
+    if (!dob) return null;
+    const birthDate = new Date(dob);
+    const ageDifMs = Date.now() - birthDate.getTime(); //total duration of life in ms
+    const ageDate = new Date(ageDifMs);  //convert to years since Unix Epoch (1/1/1970) . for example 1yo=1971yo
+    return Math.abs(ageDate.getUTCFullYear() - 1970);
+  };
+
   const handleProfileUpdate = (updatedUser) => {
     setProfile((prev) => ({ ...prev, ...updatedUser }));
     if (user.id === updatedUser.id) updateUser(updatedUser); //
+  };
+
+
+
+  const handlePostCreated = (newPostData) => {
+      // newPostData from CreatePost -> { post: {...}, author: {...} }
+      //format to match PostCard expectations
+      const formatted = {
+          id: newPostData.post.id,
+          content: newPostData.post.content,
+          timestamp: newPostData.post.created_at,
+          image: newPostData.post.media?.[0] || null,
+          author: {
+              id: newPostData.author.id,
+              name: newPostData.author.display_name || newPostData.author.username,
+              handle: newPostData.author.username,
+              avatar: newPostData.author.avatar_url,
+          },
+          stats: { //initialize
+              likes: 0,
+              comments: 0,
+              shares: 0,
+          },
+          sharedPost: null
+      };
+
+      //add to top of list
+      setPosts(prev => [formatted, ...prev]);
+      
+      //+1 post count
+      setProfile(prev => ({
+          ...prev,
+          stats: {
+              ...prev.stats,
+              posts: (prev.stats?.posts || 0) + 1
+          }
+      }));
   };
 
   const handlePostDelete = (deletedPostId) => {
@@ -188,7 +236,7 @@ export default function ProfilePage() {
         className="h-48 bg-cover bg-center w-full relative"
         style={{
           backgroundImage: `url(${
-            profile.cover_url || "https://via.placeholder.com/800x200"
+            profile.cover_url || "https://ui-avatars.com/api/?name="+ profile.display_name + "&background=random&size=800"
           })`,
           backgroundColor: "#a0a0a0",
         }}
@@ -250,6 +298,34 @@ export default function ProfilePage() {
           <p className="mb-6 text-gray-700 leading-relaxed">{profile.bio}</p>
         )}
 
+        <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-6">
+          {profile.gender && (
+            <span className="flex items-center gap-1 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+              Gender:{" "}
+              <span className="font-medium text-gray-700 capitalize">
+                {profile.gender}
+              </span>
+            </span>
+          )}
+
+          {profile.date_of_birth && (
+            <span className="flex items-center gap-1 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+              Age:{" "}
+              <span className="font-medium text-gray-700">
+                {calculateAge(profile.date_of_birth)}
+              </span>
+            </span>
+          )}
+
+          {/*show phone only in own page */}
+          {isOwnProfile && profile.phone && (
+            <span className="flex items-center gap-1 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+              Phone:{" "}
+              <span className="font-medium text-gray-700">{profile.phone}</span>
+            </span>
+          )}
+        </div>
+
         <div className="flex gap-8 border-y border-gray-100 py-4">
           <div className="text-center cursor-pointer hover:opacity-75">
             <span className="font-bold block text-lg text-black">
@@ -257,17 +333,21 @@ export default function ProfilePage() {
             </span>
             <span className="text-gray-500 text-sm">Posts</span>
           </div>
-          <Link  to="/connections" 
-          state={{targetId:profile.id,initialTab:"followers"}}
-          className="text-center cursor-pointer hover:opacity-75">
+          <Link
+            to="/connections"
+            state={{ targetId: profile.id, initialTab: "followers" }}
+            className="text-center cursor-pointer hover:opacity-75"
+          >
             <span className="font-bold block text-lg text-black">
               {profile.stats?.followers || 0}
             </span>
             <span className="text-gray-500 text-sm">Followers</span>
           </Link>
-          <Link to="/connections"
-          state={{targetId:profile.id,initialTab:"following"}}
-          className="text-center cursor-pointer hover:opacity-75">
+          <Link
+            to="/connections"
+            state={{ targetId: profile.id, initialTab: "following" }}
+            className="text-center cursor-pointer hover:opacity-75"
+          >
             <span className="font-bold block text-lg text-black">
               {profile.stats?.following || 0}
             </span>
@@ -276,6 +356,11 @@ export default function ProfilePage() {
         </div>
 
         <div className="flex flex-col gap-4 mt-6">
+
+          {isOwnProfile && (
+             <CreatePost onPostCreated={handlePostCreated} />
+          )}
+
           {posts.length > 0 ? (
             posts.map((post) => (
               <PostCard key={post.id} post={post} onDelete={handlePostDelete} />

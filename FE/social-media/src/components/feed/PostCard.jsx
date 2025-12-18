@@ -30,7 +30,6 @@ export default function PostCard({ post, onDelete }) {
 
   const [isSharing, setIsSharing] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
-  //??INITIAL LIKE STATE NOT AVAILABLE IN BE
   const [showComments, setShowComments] = useState(false);
   const [likeCount, setLikeCount] = useState(post.stats?.likes || 0);
   const [commentCount, setCommentCount] = useState(post.stats?.comments || 0);
@@ -38,10 +37,10 @@ export default function PostCard({ post, onDelete }) {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
+  const [shareCount, setShareCount] = useState(post.stats?.shares || 0);
 
   //initialize
   useEffect(() => {
-    //default to 0 bc be getFeed'' doent return like count or islike status
   }, [post]);
 
   //listen for real-time update
@@ -166,6 +165,7 @@ export default function PostCard({ post, onDelete }) {
     try {
       await sharePost(post.id, caption);
       alert("Post shared successfully!");
+      setShareCount((prev) => prev + 1);
     } catch (error) {
       console.error("Share failed", error);
       alert("Failed to share post.");
@@ -243,6 +243,7 @@ export default function PostCard({ post, onDelete }) {
             <div className="h-48 w-full overflow-hidden bg-gray-100">
               <img
                 src={post.sharedPost.image}
+                alt="Shared post content"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -252,8 +253,10 @@ export default function PostCard({ post, onDelete }) {
           <div className="p-3">
             <div className="flex items-center gap-2 mb-2">
               <img
-                src={post.sharedPost.author.avatar}
-                className="w-6 h-6 rounded-full"
+                src={post.sharedPost.author.avatar||
+                  `https://ui-avatars.com/api/?name=${post.sharedPost.author.name}`}
+                alt={post.sharedPost.author.name}
+                className="w-6 h-6 rounded-full object-cover border border-gray-200"
               />
               <span className="font-bold text-sm">
                 {post.sharedPost.author.name}
@@ -295,7 +298,7 @@ export default function PostCard({ post, onDelete }) {
           className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50"
         >
           <Share2 size={20} />
-          <span>{isSharing ? "Sharing..." : "Share"}</span>
+          <span>{isSharing ? "Sharing..." : shareCount>0 ? shareCount : "Share"}</span>
         </button>
       </div>
       {/* Comments Section  */}
