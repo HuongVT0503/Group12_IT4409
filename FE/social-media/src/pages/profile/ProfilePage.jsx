@@ -231,9 +231,9 @@ export default function ProfilePage() {
   const isOwnProfile = profile.id === user?.id;
 
   return (
-    <div className="max-w-2xl mx-auto bg-white min-h-screen shadow-sm border-x border-gray-100 pb-10">
+    <div className="w-full max-w-5xl mx-auto bg-white min-h-screen shadow-sm border-x border-gray-100 pb-10">
       <div
-        className="h-48 bg-cover bg-center w-full relative"
+        className="h-60 lg:h-80 bg-cover bg-center w-full relative"
         style={{
           backgroundImage: `url(${
             profile.cover_url || "https://ui-avatars.com/api/?name="+ profile.display_name + "&background=random&size=800"
@@ -242,15 +242,15 @@ export default function ProfilePage() {
         }}
       ></div>
 
-      <div className="px-6">
-        <div className="relative flex justify-between items-end -mt-12 mb-4">
+      <div className="px-6 lg:px-10">
+        <div className="relative flex justify-between items-end -mt-16 mb-6">
           <img
             src={
               profile.avatar_url ||
               `https://ui-avatars.com/api/?name=${profile.display_name}`
             }
             alt="Avatar"
-            className="w-32 h-32 rounded-full border-4 border-white object-cover bg-white shadow-sm"
+            className="w-32 h-32 2xl:w-40 2xl:h-40 rounded-full border-4 border-white object-cover bg-white shadow-sm"
           />
           {isOwnProfile ? (
             <button

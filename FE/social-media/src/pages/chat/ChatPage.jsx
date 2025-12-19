@@ -18,8 +18,7 @@ import {
   Check,
   CheckCheck,
   PlusCircle,
-  ArrowLeft,
-  Smile
+  
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "../../utils/cn";
@@ -322,14 +321,7 @@ export default function ChatPage() {
         {/*Horizontal Friends List */}
         {friends.length > 0 && (
           <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-            <div className="flex flex-col items-center gap-1 min-w-[60px] cursor-pointer group">
-              <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                <PlusCircle size={24} />
-              </div>
-              <span className="text-xs text-gray-500 font-medium truncate w-full text-center">
-                New
-              </span>
-            </div>
+            
 
             {/* Friend Items */}
             {friends.map((friend) => (
