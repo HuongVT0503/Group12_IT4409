@@ -3,7 +3,8 @@ import * as chatRepo from "../repositories/chatRepository.js";
 
 async function getOrCreateConversation(userId1, userId2) {
   const newId = uuidv4();
-  return await chatRepo.getOrCreateConversation(userId1, userId2, newId);
+  const [sortedId1, sortedId2] = [userId1, userId2].sort();// sort to make sure conversation is the same for both users
+  return await chatRepo.getOrCreateConversation(sortedId1, sortedId2, newId);
 }
 
 async function getUserConversations(userId) {

@@ -45,15 +45,13 @@ export default function PostCard({ post, onDelete }) {
 
   //listen for real-time update
   useEffect(() => {
-    if (!socket) return;
+    if (!socket|| !post.id) return;
 
-    //JOIN ROOM
+    //JOIN post ROOM
     socket.emit("join_post", post.id);
 
-    //modify backend to emit to a global feed OR the frontend needs to join specific post rooms
-    //listen globally?
+
     const handleUpdate = (payload) => {
-      //need to emit `socket.emit('join_post', post.id)`
 
       if (payload.deleted) {
         if (onDelete) onDelete(post.id);
@@ -61,16 +59,13 @@ export default function PostCard({ post, onDelete }) {
       }
 
       if (payload.likedBy) {
-        // +1 if its not me
-        if (payload.likedBy !== user?.id) {
-          setLikeCount((prev) => prev + 1);
-        }
+        setLikeCount((prev) => prev + 1);
+        
       }
 
       if (payload.unlikedBy) {
-        if (payload.unlikedBy !== user?.id) {
-          setLikeCount((prev) => Math.max(0, prev - 1));
-        }
+        setLikeCount((prev) => Math.max(0, prev - 1));
+        
       }
 
       if (payload.newComment) {
@@ -98,12 +93,10 @@ export default function PostCard({ post, onDelete }) {
 
     socket.on("post_update", handleUpdate);
 
-    // JOIN the room for this specific post if using rooms
-    //socket.emit('join_post', post.id); //NEED THIS LISTENER IN SERVER.JS IN BE
-
+    //leave the room
     return () => {
       socket.off("post_update", handleUpdate);
-      socket.emit("leave_post", post.id); //cleanup room
+      socket.emit("leave_post", post.id); 
     };
   }, [socket, post.id, user?.id, showComments]);
 

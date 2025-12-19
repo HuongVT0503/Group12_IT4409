@@ -50,7 +50,19 @@ export default function ChatPage() {
   useEffect(() => {
     getConversations()
       .then((res) => {
-        setConversations(res.data.conversations || []);
+        const rawConvos = res.data.conversations || [];
+
+        //remove duplicate convos
+        const uniqueConvos = [];
+        const seenUserIds = new Set();
+
+        rawConvos.forEach((conv) => {
+          if (!seenUserIds.has(conv.otherUser.id)) {
+            seenUserIds.add(conv.otherUser.id);
+            uniqueConvos.push(conv);
+          }
+        });
+        setConversations(uniqueConvos);
       })
       .catch((error) => {
         console.error("Failed to fetch conversations", error);
@@ -82,7 +94,7 @@ export default function ChatPage() {
             ...updatedConv,
             lastMessage: {
               ...payload.message,
-              sender: payload.sender || payload.message.sender
+              sender: payload.sender || payload.message.sender,
             },
             updated_at: new Date().toISOString(),
           };
@@ -306,17 +318,17 @@ export default function ChatPage() {
   };
 
   const safeFormatDate = (dateString) => {
-  try {
-    if (!dateString) return "";
-    // formatDistanceToNow returns strings like "5 minutes", addSuffix adds "ago"
-    return formatDistanceToNow(new Date(dateString), { addSuffix: true });
-  } catch (e) {
-    console.error("Date error:", e);
-    return "";
-  }
-};
+    try {
+      if (!dateString) return "";
+      // formatDistanceToNow returns strings like "5 minutes", addSuffix adds "ago"
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    } catch (e) {
+      console.error("Date error:", e);
+      return "";
+    }
+  };
 
-//preview txt
+  //preview txt
   const renderLastMessage = (chat) => {
     const msg = chat.lastMessage;
     //if no message
@@ -330,7 +342,9 @@ export default function ChatPage() {
 
     if (isImage) {
       if (isMe) return "You sent a picture";
-      return `${chat.otherUser?.display_name?.split(" ")[0] || "User"} sent a picture`;
+      return `${
+        chat.otherUser?.display_name?.split(" ")[0] || "User"
+      } sent a picture`;
     }
 
     if (isMe) return `You: ${msg.content}`;
@@ -443,7 +457,9 @@ export default function ChatPage() {
                     {chat.otherUser?.display_name}
                   </h4>
                   <span className="text-[11px] text-gray-400 font-medium">
-                    {safeFormatDate(chat.lastMessage?.created_at || chat.updated_at)}
+                    {safeFormatDate(
+                      chat.lastMessage?.created_at || chat.updated_at
+                    )}
                   </span>
                 </div>
                 <p
@@ -498,26 +514,26 @@ export default function ChatPage() {
                     <path d="m15 18-6-6 6-6" />
                   </svg>
                 </button>
-                <Link 
-                    to={`/profile/${selectedChat.otherUser?.id}`} 
-                    className="flex items-center gap-3 hover:opacity-80 transition-opacity group"
-                > 
-                <img
-                  src={getAvatar(selectedChat.otherUser)}
-                  className="w-10 h-10 rounded-full object-cover border border-gray-200"
-                  alt="User"
-                />
-                <div>
-                  <h3 className="font-bold text-gray-900 leading-tight">
-                    {selectedChat.otherUser?.display_name}
-                  </h3>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    <span className="text-xs text-gray-500 font-medium">
-                      Online
-                    </span>
+                <Link
+                  to={`/profile/${selectedChat.otherUser?.id}`}
+                  className="flex items-center gap-3 hover:opacity-80 transition-opacity group"
+                >
+                  <img
+                    src={getAvatar(selectedChat.otherUser)}
+                    className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                    alt="User"
+                  />
+                  <div>
+                    <h3 className="font-bold text-gray-900 leading-tight">
+                      {selectedChat.otherUser?.display_name}
+                    </h3>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                      <span className="text-xs text-gray-500 font-medium">
+                        Online
+                      </span>
+                    </div>
                   </div>
-                </div>
                 </Link>
               </div>
 
