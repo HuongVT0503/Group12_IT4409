@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import CreatePost from "../../components/feed/CreatePost"; // Note: verify your typo 'CeatePost' filename
+import CreatePost from "../../components/feed/CreatePost";
 
 export default function CreatePostPage() {
   const navigate = useNavigate();
