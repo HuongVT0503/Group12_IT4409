@@ -45,15 +45,13 @@ export default function PostCard({ post, onDelete }) {
 
   //listen for real-time update
   useEffect(() => {
-    if (!socket) return;
+    if (!socket|| !post.id) return;
 
-    //JOIN ROOM
+    //JOIN post ROOM
     socket.emit("join_post", post.id);
 
-    //modify backend to emit to a global feed OR the frontend needs to join specific post rooms
-    //listen globally?
+
     const handleUpdate = (payload) => {
-      //need to emit `socket.emit('join_post', post.id)`
 
       if (payload.deleted) {
         if (onDelete) onDelete(post.id);
@@ -61,16 +59,13 @@ export default function PostCard({ post, onDelete }) {
       }
 
       if (payload.likedBy) {
-        // +1 if its not me
-        if (payload.likedBy !== user?.id) {
-          setLikeCount((prev) => prev + 1);
-        }
+        setLikeCount((prev) => prev + 1);
+        
       }
 
       if (payload.unlikedBy) {
-        if (payload.unlikedBy !== user?.id) {
-          setLikeCount((prev) => Math.max(0, prev - 1));
-        }
+        setLikeCount((prev) => Math.max(0, prev - 1));
+        
       }
 
       if (payload.newComment) {
@@ -98,12 +93,10 @@ export default function PostCard({ post, onDelete }) {
 
     socket.on("post_update", handleUpdate);
 
-    // JOIN the room for this specific post if using rooms
-    //socket.emit('join_post', post.id); //NEED THIS LISTENER IN SERVER.JS IN BE
-
+    //leave the room
     return () => {
       socket.off("post_update", handleUpdate);
-      socket.emit("leave_post", post.id); //cleanup room
+      socket.emit("leave_post", post.id); 
     };
   }, [socket, post.id, user?.id, showComments]);
 
@@ -182,10 +175,10 @@ export default function PostCard({ post, onDelete }) {
     user?.id === post.author.id || user?.id === post.author.userId;
 
   return (
-    <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4">
+    <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 2xl:p-6 mb-4 2xl:mb-6 transition-all hover:shadow-md">
       {/* Header */}
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex gap-3">
+      <div className="flex justify-between items-start mb-3 2xl:mb-5">
+        <div className="flex gap-3 2xl:gap-4">
           <Link to={`/profile/${post.author.id}`}>
             <img
               src={
@@ -193,16 +186,16 @@ export default function PostCard({ post, onDelete }) {
                 `https://ui-avatars.com/api/?name=${post.author.name}`
               }
               alt={post.author.name}
-              className="w-10 h-10 rounded-full object-cover border border-gray-200"
+              className="w-10 h-10 2xl:w-14 2xl:h-14 rounded-full object-cover border border-gray-200"
             />
           </Link>
           <div>
             <Link to={`/profile/${post.author.id}`}>
-              <h3 className="font-bold text-gray-900 leading-tight">
+              <h3 className="font-bold text-gray-900 leading-tight 2xl:text-lg">
                 {post.author.name}
               </h3>
             </Link>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm 2xl:text-base text-gray-500">
               @{post.author.handle} • {safeFormatDate(post.timestamp)}
             </p>
           </div>
@@ -212,14 +205,14 @@ export default function PostCard({ post, onDelete }) {
             onClick={handleDelete}
             className="text-gray-400 hover:text-red-600"
           >
-            <Trash2 size={18} />
+            <Trash2 size={20} className="2xl:w-6 2xl:h-6" />
           </button>
         )}
       </div>
 
       {/* Content */}
-      <div className="mb-3">
-        <p className="text-gray-800 text-[15px] leading-relaxed whitespace-pre-line">
+      <div className="mb-3 2xl:mb-5">
+        <p className="text-gray-800 text-[15px] 2xl:text-lg leading-relaxed whitespace-pre-line">
           {post.content}
         </p>
       </div>
@@ -230,7 +223,7 @@ export default function PostCard({ post, onDelete }) {
           <img
             src={post.image}
             alt="Post content"
-            className="w-full h-auto object-cover max-h-[500px]"
+            className="w-full h-auto object-cover max-h-[500px] 2xl:max-h-[700px]"
           />
         </div>
       )}
@@ -238,7 +231,7 @@ export default function PostCard({ post, onDelete }) {
       {/*Shared Post / if isrepost */}
       {post.sharedPost && (
         <div
-          className="mb-4 border border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:bg-gray-50 transition-colors"
+          className="mb-4 2xl:mb-6 border border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:bg-gray-50 transition-colors"
           onClick={() => navigate(`/post/${post.sharedPost.id}`)} //og post link
         >
           {/* Sharedpost media */}
@@ -261,14 +254,14 @@ export default function PostCard({ post, onDelete }) {
                 alt={post.sharedPost.author.name}
                 className="w-6 h-6 rounded-full object-cover border border-gray-200"
               />
-              <span className="font-bold text-sm">
+              <span className="font-bold text-sm 2xl:text-base">
                 {post.sharedPost.author.name}
               </span>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs 2xl:text-sm text-gray-500">
                 • {safeFormatDate(post.sharedPost.timestamp)}
               </span>
             </div>
-            <p className="text-sm text-gray-800 line-clamp-3">
+            <p className="text-sm 2xl:text-base text-gray-800 line-clamp-3">
               {post.sharedPost.content}
             </p>
           </div>
@@ -279,28 +272,28 @@ export default function PostCard({ post, onDelete }) {
       <div className="flex items-center gap-4 border-t border-gray-100 pt-3 mt-2">
         <button
           onClick={toggleLike}
-          className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+          className={`flex items-center gap-6 text-sm 2xl:text-base font-medium transition-colors ${
             isLiked ? "text-red-500" : "text-gray-500 hover:text-gray-700"
           }`}
         >
-          <Heart size={20} className={isLiked ? "fill-current" : ""} />
+          <Heart size={20} className={`2xl:w-6 2xl:h-6 ${isLiked ? "fill-current" : ""}`} />
           <span>{likeCount > 0 ? likeCount : "Like"}</span>
         </button>
 
         <button
           onClick={handleFetchComments}
-          className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700"
+          className="flex items-center gap-2 text-sm 2xl:text-base font-medium text-gray-500 hover:text-gray-700"
         >
-          <MessageSquare size={20} />
+          <MessageSquare size={20} className="2xl:w-6 2xl:h-6"/>
           <span>{commentCount > 0 ? commentCount : "Comment"}</span>
         </button>
 
         <button
           onClick={handleShare}
           disabled={isSharing}
-          className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50"
+          className="flex items-center gap-2 text-sm 2xl:text-base font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50"
         >
-          <Share2 size={20} />
+          <Share2 size={20} className="2xl:w-6 2xl:h-6" />
           <span>{isSharing ? "Sharing..." : shareCount>0 ? shareCount : "Share"}</span>
         </button>
       </div>
@@ -313,7 +306,7 @@ export default function PostCard({ post, onDelete }) {
                 user?.avatar_url ||
                 `https://ui-avatars.com/api/?name=${user?.display_name}`
               }
-              className="w-8 h-8 rounded-full"
+              className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-full"
             />
             <input
               type="text"
@@ -321,12 +314,12 @@ export default function PostCard({ post, onDelete }) {
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={handlePostComment}
               placeholder="Write a comment..."
-              className="w-full bg-gray-100 rounded-full py-2 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
+              className="w-full bg-gray-100 rounded-full py-2 px-4 text-sm 2xl:text-base focus:outline-none focus:ring-1 focus:ring-primary/50"
             />
           </div>
 
           {loadingComments ? (
-            <p className="text-xs text-center">Loading...</p>
+            <p className="text-xs 2xl:text-sm text-center">Loading...</p>
           ) : (
             <div className="space-y-4">
               {comments.map((item) => (
@@ -337,7 +330,7 @@ export default function PostCard({ post, onDelete }) {
                         item.author.avatar_url ||
                         `https://ui-avatars.com/api/?name=${item.author.display_name}`
                       }
-                      className="w-8 h-8 rounded-full"
+                      className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-full"
                     />
                   </Link>
                   <div className="bg-gray-50 rounded-2xl rounded-tl-none px-4 py-2">
@@ -345,15 +338,15 @@ export default function PostCard({ post, onDelete }) {
                       <Link
                         to={`/profile/${item.author.id || item.author.userId}`}
                       >
-                        <span className="font-semibold text-sm">
+                        <span className="font-semibold text-sm 2xl:text-base">
                           {item.author.display_name}
                         </span>
                       </Link>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs 2xl:text-sm text-gray-400">
                         {safeFormatDate(item.comment.created_at)} ago
                       </span>
                     </div>
-                    <p className="text-sm text-gray-700 mt-1">
+                    <p className="text-sm 2xl:text-base text-gray-700 mt-1">
                       {item.comment.content}
                     </p>
                   </div>

@@ -10,13 +10,15 @@ import { useAuth } from "../../context/AuthContext";
 import EditProfileModal from "../../components/profile/EditProfile";
 import PostCard from "../../components/feed/PostCard";
 import { getUserPosts } from "../../services/postService";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Button from "../../components/common/ButtonComponent"; //
-import { UserPlus, UserCheck } from "lucide-react";
+import { UserPlus, UserCheck, MessageCircle } from "lucide-react";
 import CreatePost from "../../components/feed/CreatePost";
+import { getOrCreateConversation } from "../../services/chatService";
 
 export default function ProfilePage() {
   const { id } = useParams(); //id from url
+  const navigate = useNavigate(); //hook
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,6 +28,7 @@ export default function ProfilePage() {
 
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [messageLoading, setMessageLoading] = useState(false);
 
   const targetId = id || user?.id; //url id or user id
 
@@ -130,7 +133,7 @@ export default function ProfilePage() {
     if (!dob) return null;
     const birthDate = new Date(dob);
     const ageDifMs = Date.now() - birthDate.getTime(); //total duration of life in ms
-    const ageDate = new Date(ageDifMs);  //convert to years since Unix Epoch (1/1/1970) . for example 1yo=1971yo
+    const ageDate = new Date(ageDifMs); //convert to years since Unix Epoch (1/1/1970) . for example 1yo=1971yo
     return Math.abs(ageDate.getUTCFullYear() - 1970);
   };
 
@@ -139,41 +142,40 @@ export default function ProfilePage() {
     if (user.id === updatedUser.id) updateUser(updatedUser); //
   };
 
-
-
   const handlePostCreated = (newPostData) => {
-      // newPostData from CreatePost -> { post: {...}, author: {...} }
-      //format to match PostCard expectations
-      const formatted = {
-          id: newPostData.post.id,
-          content: newPostData.post.content,
-          timestamp: newPostData.post.created_at,
-          image: newPostData.post.media?.[0] || null,
-          author: {
-              id: newPostData.author.id,
-              name: newPostData.author.display_name || newPostData.author.username,
-              handle: newPostData.author.username,
-              avatar: newPostData.author.avatar_url,
-          },
-          stats: { //initialize
-              likes: 0,
-              comments: 0,
-              shares: 0,
-          },
-          sharedPost: null
-      };
+    // newPostData from CreatePost -> { post: {...}, author: {...} }
+    //format to match PostCard expectations
+    const formatted = {
+      id: newPostData.post.id,
+      content: newPostData.post.content,
+      timestamp: newPostData.post.created_at,
+      image: newPostData.post.media?.[0] || null,
+      author: {
+        id: newPostData.author.id,
+        name: newPostData.author.display_name || newPostData.author.username,
+        handle: newPostData.author.username,
+        avatar: newPostData.author.avatar_url,
+      },
+      stats: {
+        //initialize
+        likes: 0,
+        comments: 0,
+        shares: 0,
+      },
+      sharedPost: null,
+    };
 
-      //add to top of list
-      setPosts(prev => [formatted, ...prev]);
-      
-      //+1 post count
-      setProfile(prev => ({
-          ...prev,
-          stats: {
-              ...prev.stats,
-              posts: (prev.stats?.posts || 0) + 1
-          }
-      }));
+    //add to top of list
+    setPosts((prev) => [formatted, ...prev]);
+
+    //+1 post count
+    setProfile((prev) => ({
+      ...prev,
+      stats: {
+        ...prev.stats,
+        posts: (prev.stats?.posts || 0) + 1,
+      },
+    }));
   };
 
   const handlePostDelete = (deletedPostId) => {
@@ -222,6 +224,24 @@ export default function ProfilePage() {
     }
   };
 
+  //msgbutton click
+  const handleMessageUser = async () => {
+    if (!profile?.id) return;
+    setMessageLoading(true);
+    try {
+      const res = await getOrCreateConversation(profile.id);
+
+      if (res.data.success && res.data.conversation) {
+        navigate(`/chat/${res.data.conversation.id}`);
+      }
+    } catch (error) {
+      console.error("Failed to start conversation", error);
+      alert("Could not start chat.");
+    } finally {
+      setMessageLoading(false);
+    }
+  };
+
   if (loading)
     return (
       <div className="p-8 text-center animate-pulse">Loading profile...</div>
@@ -231,26 +251,29 @@ export default function ProfilePage() {
   const isOwnProfile = profile.id === user?.id;
 
   return (
-    <div className="max-w-2xl mx-auto bg-white min-h-screen shadow-sm border-x border-gray-100 pb-10">
+    <div className="w-full max-w-5xl mx-auto bg-white min-h-screen shadow-sm border-x border-gray-100 pb-10">
       <div
-        className="h-48 bg-cover bg-center w-full relative"
+        className="h-60 lg:h-80 bg-cover bg-center w-full relative"
         style={{
           backgroundImage: `url(${
-            profile.cover_url || "https://ui-avatars.com/api/?name="+ profile.display_name + "&background=random&size=800"
+            profile.cover_url ||
+            "https://ui-avatars.com/api/?name=" +
+              profile.display_name +
+              "&background=random&size=800"
           })`,
           backgroundColor: "#a0a0a0",
         }}
       ></div>
 
-      <div className="px-6">
-        <div className="relative flex justify-between items-end -mt-12 mb-4">
+      <div className="px-6 lg:px-10">
+        <div className="relative flex justify-between items-end -mt-16 mb-6">
           <img
             src={
               profile.avatar_url ||
               `https://ui-avatars.com/api/?name=${profile.display_name}`
             }
             alt="Avatar"
-            className="w-32 h-32 rounded-full border-4 border-white object-cover bg-white shadow-sm"
+            className="w-32 h-32 2xl:w-40 2xl:h-40 rounded-full border-4 border-white object-cover bg-white shadow-sm"
           />
           {isOwnProfile ? (
             <button
@@ -261,6 +284,15 @@ export default function ProfilePage() {
             </button>
           ) : (
             <div className="mb-2">
+              <Button
+                onClick={handleMessageUser}
+                loading={messageLoading}
+                variant="outline"
+                className="rounded-full px-6 h-10 text-sm border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-primary hover:border-primary/50"
+              >
+                <MessageCircle size={18} className="mr-2" />
+                Message
+              </Button>
               <Button
                 onClick={handleFollowToggle}
                 loading={followLoading}
@@ -356,10 +388,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="flex flex-col gap-4 mt-6">
-
-          {isOwnProfile && (
-             <CreatePost onPostCreated={handlePostCreated} />
-          )}
+          {isOwnProfile && <CreatePost onPostCreated={handlePostCreated} />}
 
           {posts.length > 0 ? (
             posts.map((post) => (
