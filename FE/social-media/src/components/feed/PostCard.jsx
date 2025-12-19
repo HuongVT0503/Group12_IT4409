@@ -47,6 +47,9 @@ export default function PostCard({ post, onDelete }) {
   useEffect(() => {
     if (!socket) return;
 
+    //JOIN ROOM
+    socket.emit("join_post", post.id);
+
     //modify backend to emit to a global feed OR the frontend needs to join specific post rooms
     //listen globally?
     const handleUpdate = (payload) => {
