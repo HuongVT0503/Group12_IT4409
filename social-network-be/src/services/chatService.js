@@ -2,7 +2,8 @@ import { v4 as uuidv4 } from "uuid";
 import * as chatRepo from "../repositories/chatRepository.js";
 
 async function getOrCreateConversation(userId1, userId2) {
-  return await chatRepo.getOrCreateConversation(userId1, userId2);
+  const newId = uuidv4();
+  return await chatRepo.getOrCreateConversation(userId1, userId2, newId);
 }
 
 async function getUserConversations(userId) {

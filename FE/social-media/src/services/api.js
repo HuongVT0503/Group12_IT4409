@@ -28,8 +28,8 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    //401 + didnt retry
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    //401 + 403 didnt retry
+    if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
       originalRequest._retry = true;
 
       //refresh token

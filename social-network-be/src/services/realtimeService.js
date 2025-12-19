@@ -40,7 +40,8 @@ export function emitNotificationRead(userId, notificationId) {
 }
 
 export function emitMessage(userId, payload) {
-    io.to(userId).emit('new_message', payload);
+    const conversationRoomId = `conversation_${payload.conversationId}`;
+    io.to(conversationRoomId).emit('new_message', payload);
 }
 
 export function emitMessageRead(conversationId, messageId) {
