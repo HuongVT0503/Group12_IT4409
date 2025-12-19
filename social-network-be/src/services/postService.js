@@ -1,10 +1,16 @@
-import { v4 as uuidv4 } from 'uuid';
-import * as postRepo from '../repositories/postRepository.js';
-import * as notificationRepo from '../repositories/notificationRepository.js';
+import { v4 as uuidv4 } from "uuid";
+import * as postRepo from "../repositories/postRepository.js";
+import * as notificationRepo from "../repositories/notificationRepository.js";
 
 async function createPost({ authorId, content, media, privacy }) {
   const id = uuidv4();
-  const result = await postRepo.createPost({ id, authorId, content, media, privacy });
+  const result = await postRepo.createPost({
+    id,
+    authorId,
+    content,
+    media,
+    privacy,
+  });
   return result;
 }
 
@@ -31,8 +37,8 @@ async function likePost(userId, postId) {
     const notif = {
       id: uuidv4(),
       userId: post.author.id,
-      type: 'like',
-      data: JSON.stringify({ from: userId, postId })
+      type: "like",
+      data: JSON.stringify({ from: userId, postId }),
     };
     await notificationRepo.createNotification(notif);
   }
@@ -50,4 +56,41 @@ async function countLikes(postId) {
   return await postRepo.countLikes(postId);
 }
 
-export { createPost, getPost, deletePost, getFeed, getPostsByUser,  likePost, unlikePost, countLikes };
+async function sharePost(userId, originalPostId, content = "") {
+  //fetch og post
+  const original = await postRepo.getPostById(originalPostId);
+  if (!original || !original.post) {
+    throw { status: 404, message: "Original post not found" };
+  }
+
+  //if nested share-> share the og og post, not the shared shared
+  const targetPostId = original.sharedPost
+    ? original.sharedPost.id
+    : original.post.id;
+
+  //
+  const id = uuidv4();
+  const newPostData = await postRepo.createPost({
+    id,
+    authorId: userId,
+    content: content||"", //newpost caption
+    media: [], //ref og media
+    privacy: original.post.privacy || "public",
+    sharedPostId: targetPostId,
+  });
+
+
+  return await postRepo.getPostById(id);
+}
+
+export {
+  createPost,
+  getPost,
+  deletePost,
+  getFeed,
+  getPostsByUser,
+  likePost,
+  unlikePost,
+  countLikes,
+  sharePost,
+};

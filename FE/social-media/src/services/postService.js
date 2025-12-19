@@ -40,3 +40,7 @@ export const deletePost = async (postId) => {
 export const getPostLikes = async (postId) => {
   return await api.get(`/posts/${postId}/likes`);
 }
+
+export const sharePost = async (postId, content) => {
+  return await api.post(`/posts/${postId}/share`, { content });
+};

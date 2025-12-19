@@ -77,4 +77,14 @@ async function getFollowing(req, res, next) {
   } catch (err) { next(err); }
 }
 
-export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing };
+async function searchUsers(req, res, next) {
+  try {
+    const q = req.query.q || req.query.username || '';
+    const limit = parseInt(req.query.limit || '50');
+    const skip = parseInt(req.query.skip || '0');
+    const data = await userService.searchUsers(q, limit, skip);
+    res.json({ data });
+  } catch (err) { next(err); }
+}
+
+export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing, searchUsers };

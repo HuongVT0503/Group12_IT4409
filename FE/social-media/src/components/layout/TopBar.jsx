@@ -1,15 +1,18 @@
 //mobile header //llogo, search, notification, profile
 
 import logo from "../../assets/img/logo/logo.png";
-import { Search, Bell, LogOut, User, Settings } from "lucide-react";
+import { Search, Bell, LogOut, User, Settings, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSocket } from "../../context/SocketContext";
-import { getNotifications, markAsRead } from "../../services/notificationService";
+import {
+  getNotifications,
+  markAsRead,
+} from "../../services/notificationService";
 import { formatDistanceToNow } from "date-fns";
 import { getProfile } from "../../services/userService";
-
+import { searchUsers } from "../../services/userService";
 
 //
 //validate date b4 passing it to formatDistanceToNow
@@ -18,7 +21,7 @@ const getRelativeTime = (dateInput) => {
   try {
     const date = new Date(dateInput);
     //valid?
-    if (isNaN(date.getTime())) return "Just now"; 
+    if (isNaN(date.getTime())) return "Just now";
     return formatDistanceToNow(date, { addSuffix: true });
   } catch (error) {
     console.error(error);
@@ -31,10 +34,16 @@ export default function TopBar() {
 
   const [showNoti, setShowNoti] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  
+
   const [notis, setNotis] = useState([]);
   const [loading, setLoading] = useState(false);
   const [senderNames, setSenderNames] = useState({});
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const searchRef = useRef(null);
 
   //refs for click outside detection
   const notiRef = useRef(null);
@@ -45,9 +54,39 @@ export default function TopBar() {
 
   const unreadCount = notis.filter((n) => !n.read).length;
 
+  /////
+
+  //search debounce
+  useEffect(() => {
+    //wait 500ms after user stops typing b4 calling api
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.trim().length > 0) {
+        setIsSearching(true);
+        try {
+          const res = await searchUsers(searchQuery);
+
+          setSearchResults(res.data.data || []);
+          setShowSearchDropdown(true);
+        } catch (error) {
+          console.error("Search failed", error);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+        setShowSearchDropdown(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
   useEffect(() => {
     function handleClickOutside(event) {
       //click outside to close
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSearchDropdown(false);
+      }
       if (notiRef.current && !notiRef.current.contains(event.target)) {
         setShowNoti(false);
       }
@@ -110,27 +149,29 @@ export default function TopBar() {
   //fetch sender names when noti change
   useEffect(() => {
     const fetchMissingSenders = async () => {
-    
-      const uniqueIds = [...new Set(notis.map(n => n.data?.from || n.data?.userId))]
-        .filter(id => id && !senderNames[id] && id !== user?.id);
+      const uniqueIds = [
+        ...new Set(notis.map((n) => n.data?.from || n.data?.userId)),
+      ].filter((id) => id && !senderNames[id] && id !== user?.id);
 
       if (uniqueIds.length === 0) return;
 
       const newNames = {};
-      
-      //fetch profiles in parallel
-      await Promise.all(uniqueIds.map(async (id) => {
-        try {
-          const res = await getProfile(id); 
-          //be -> { user: ... }        inside axios response.data
-          newNames[id] = res.data.user.display_name; 
-        } catch (err) {
-          console.error(`Failed to fetch user ${id}`, err);
-          newNames[id] = "Unknown User";
-        }
-      }));
 
-      setSenderNames(prev => ({ ...prev, ...newNames }));
+      //fetch profiles in parallel
+      await Promise.all(
+        uniqueIds.map(async (id) => {
+          try {
+            const res = await getProfile(id);
+            //be -> { user: ... }        inside axios response.data
+            newNames[id] = res.data.user.display_name;
+          } catch (err) {
+            console.error(`Failed to fetch user ${id}`, err);
+            newNames[id] = "Unknown User";
+          }
+        })
+      );
+
+      setSenderNames((prev) => ({ ...prev, ...newNames }));
     };
 
     if (notis.length > 0) {
@@ -138,8 +179,14 @@ export default function TopBar() {
     }
   }, [notis, senderNames, user?.id]);
 
-
   /////////
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setShowSearchDropdown(false);
+  };
+
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -160,16 +207,16 @@ export default function TopBar() {
   };
 
   const handleMarkAllAsRead = async () => {
-    const unreadNotis = notis.filter(n => !n.read);
+    const unreadNotis = notis.filter((n) => !n.read);
     if (unreadNotis.length === 0) return;
 
-    setNotis(prev => prev.map(n => ({ ...n, read: true })));
+    setNotis((prev) => prev.map((n) => ({ ...n, read: true })));
 
     //send req in parallel ( be doesnt have read-all endpoint)
     try {
-        await Promise.all(unreadNotis.map(n => markAsRead(n.id)));
+      await Promise.all(unreadNotis.map((n) => markAsRead(n.id)));
     } catch (error) {
-        console.error("Failed to mark all as read", error);
+      console.error("Failed to mark all as read", error);
     }
   };
 
@@ -181,20 +228,24 @@ export default function TopBar() {
     const fromId = n.data?.from || n.data?.userId;
     const postId = n.data?.postId;
 
-    if (n.type === 'follow' && fromId) {
-        navigate(`/profile/${fromId}`);
-    } else if ((n.type === 'like' || n.type === 'comment') && postId) {
-        navigate(`/post/${postId}`);
+    if (n.type === "follow" && fromId) {
+      navigate(`/profile/${fromId}`);
+    } else if (
+      (n.type === "like" ||
+        n.type === "comment" ||
+        n.type === "new_post" ||
+        n.type === "share_post") &&
+      postId
+    ) {
+      navigate(`/post/${postId}`);
     }
   };
-
-
 
   //render noti txt based on type
   const renderNotificationText = (n) => {
     //missing 'data' or different format
     const fromId = n.data?.from || n.data?.userId;
-    const senderName =  n.data?.senderName || senderNames[fromId] || "Someone";
+    const senderName = senderNames[fromId] || n.data?.senderName || "Someone";
 
     switch (n.type) {
       case "like":
@@ -203,6 +254,10 @@ export default function TopBar() {
         return `${senderName} commented on your post.`;
       case "follow":
         return `${senderName} started following you.`;
+      case "new_post":
+        return `${senderName} posted a new update.`;
+      case "share_post":
+        return `${senderName} ${n.data?.text || "shared a post"}.`;
       default:
         return n.data?.text || "New notification";
     }
@@ -222,18 +277,77 @@ export default function TopBar() {
         </span>
       </div>
 
-      {/* Center Search - hidden on small mobile */}
-      <div className="hidden md:flex flex-1 max-w-md mx-8 relative">
-        <Search
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-          size={20}
-        />
-        <input
-          type="text"
-          placeholder="Search for friends..."
-          className="w-full bg-gray-100 rounded-full py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-        />
-        <div className="w-full h-10"></div>
+      {/* Center Search*/}
+      <div
+        className=" md:flex flex-1 max-w-md mx-8 relative"
+        ref={searchRef}
+      >
+        <div className="relative w-full">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            size={20}
+          />
+          <input
+            type="text"
+            placeholder="Search for friends..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => {
+              if (searchResults.length > 0) setShowSearchDropdown(true);
+            }}
+            className="w-full bg-gray-100 rounded-full py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+          />
+          {/* Clear x btn (show when typing) */}
+          {searchQuery && (
+            <button
+              onClick={handleClearSearch}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+
+        {/* SEARCH RESULTS DROPDOWN */}
+        {showSearchDropdown && (
+          <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+            {isSearching ? (
+              <div className="p-4 text-center text-sm text-gray-500">
+                Searching...
+              </div>
+            ) : searchResults.length > 0 ? (
+              <div className="max-h-[300px] overflow-y-auto">
+                {searchResults.map((user) => (
+                  <Link
+                    key={user.id}
+                    to={`/profile/${user.id}`}
+                    onClick={handleClearSearch} //close search on click
+                    className="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-none"
+                  >
+                    <img
+                      src={
+                        user.avatar_url ||
+                        `https://ui-avatars.com/api/?name=${user.display_name}`
+                      }
+                      alt={user.display_name}
+                      className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                    />
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">
+                        {user.display_name}
+                      </p>
+                      <p className="text-xs text-gray-500">@{user.username}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 text-center text-sm text-gray-500">
+                No users found for {searchQuery}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Right User Actions */}
@@ -291,9 +405,10 @@ export default function TopBar() {
                 ))}
               </div>
               <div className="p-2 text-center border-t border-gray-100">
-                <button 
-                onClick={handleMarkAllAsRead}
-                className="text-xs text-primary font-semibold hover:underline">
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-xs text-primary font-semibold hover:underline"
+                >
                   Mark all as read
                 </button>
               </div>

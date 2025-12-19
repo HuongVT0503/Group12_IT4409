@@ -14,7 +14,7 @@ async function getProfile(usernameOrId) {
 
 async function updateProfile(userId, patch) {
   const allowed = {};
-  ['display_name', 'bio', 'avatar_url', 'cover_url'].forEach(k => { if (patch[k] !== undefined) allowed[k] = patch[k]; });
+  ['display_name', 'bio', 'avatar_url', 'cover_url', 'date_of_birth', 'gender', 'phone'].forEach(k => { if (patch[k] !== undefined) allowed[k] = patch[k]; });
   if (!Object.keys(allowed).length) throw { status: 400, message: 'No valid fields to update' };
   return await userRepo.updateProfile(userId, allowed);
 }
@@ -33,4 +33,9 @@ async function unfollow(followerId, followeeId) {
 async function getFollowers(userId, limit) { return userRepo.getFollowers(userId, limit); }
 async function getFollowing(userId, limit) { return userRepo.getFollowing(userId, limit); }
 
-export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing };
+async function searchUsers(q, limit = 50, skip = 0) {
+  if (!q || !q.trim()) return [];
+  return userRepo.searchByUsername(q.trim(), limit, skip);
+}
+
+export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing, searchUsers };

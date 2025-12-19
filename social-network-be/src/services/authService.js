@@ -9,7 +9,7 @@ import { signAccessToken } from '../utils/JWT.js';
 
 const SALT_ROUNDS = 10;
 
-export async function register({ username, email, password, display_name }) {
+export async function register({ username, email, password, display_name, date_of_birth, gender, phone }) {
   const existing = await userRepo.findByEmail(email);
   if (existing) throw { status: 400, message: 'Email already in use' };
 
@@ -24,7 +24,10 @@ export async function register({ username, email, password, display_name }) {
     username,
     email,
     password_hash,
-    display_name
+    display_name,
+    date_of_birth,
+    gender,
+    phone
   });
 }
 
@@ -59,7 +62,10 @@ export async function refresh({ refreshToken }) {
   const stored = await tokenRepo.findRefreshToken(hash);
   if (!stored) throw { status: 401, message: 'Invalid refresh token' };
 
-  // TODO: Check expiry
+  if (new Date() > new Date(stored.expiresAt)) {
+    throw { status: 401, message: 'Refresh token expired' };
+  }
+  
   const user = await userRepo.findById(stored.user_id || stored.userId);
   if (!user) throw { status: 401, message: 'User not found' };
 
