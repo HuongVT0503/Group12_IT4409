@@ -21,7 +21,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "../../utils/cn";
 import { uploadMedia } from "../../services/mediaService";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 
 export default function ChatPage() {
   const { user } = useAuth();
@@ -498,6 +498,10 @@ export default function ChatPage() {
                     <path d="m15 18-6-6 6-6" />
                   </svg>
                 </button>
+                <Link 
+                    to={`/profile/${selectedChat.otherUser?.id}`} 
+                    className="flex items-center gap-3 hover:opacity-80 transition-opacity group"
+                > 
                 <img
                   src={getAvatar(selectedChat.otherUser)}
                   className="w-10 h-10 rounded-full object-cover border border-gray-200"
@@ -514,6 +518,7 @@ export default function ChatPage() {
                     </span>
                   </div>
                 </div>
+                </Link>
               </div>
 
               <div className="flex items-center gap-2 text-primary">
