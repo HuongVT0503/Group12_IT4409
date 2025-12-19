@@ -29,7 +29,7 @@ async function createPost(req, res, next) {
     );
 
     //create noti for FOLLOWERS
-    followers.forEach(async (follower) => {
+    const notificationPromise = followers.map(async (follower) => {
         const notifId = uuidv4();
         const notifData = {
             from: authorId,
@@ -54,6 +54,8 @@ async function createPost(req, res, next) {
             data: notifData
         });
     });
+
+    await Promise.all(notificationPromise);
 
 
     emitPostUpdate(post.post.id, { newPost: post });
@@ -195,7 +197,7 @@ async function sharePost(req, res, next) {
     );
 
     //noti shared post
-    followers.forEach(async (follower) => {
+    const notiSharePromise =  followers.map(async (follower) => {
       if (originalAuthorId&&follower.id===originalAuthorId) return;// skip if og author is a follower
 
         const notifId = uuidv4();
@@ -222,6 +224,8 @@ async function sharePost(req, res, next) {
             data: notifData
         });
     });
+
+    await Promise.all(notiSharePromise);
 
 
     if (originalAuthorId && originalAuthorId !== userId) {

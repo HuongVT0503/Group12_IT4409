@@ -60,178 +60,18 @@ input::-ms-clear {
 
 /*global reset*/
 
-/* *,
-*::before,
-*::after {
-  margin: 0;      removes default margin n padding */
-  /* padding: 0;
-  width: auto;
-  height: auto;
-  box-sizing: border-box;/*ensures PADDING n BORDER r included in an elements total width/ height
-  -> predictable layout math      e.g.     a width: 200px box wont grow larger after padding /border is added*/
-/* } */ 
-/* 
-html,body,#root{
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%; 
 
-}
-
-html {
-  scroll-behavior: smooth;
-
-  height: 100%; 
-  
-  text-rendering: optimizeLegibility; Prevent font scaling
-
-} */
-
-
-/* body {
-  height: 100%; 
-  line-height: 1.5;
-  font-family: var(--font-sans,'Inter',Arial,sans-serif,system-ui);
-  color:var(--text-black,#1A1A1A);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeSpeed;
-  background: var(--neutral-300);
-  min-width:320px; min-height: 100vh; 
-  margin:0; */
-  /*display:flex; 
-  place-items: center; */  
-  
-  
-/* } */
-
-
-/* img,
-picture,
-video,
-canvas,
-svg {
-  display: block;
-  max-width: 100%;
-} */
-
-/* input,
-button,
-textarea,
-select {
-  font: inherit; consistent font styles
-  color:inherit;
-} */
-/* 
-:focus{
-  outline: none;
-}
-
-:focus-visible{
-  outline:2px solid var(--primary-purple-500,#7A3E9D);
-  outline-offset: 2px;
-}
-
-a {
-  text-decoration: none;
-  color: inherit;
-} */
-
-/* 
-a[href]{
-  cursor: pointer;
-}
-
-a[href]:where(:hover,:focus-visible){
-  text-decoration: underline;
-}
-
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-} */
-
-/* 
-ul,
-ol {
-  list-style: none;
-}
-
-table {
-  border-collapse: collapse;
-  border-spacing: 0;
-}
-
-
- */
-
-
-
-
-
-
-
-
-
-
-
-
-/* 
-:root {
-  
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-} */
-
-
-
-
-/* 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-} */
-/* button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-} */
-/* 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+/* src/index.css */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
-  a:hover {
-    color: #747bff;
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
-  button {
-    background-color: #f9f9f9;
-  }
-} */
+}
 
-/* 
-@media (min-width: 1024px) {
-  body {
-    font-size: 18px; 
-    line-height: 1.65; 
-  }
-} */
+.bg-gradient-primary {
+  background: linear-gradient(90deg, #7A3E9D 0%, #C79AF5 100%);
+}
