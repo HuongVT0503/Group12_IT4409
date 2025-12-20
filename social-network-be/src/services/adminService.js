@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import * as adminRepo from '../repositories/adminRepository.js';
 
 // Xem danh sách user/post
