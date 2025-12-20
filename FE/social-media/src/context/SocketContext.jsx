@@ -17,10 +17,20 @@ export const SocketProvider = ({ children }) => {
       //Connect to root
       const newSocket = io("http://localhost:4000", { 
         auth: { token },
-        transports: ['websocket']
+        ///transports: ['websocket']    //rremove to allow polling, auto detects ws or http
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
       });
 
-      newSocket.emit("join", user.id);
+      newSocket.on("connect_error", (err) => {
+        console.error("Socket connection failed:", err.message);
+      });
+
+      newSocket.on("connect", () => {
+        console.log("Socket Connected:", newSocket.id);
+        newSocket.emit("join", user.id);
+      });
+
 
       setSocket(newSocket);
 

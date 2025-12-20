@@ -1,5 +1,7 @@
 import * as userService from '../services/userService.js';
 import { emitNotification, emitFollowUpdate } from '../services/realtimeService.js';
+import { v4 as uuidv4 } from 'uuid';
+import * as notificationRepo from '../repositories/notificationRepository.js';
 
 async function getProfile(req, res, next) {
   try {
@@ -23,10 +25,21 @@ async function follow(req, res, next) {
     const followeeId = req.params.id;
     await userService.follow(followerId, followeeId);
 
+    //save to db
+    await notificationRepo.createNotification({
+      id: uuidv4(),
+      userId: followeeId,
+      type: "follow",
+      data: JSON.stringify({
+        from: followerId,
+        text: "started following you",
+      }),
+    });
+
     // Emit realtime
     emitNotification(followeeId, {
-      type: 'follow',
-      from: followerId
+      type: "follow",
+      from: followerId,
     });
 
     emitFollowUpdate(followeeId, { newFollower: followerId });
@@ -64,12 +77,22 @@ async function getFollowing(req, res, next) {
   } catch (err) { next(err); }
 }
 
-async function submitReport(req, res, next) {
-  try {
-    const reporterId = req.user.id || req.user.userId;
-    const success = await userService.createUserReport(reporterId, req.body);
-    if (success) { res.status(201).json({ message: "Your report has been submitted" })}
-  } catch (err) { next(err); }
+async function searchUsers(req, res, next) {
+    try {
+        const q = req.query.q || req.query.username || '';
+        const limit = parseInt(req.query.limit || '50');
+        const skip = parseInt(req.query.skip || '0');
+        const data = await userService.searchUsers(q, limit, skip);
+        res.json({ data });
+    } catch (err) { next(err); }
 }
 
-export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing, submitReport };
+async function submitReport(req, res, next) {
+    try {
+        const reporterId = req.user.id || req.user.userId;
+        const success = await userService.createUserReport(reporterId, req.body);
+        if (success) { res.status(201).json({ message: "Your report has been submitted" })}
+    } catch (err) { next(err); }
+}
+
+export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing, searchUsers, submitReport };

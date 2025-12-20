@@ -15,7 +15,7 @@ async function getProfile(usernameOrId) {
 
 async function updateProfile(userId, patch) {
   const allowed = {};
-  ['display_name', 'bio', 'avatar_url', 'cover_url'].forEach(k => { if (patch[k] !== undefined) allowed[k] = patch[k]; });
+  ['display_name', 'bio', 'avatar_url', 'cover_url', 'date_of_birth', 'gender', 'phone'].forEach(k => { if (patch[k] !== undefined) allowed[k] = patch[k]; });
   if (!Object.keys(allowed).length) throw { status: 400, message: 'No valid fields to update' };
   return await userRepo.updateProfile(userId, allowed);
 }
@@ -34,20 +34,24 @@ async function unfollow(followerId, followeeId) {
 async function getFollowers(userId, limit) { return userRepo.getFollowers(userId, limit); }
 async function getFollowing(userId, limit) { return userRepo.getFollowing(userId, limit); }
 
-async function createUserReport(reporterId, data) {
-  const { targetId, targetType, reason } = data;
-  if (!targetId || !targetType || !reason) {
-    throw { status: 400, message: "Lack of reporting information" };
-  }
-  const validTypes = ['User', 'Post'];
-  if (!validTypes.includes(targetType)) {
-    throw { status: 400, message: "The report is invalid" };
-  }
-  if (targetType === 'User' && reporterId === targetId) {
-    throw { status: 400, message: "Unable to report myself" };
-  }
-  const reportId = uuidv4();
-  return await userRepo.createReport({reportId, reporterId, targetId, targetType, reason});
+async function searchUsers(q, limit = 50, skip = 0) {
+    if (!q || !q.trim()) return [];
+    return userRepo.searchByUsername(q.trim(), limit, skip);
 }
 
-export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing, createUserReport };
+async function createUserReport(reporterId, data) {
+    const { targetId, targetType, reason } = data;
+    if (!targetId || !targetType || !reason) {
+        throw { status: 400, message: "Lack of reporting information" };
+    }
+    const validTypes = ['User', 'Post'];
+    if (!validTypes.includes(targetType)) {
+        throw { status: 400, message: "The report is invalid" };
+    }
+    if (targetType === 'User' && reporterId === targetId) {
+        throw { status: 400, message: "Unable to report myself" };
+    }
+    const reportId = uuidv4();
+    return await userRepo.createReport({reportId, reporterId, targetId, targetType, reason});
+}
+export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing, searchUsers, createUserReport };

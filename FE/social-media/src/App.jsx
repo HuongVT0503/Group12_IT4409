@@ -6,6 +6,8 @@ import Feed from "./pages/feed/FeedPage";
 import ChatPage from "./pages/chat/ChatPage";
 import CreatePostPage from "./pages/feed/CreatePostPage";
 import ConnectionsPage from "./pages/connections/ConnectionPage";
+import SettingsPage from './pages/settings/SettingsPage';
+import PostDetailsPage from "./pages/feed/PostDetailsPage";
 
 import {
   BrowserRouter,
@@ -13,6 +15,7 @@ import {
   Route,
   Navigate,
   useNavigate,
+  useLocation
 } from "react-router-dom";
 
 import MainLayout from "./components/layout/MainLayout";
@@ -31,6 +34,7 @@ function AppRouter() {
   //toplvl component
 
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   //const isAuthenticated = false;
   const navigate = useNavigate();
@@ -46,9 +50,9 @@ function AppRouter() {
         path="/login"
         element={
           !user ? (
-            <Login onSwitch={() => navigate("/signup")} />
+            <Login onSwitch={() => window.location.href = '/signup'} />
           ) : (
-            <Navigate to="/" />
+            <Navigate to="/" replace />
           )
         }
       />
@@ -57,41 +61,45 @@ function AppRouter() {
         element={
           !user ? (
             <Signup
-              onSwitch={() => navigate("/login")}
-              onSuccess={() => navigate("/login")}
+              onSwitch={() => window.location.href = '/login'}
+              onSuccess={(data) => navigate("/login", { 
+                state: { 
+                  email: data.user?.email, 
+                  message: "Account created successfully! Please log in." 
+                } 
+              })}
             />
           ) : (
-            <Navigate to="/" />
+            <Navigate to="/" replace />
           )
         }
       />
 
-      {/*PREVIEW ROUTE*/}
-
-      <Route path="/preview" element={<MainLayout />}>
-        <Route index element={<Feed />} />
-        {/* URL: /preview */}
-        <Route path="profile" element={<ProfilePage />} />{" "}
-        {/* URL: /preview/profile */}
-        <Route path="feed" element={<Feed />} />
-        <Route path="chat" element={<ChatPage />} />
-      </Route>
+      
 
       {/* PROTECTED ROUTES */}
       <Route
         path="/"
-        element={user ? <MainLayout /> : <Navigate to="/login" replace />}
+        element={user ? <MainLayout /> : <Navigate to="/login" state={{ from: location }} replace />}
       >
         <Route index element={<Feed />} />
 
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="profile/:id" element={<ProfilePage />} />
+
+        <Route path="post/:id" element={<PostDetailsPage />} />
+        
         <Route path="chat" element={<ChatPage />} />
+        <Route path="chat/:id" element={<ChatPage />} />
         <Route path="connections" element={<ConnectionsPage />} />
         <Route path="create" element={<CreatePostPage />} />
+        <Route path="settings" element={<SettingsPage />} />
       </Route>
 
+      
+
       {/* 404 CATCH ALL */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to={user ? "/" : "/login"} replace />} />
     </Routes>
 
     // <main className="w-full min-h-screen">

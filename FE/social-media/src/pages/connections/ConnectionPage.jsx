@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link,useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { 
   getFollowers, 
@@ -8,13 +8,18 @@ import {
 } from "../../services/userService";
 
 export default function ConnectionsPage() {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("following"); // 'following' or 'followers'
+  const { user:currentUser } = useAuth();
+  const location = useLocation();
+
+  //
+  const targetId = location.state?.targetId || currentUser?.id;//default to current user
+
+  const [activeTab, setActiveTab] = useState(location.state?.initialTab || "following"); // 'following' or 'followers'
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!targetId) return;
 
     const fetchData = async () => {
       setLoading(true);
@@ -22,9 +27,9 @@ export default function ConnectionsPage() {
         let res;
         ///
         if (activeTab === "followers") {
-          res = await getFollowers(user.id);
+          res = await getFollowers(targetId);
         } else {
-          res = await getFollowing(user.id);
+          res = await getFollowing(targetId);
         }
         // be userController returns { data: [...] } 
         setData(res.data.data || []); 
@@ -36,7 +41,7 @@ export default function ConnectionsPage() {
     };
 
     fetchData();
-  }, [user?.id, activeTab]);
+  }, [targetId, activeTab]);
 
   const handleUnfollow = async (targetId) => {
     if (!confirm("Unfollow this user?")) return;
@@ -49,6 +54,8 @@ export default function ConnectionsPage() {
       console.error("Failed to unfollow", error);
     }
   };
+
+  const isOwnProfile = targetId === currentUser?.id;
 
   return (
     <div className="bg-white min-h-screen pb-20">
@@ -105,7 +112,7 @@ export default function ConnectionsPage() {
                 </Link>
                 
                 {/* Show Unfollow btn only on 'Following' tab */}
-                {activeTab === 'following' && (
+                {activeTab === 'following' && isOwnProfile && (
                     <button 
                         onClick={() => handleUnfollow(person.id)}
                         className="px-4 py-1.5 text-xs font-bold text-gray-500 border border-gray-200 rounded-full hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"

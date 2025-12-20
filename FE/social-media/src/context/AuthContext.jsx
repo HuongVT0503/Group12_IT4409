@@ -23,6 +23,13 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
   };
 
+  const updateUser = (updatedData) => {
+    //merge cuurrengt user data w updates (to keep fields (email/id) if be dosnt return)
+    const newUser = { ...user, ...updatedData };
+    localStorage.setItem("user", JSON.stringify(newUser));
+    setUser(newUser);
+  };
+
   const logout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
@@ -30,7 +37,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );
