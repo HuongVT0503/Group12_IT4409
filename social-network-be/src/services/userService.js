@@ -9,6 +9,7 @@ async function getProfile(usernameOrId) {
   }
   if (!user) user = await userRepo.findByUsername(usernameOrId);
   if (!user) throw { status: 404, message: 'User not found' };
+  if (user.isBanned) throw { status: 403, message: 'User not exist' };
   return user;
 }
 
@@ -33,4 +34,20 @@ async function unfollow(followerId, followeeId) {
 async function getFollowers(userId, limit) { return userRepo.getFollowers(userId, limit); }
 async function getFollowing(userId, limit) { return userRepo.getFollowing(userId, limit); }
 
-export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing };
+async function createUserReport(reporterId, data) {
+  const { targetId, targetType, reason } = data;
+  if (!targetId || !targetType || !reason) {
+    throw { status: 400, message: "Lack of reporting information" };
+  }
+  const validTypes = ['User', 'Post'];
+  if (!validTypes.includes(targetType)) {
+    throw { status: 400, message: "The report is invalid" };
+  }
+  if (targetType === 'User' && reporterId === targetId) {
+    throw { status: 400, message: "Unable to report myself" };
+  }
+  const reportId = uuidv4();
+  return await userRepo.createReport({reportId, reporterId, targetId, targetType, reason});
+}
+
+export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing, createUserReport };

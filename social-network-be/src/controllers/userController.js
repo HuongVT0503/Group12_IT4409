@@ -64,4 +64,12 @@ async function getFollowing(req, res, next) {
   } catch (err) { next(err); }
 }
 
-export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing };
+async function submitReport(req, res, next) {
+  try {
+    const reporterId = req.user.id || req.user.userId;
+    const success = await userService.createUserReport(reporterId, req.body);
+    if (success) { res.status(201).json({ message: "Your report has been submitted" })}
+  } catch (err) { next(err); }
+}
+
+export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing, submitReport };

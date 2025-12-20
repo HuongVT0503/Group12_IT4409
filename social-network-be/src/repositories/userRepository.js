@@ -4,7 +4,7 @@ async function createUser({ id, username, email, password_hash, display_name }) 
   const session = getSession();
   try {
     const res = await session.run(
-      `CREATE (u:User {id:$id, username:$username, email:$email, password_hash:$password_hash, display_name:$display_name, created_at: datetime()})
+      `CREATE (u:User {id:$id, username:$username, email:$email, password_hash:$password_hash, display_name:$display_name, role: $role, isBanned: false, created_at: datetime()})
        RETURN u`,
       { id, username, email, password_hash, display_name }
     );
@@ -117,7 +117,32 @@ async function getFollowing(userId, limit = 50) {
   }
 }
 
+// User tạo báo cáo
+async function createReport({ reportId, reporterId, targetId, targetType, reason }) {
+  const session = getSession();
+  try {
+    const idField = targetType === 'User' ? 'userId' : 'postId';
+    const res = await session.run(
+        `MATCH (reporter:User {userId: $reporterId})
+         MATCH (target:${targetType} {${idField}: $targetId})
+         MERGE (reporter)-[r:REPORTED]->(target)
+         ON CREATE SET 
+            r.reportId = $reportId,
+            r.reason = $reason,
+            r.createdAt = datetime()
+         ON MATCH SET
+            r.reason = $reason,
+            r.updatedAt = datetime()
+         RETURN r`,
+        { reportId, reporterId, targetId, reason }
+    );
+    return res.records.length > 0;
+  } finally {
+    await session.close();
+  }
+}
+
 export {
   createUser, findByEmail, findByUsername, findById, updateProfile,
-  followUser, unfollowUser, getFollowers, getFollowing
+  followUser, unfollowUser, getFollowers, getFollowing, createReport
 };

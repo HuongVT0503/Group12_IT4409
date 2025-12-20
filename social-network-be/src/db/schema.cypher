@@ -25,3 +25,8 @@ FOR (n:Notification) REQUIRE n.notifId IS UNIQUE;
 // Optional: Indexes
 CREATE INDEX user_username_index IF NOT EXISTS FOR (u:User) ON (u.username);
 CREATE INDEX post_createdAt_index IF NOT EXISTS FOR (p:Post) ON (p.createdAt);
+CREATE INDEX user_ban_status_index IF NOT EXISTS FOR (u:User) ON (u.isBanned);
+
+// Report ID
+CREATE CONSTRAINT report_id_unique IF NOT EXISTS FOR (r:Report) REQUIRE r.reportId IS UNIQUE;
+
