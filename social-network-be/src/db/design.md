@@ -1,7 +1,7 @@
 # Database Design — Social Network
 
 ## Entities
-- User(userId, username, email, password, createdAt)
+- User(userId, username, email, password, role, createdAt)
 - Post(postId, content, createdAt)
 - Comment(commentId, text, createdAt)
 - Media(mediaId, url, type)
