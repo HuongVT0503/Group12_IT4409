@@ -35,10 +35,15 @@ export async function login({ email, password }) {
   const user = await userRepo.findByEmail(email);
   if (!user) throw { status: 401, message: 'Invalid credentials' };
 
+  // Kiểm tra tài khoản bị ban
+  if (user.isBanned === true) {
+    throw { status: 403, message: 'Your account has been locked' };
+  }
+
   const ok = await bcrypt.compare(password, user.password_hash || '');
   if (!ok) throw { status: 401, message: 'Invalid credentials' };
 
-  const accessToken = signAccessToken({ sub: user.id, id: user.id });
+  const accessToken = signAccessToken({ sub: user.id, id: user.id, role: user.role || 'user' });
   const rawRefresh = uuidv4() + '.' + uuidv4();
   const tokenHash = sha256(rawRefresh);
 
@@ -65,11 +70,16 @@ export async function refresh({ refreshToken }) {
   if (new Date() > new Date(stored.expiresAt)) {
     throw { status: 401, message: 'Refresh token expired' };
   }
-  
+
   const user = await userRepo.findById(stored.user_id || stored.userId);
   if (!user) throw { status: 401, message: 'User not found' };
 
-  const accessToken = signAccessToken({ sub: user.id, id: user.id });
+  // Kiểm tra tài khoản bị ban
+  if (user.isBanned === true) {
+      throw { status: 403, message: 'Your account has been locked' };
+  }
+
+  const accessToken = signAccessToken({ sub: user.id, id: user.id, role: user.role || 'user' });
 
   return { accessToken, user };
 }

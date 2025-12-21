@@ -45,32 +45,23 @@ export default function PostCard({ post, onDelete }) {
 
   //listen for real-time update
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !post.id) return;
 
-    //JOIN ROOM
+    //JOIN post ROOM
     socket.emit("join_post", post.id);
 
-    //modify backend to emit to a global feed OR the frontend needs to join specific post rooms
-    //listen globally?
     const handleUpdate = (payload) => {
-      //need to emit `socket.emit('join_post', post.id)`
-
       if (payload.deleted) {
         if (onDelete) onDelete(post.id);
         return;
       }
 
       if (payload.likedBy) {
-        // +1 if its not me
-        if (payload.likedBy !== user?.id) {
-          setLikeCount((prev) => prev + 1);
-        }
+        setLikeCount((prev) => prev + 1);
       }
 
       if (payload.unlikedBy) {
-        if (payload.unlikedBy !== user?.id) {
-          setLikeCount((prev) => Math.max(0, prev - 1));
-        }
+        setLikeCount((prev) => Math.max(0, prev - 1));
       }
 
       if (payload.newComment) {
@@ -98,12 +89,10 @@ export default function PostCard({ post, onDelete }) {
 
     socket.on("post_update", handleUpdate);
 
-    // JOIN the room for this specific post if using rooms
-    //socket.emit('join_post', post.id); //NEED THIS LISTENER IN SERVER.JS IN BE
-
+    //leave the room
     return () => {
       socket.off("post_update", handleUpdate);
-      socket.emit("leave_post", post.id); //cleanup room
+      socket.emit("leave_post", post.id);
     };
   }, [socket, post.id, user?.id, showComments]);
 
@@ -208,14 +197,14 @@ export default function PostCard({ post, onDelete }) {
             onClick={handleDelete}
             className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all"
           >
-            <Trash2 size={18} />
+            <Trash2 size={20} className="2xl:w-6 2xl:h-6" />
           </button>
         )}
       </div>
 
       {/* Content */}
-      <div className="mb-3">
-        <p className="text-gray-800 text-[15px] leading-relaxed whitespace-pre-line">
+      <div className="mb-3 2xl:mb-5">
+        <p className="text-gray-800 text-[15px] 2xl:text-lg leading-relaxed whitespace-pre-line">
           {post.content}
         </p>
       </div>
@@ -226,7 +215,7 @@ export default function PostCard({ post, onDelete }) {
           <img
             src={post.image}
             alt="Post content"
-            className="w-full h-auto object-cover max-h-[500px]"
+            className="w-full h-auto object-cover max-h-[500px] 2xl:max-h-[700px]"
           />
         </div>
       )}
@@ -258,14 +247,14 @@ export default function PostCard({ post, onDelete }) {
                 alt={post.sharedPost.author.name}
                 className="w-6 h-6 rounded-full object-cover border border-gray-200"
               />
-              <span className="font-bold text-sm">
+              <span className="font-bold text-sm 2xl:text-base">
                 {post.sharedPost.author.name}
               </span>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs 2xl:text-sm text-gray-500">
                 • {safeFormatDate(post.sharedPost.timestamp)}
               </span>
             </div>
-            <p className="text-sm text-gray-800 line-clamp-3">
+            <p className="text-sm 2xl:text-base text-gray-800 line-clamp-3">
               {post.sharedPost.content}
             </p>
           </div>
@@ -325,7 +314,7 @@ export default function PostCard({ post, onDelete }) {
           </div>
 
           {loadingComments ? (
-            <p className="text-xs text-center">Loading...</p>
+            <p className="text-xs 2xl:text-sm text-center">Loading...</p>
           ) : (
             <div className="space-y-4">
               {comments.map((item) => (
@@ -336,7 +325,7 @@ export default function PostCard({ post, onDelete }) {
                         item.author.avatar_url ||
                         `https://ui-avatars.com/api/?name=${item.author.display_name}`
                       }
-                      className="w-8 h-8 rounded-full"
+                      className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-full"
                     />
                   </Link>
                   <div className="bg-gradient-to-br from-gray-50 to-primary-50/20 rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm border border-gray-100/50">
@@ -352,7 +341,7 @@ export default function PostCard({ post, onDelete }) {
                         {safeFormatDate(item.comment.created_at)} ago
                       </span>
                     </div>
-                    <p className="text-sm text-gray-700 mt-1">
+                    <p className="text-sm 2xl:text-base text-gray-700 mt-1">
                       {item.comment.content}
                     </p>
                   </div>

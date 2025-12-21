@@ -9,3 +9,13 @@ RETURN f.username, f.userId;
 // Lấy toàn bộ comment của 1 post
 MATCH (p:Post {postId:$postId})-[:HAS_COMMENT]->(c:Comment)
 RETURN c.text, c.createdAt;
+
+// Cập nhật role và isBanned cho User
+MATCH (u:User)
+SET u.role = COALESCE(u.role, 'user'),
+u.isBanned = COALESCE(u.isBanned, false);
+
+// Cấp quyền Admin bằng userId
+MATCH (u:User {userId: 'id vào đây'})
+SET u.role = 'admin'
+RETURN u.username, u.role;

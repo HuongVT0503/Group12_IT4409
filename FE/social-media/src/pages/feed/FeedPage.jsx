@@ -122,10 +122,17 @@ export default function FeedPage() {
     return <div className="text-center pt-10 text-red-500">{error}</div>;
 
   return (
+<<<<<<< HEAD
     <div className="w-full min-h-screen flex relative bg-gradient-feedpage">
       <div className="w-full flex justify-center">
         <div className="w-full max-w-2xl pt-8 px-4 sm:px-6 bg-primary-300/20 ">
           {/* Create Post Input */}
+=======
+    <div className="w-full min-h-screen bg-[#F3F4F6] pb-20 lg:pb-0">
+      
+      <div className="w-full max-w-5xl mx-auto pt-6 px-0 sm:px-4">
+        {/* Create Post Input */}
+>>>>>>> efd5c306c540e00de4f7b0cb2e7e90cc4e79d410
 
           <CreatePost onPostCreated={handlePostCreated} />
 
@@ -135,12 +142,27 @@ export default function FeedPage() {
               <PostCard key={post.id} post={post} onDelete={handlePostDelete} />
             ))}
 
+<<<<<<< HEAD
             {posts.length === 0 && (
               <p className="text-center text-gray-500 mt-10">
                 No posts yet. Be the first!
               </p>
             )}
           </div>
+=======
+        {/* Feed List */}
+        <div className="flex flex-col gap-4">
+          {posts.map((post) => (
+            <PostCard key={post.id} post={post} onDelete={handlePostDelete}/>
+          ))}
+
+        
+
+          {posts.length === 0 && (
+            <p className="text-center text-gray-500 mt-10">No posts yet. Be the first!</p>
+          )}
+
+>>>>>>> efd5c306c540e00de4f7b0cb2e7e90cc4e79d410
         </div>
         <aside className="hidden xl:block w-[320px] h-[calc(100vh-80px)] overflow-y-auto no-scrollbar sticky top-20 ml-10">
           <RightPanel />

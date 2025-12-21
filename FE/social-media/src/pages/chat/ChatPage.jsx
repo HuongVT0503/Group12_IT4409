@@ -17,13 +17,11 @@ import {
   Image as ImageIcon,
   Check,
   CheckCheck,
-  PlusCircle,
-  ArrowLeft,
-  Smile
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "../../utils/cn";
 import { uploadMedia } from "../../services/mediaService";
+import { useParams, useNavigate, Link } from "react-router-dom";
 
 export default function ChatPage() {
   const { user } = useAuth();
@@ -45,11 +43,26 @@ export default function ChatPage() {
 
   const [friends, setFriends] = useState([]);
 
+  const { id: routeChatId } = useParams();
+  const navigate = useNavigate();
+
   //fetch conversations + friends onload
   useEffect(() => {
     getConversations()
       .then((res) => {
-        setConversations(res.data.conversations || []);
+        const rawConvos = res.data.conversations || [];
+
+        //remove duplicate convos
+        const uniqueConvos = [];
+        const seenUserIds = new Set();
+
+        rawConvos.forEach((conv) => {
+          if (!seenUserIds.has(conv.otherUser.id)) {
+            seenUserIds.add(conv.otherUser.id);
+            uniqueConvos.push(conv);
+          }
+        });
+        setConversations(uniqueConvos);
       })
       .catch((error) => {
         console.error("Failed to fetch conversations", error);
@@ -79,7 +92,10 @@ export default function ChatPage() {
         if (updatedConv) {
           updatedConv = {
             ...updatedConv,
-            lastMessage: payload.message,
+            lastMessage: {
+              ...payload.message,
+              sender: payload.sender || payload.message.sender,
+            },
             updated_at: new Date().toISOString(),
           };
           return [updatedConv, ...others];
@@ -138,10 +154,29 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages]); //auto-scroll
 
+  //restore last active chat
+  useEffect(() => {
+    //convo are loaded
+    if (conversations.length === 0) return;
+
+    let targetId = routeChatId;
+
+    if (targetId && selectedChat?.id !== targetId) {
+      const conv = conversations.find((c) => String(c.id) === String(targetId));
+      if (conv) {
+        handleSelectChat(conv);
+      }
+    }
+  }, [routeChatId, conversations]); //run when URL changes or convos load
+
   //select chat &fetch
   const handleSelectChat = async (conv) => {
     setSelectedChat(conv);
     setIsMobileListVisible(false);
+
+    navigate(`/chat/${conv.id}`); //update URL wo reload
+
+    localStorage.setItem("lastActiveChatId", conv.id);
     try {
       const res = await getMessages(conv.id);
       setMessages(res.data.messages || []);
@@ -215,7 +250,8 @@ export default function ChatPage() {
 
   //
   const handleSend = async (contentOverride = null) => {
-    const actualContent = typeof contentOverride === 'string' ? contentOverride : null;
+    const actualContent =
+      typeof contentOverride === "string" ? contentOverride : null;
     const textToSend = actualContent || inputText;
     if (!textToSend?.trim() || !selectedChat) return;
 
@@ -240,9 +276,8 @@ export default function ChatPage() {
       setConversations((prev) => {
         const others = prev.filter((c) => c.id !== selectedChat.id);
 
-        const existing = prev.find(c => c.id === selectedChat.id);
+        const existing = prev.find((c) => c.id === selectedChat.id);
         const base = existing || selectedChat;
-
 
         const updated = {
           ...base,
@@ -282,6 +317,40 @@ export default function ChatPage() {
     }
   };
 
+  const safeFormatDate = (dateString) => {
+    try {
+      if (!dateString) return "";
+      // formatDistanceToNow returns strings like "5 minutes", addSuffix adds "ago"
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    } catch (e) {
+      console.error("Date error:", e);
+      return "";
+    }
+  };
+
+  //preview txt
+  const renderLastMessage = (chat) => {
+    const msg = chat.lastMessage;
+    //if no message
+    if (!msg) return "Start a conversation";
+
+    //is img
+    const isImage = isImageUrl(msg.content);
+
+    //did current user sent it
+    const isMe = msg.sender?.id === user?.id;
+
+    if (isImage) {
+      if (isMe) return "You sent a picture";
+      return `${
+        chat.otherUser?.display_name?.split(" ")[0] || "User"
+      } sent a picture`;
+    }
+
+    if (isMe) return `You: ${msg.content}`;
+    return msg.content;
+  };
+
   const scrollToBottom = () => {
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -313,7 +382,7 @@ export default function ChatPage() {
             />
             <input
               type="text"
-              placeholder="Search messages..."
+              placeholder="Search for something..."
               className="w-full bg-gray-50 rounded-full py-2.5 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
@@ -322,15 +391,6 @@ export default function ChatPage() {
         {/*Horizontal Friends List */}
         {friends.length > 0 && (
           <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-            <div className="flex flex-col items-center gap-1 min-w-[60px] cursor-pointer group">
-              <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                <PlusCircle size={24} />
-              </div>
-              <span className="text-xs text-gray-500 font-medium truncate w-full text-center">
-                New
-              </span>
-            </div>
-
             {/* Friend Items */}
             {friends.map((friend) => (
               <div
@@ -354,77 +414,75 @@ export default function ChatPage() {
             ))}
           </div>
         )}
-      
 
-      {/* List */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
-        {conversations.length === 0 && (
-          <div className="p-8 text-center text-gray-400 text-sm">
-            No conversations yet
-          </div>
-        )}
-
-        {conversations.map((chat) => (
-          <div
-            key={chat.id}
-            onClick={() => handleSelectChat(chat)}
-            className={cn(
-              "p-4 flex gap-3 cursor-pointer transition-all border-l-4 border-transparent hover:bg-gray-50",
-              selectedChat?.id === chat.id ? "bg-primary/5 border-primary" : ""
-            )}
-          >
-            <div className="relative">
-              <img
-                src={getAvatar(chat.otherUser)}
-                className="w-12 h-12 rounded-full object-cover border border-gray-200"
-                alt={chat.otherUser?.display_name}
-              />
-              {/* Online Status: always online??*/}
-              <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
+        {/* List */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          {conversations.length === 0 && (
+            <div className="p-8 text-center text-gray-400 text-sm">
+              No conversations yet
             </div>
+          )}
 
-            <div className="flex-1 min-w-0 flex flex-col justify-center">
-              <div className="flex justify-between items-baseline mb-0.5">
-                <h4
+          {conversations.map((chat) => (
+            <div
+              key={chat.id}
+              onClick={() => handleSelectChat(chat)}
+              className={cn(
+                "p-4 flex gap-3 cursor-pointer transition-all border-l-4 border-transparent hover:bg-gray-50",
+                selectedChat?.id === chat.id
+                  ? "bg-primary/5 border-primary"
+                  : ""
+              )}
+            >
+              <div className="relative">
+                <img
+                  src={getAvatar(chat.otherUser)}
+                  className="w-12 h-12 rounded-full object-cover border border-gray-200"
+                  alt={chat.otherUser?.display_name}
+                />
+                {/* Online Status: always online??*/}
+                <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
+              </div>
+
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <div className="flex justify-between items-baseline mb-0.5">
+                  <h4
+                    className={cn(
+                      "font-semibold truncate text-[15px]",
+                      selectedChat?.id === chat.id
+                        ? "text-primary"
+                        : "text-gray-900"
+                    )}
+                  >
+                    {chat.otherUser?.display_name}
+                  </h4>
+                  <span className="text-[11px] text-gray-400 font-medium">
+                    {safeFormatDate(
+                      chat.lastMessage?.created_at || chat.updated_at
+                    )}
+                  </span>
+                </div>
+                <p
                   className={cn(
-                    "font-semibold truncate text-[15px]",
+                    "text-sm truncate",
                     selectedChat?.id === chat.id
-                      ? "text-primary"
-                      : "text-gray-900"
+                      ? "text-primary/80 font-medium"
+                      : "text-gray-500"
                   )}
                 >
-                  {chat.otherUser?.display_name}
-                </h4>
-                <span className="text-[11px] text-gray-400 font-medium">
-                  {chat.lastMessage?.created_at
-                    ? formatDistanceToNow(
-                        new Date(chat.lastMessage.created_at),
-                        { addSuffix: false }
-                      )
-                    : ""}
-                </span>
+                  {/*?user is typing? otherwise show last msg */}
+                  {typingUsers[chat.id] ? (
+                    <span className="italic text-primary animate-pulse">
+                      Typing...
+                    </span>
+                  ) : (
+                    renderLastMessage(chat)
+                  )}
+                </p>
               </div>
-              <p
-                className={cn(
-                  "text-sm truncate",
-                  selectedChat?.id === chat.id
-                    ? "text-primary/80 font-medium"
-                    : "text-gray-500"
-                )}
-              >
-                {/*?user is typing? otherwise show last msg */}
-                {typingUsers[chat.id] ? (
-                  <span className="italic text-primary animate-pulse">
-                    Typing...
-                  </span>
-                ) : (
-                  chat.lastMessage?.content || "Start a conversation"
-                )}
-              </p>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
       </div>
 
       {/* RIGHT: Chat Window */}
@@ -456,22 +514,27 @@ export default function ChatPage() {
                     <path d="m15 18-6-6 6-6" />
                   </svg>
                 </button>
-                <img
-                  src={getAvatar(selectedChat.otherUser)}
-                  className="w-10 h-10 rounded-full object-cover border border-gray-200"
-                  alt="User"
-                />
-                <div>
-                  <h3 className="font-bold text-gray-900 leading-tight">
-                    {selectedChat.otherUser?.display_name}
-                  </h3>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    <span className="text-xs text-gray-500 font-medium">
-                      Online
-                    </span>
+                <Link
+                  to={`/profile/${selectedChat.otherUser?.id}`}
+                  className="flex items-center gap-3 hover:opacity-80 transition-opacity group"
+                >
+                  <img
+                    src={getAvatar(selectedChat.otherUser)}
+                    className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                    alt="User"
+                  />
+                  <div>
+                    <h3 className="font-bold text-gray-900 leading-tight">
+                      {selectedChat.otherUser?.display_name}
+                    </h3>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                      <span className="text-xs text-gray-500 font-medium">
+                        Online
+                      </span>
+                    </div>
                   </div>
-                </div>
+                </Link>
               </div>
 
               <div className="flex items-center gap-2 text-primary">
@@ -521,7 +584,7 @@ export default function ChatPage() {
                             className="max-w-[200px] max-h-[200px] rounded-lg object-cover"
                             onError={(e) => {
                               e.target.style.display = "none";
-                            }} 
+                            }}
                           />
                         ) : (
                           <p>{msg.content}</p>

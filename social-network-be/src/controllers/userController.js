@@ -78,13 +78,21 @@ async function getFollowing(req, res, next) {
 }
 
 async function searchUsers(req, res, next) {
-  try {
-    const q = req.query.q || req.query.username || '';
-    const limit = parseInt(req.query.limit || '50');
-    const skip = parseInt(req.query.skip || '0');
-    const data = await userService.searchUsers(q, limit, skip);
-    res.json({ data });
-  } catch (err) { next(err); }
+    try {
+        const q = req.query.q || req.query.username || '';
+        const limit = parseInt(req.query.limit || '50');
+        const skip = parseInt(req.query.skip || '0');
+        const data = await userService.searchUsers(q, limit, skip);
+        res.json({ data });
+    } catch (err) { next(err); }
 }
 
-export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing, searchUsers };
+async function submitReport(req, res, next) {
+    try {
+        const reporterId = req.user.id || req.user.userId;
+        const success = await userService.createUserReport(reporterId, req.body);
+        if (success) { res.status(201).json({ message: "Your report has been submitted" })}
+    } catch (err) { next(err); }
+}
+
+export { getProfile, updateProfile, follow, unfollow, getFollowers, getFollowing, searchUsers, submitReport };
