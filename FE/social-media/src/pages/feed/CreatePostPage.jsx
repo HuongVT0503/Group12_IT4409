@@ -7,13 +7,12 @@ export default function CreatePostPage() {
   return (
     <div className="p-4 max-w-xl mx-auto pt-6">
       <h1 className="text-2xl font-bold mb-6 text-gray-800">Create New Post</h1>
-      
-      
-      <CreatePost 
+
+      <CreatePost
         onPostCreated={() => {
           //success-> back to feed
-          navigate("/"); 
-        }} 
+          navigate("/");
+        }}
       />
     </div>
   );

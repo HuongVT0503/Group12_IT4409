@@ -11,10 +11,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroui/button": "^2.2.29",
+    "@heroui/react": "^2.8.6",
+    "@heroui/system": "^2.4.25",
+    "@heroui/theme": "^2.4.25",
     "@tailwindcss/postcss": "^4.1.17",
     "@tailwindcss/vite": "^4.0.0",
     "axios": "^1.13.2",
     "date-fns": "^4.1.0",
+    "framer-motion": "^12.23.26",
     "lucide-react": "^0.555.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

@@ -12,6 +12,7 @@ import { getComments, createComment } from "../../services/commentService";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
 import { Link, useNavigate } from "react-router-dom";
+import Avatar from "../common/Avatar";
 
 const safeFormatDate = (dateString) => {
   try {
@@ -40,8 +41,7 @@ export default function PostCard({ post, onDelete }) {
   const [shareCount, setShareCount] = useState(post.stats?.shares || 0);
 
   //initialize
-  useEffect(() => {
-  }, [post]);
+  useEffect(() => {}, [post]);
 
   //listen for real-time update
   useEffect(() => {
@@ -182,35 +182,31 @@ export default function PostCard({ post, onDelete }) {
     user?.id === post.author.id || user?.id === post.author.userId;
 
   return (
-    <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4">
+    <div className="w-full bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_8px_32px_rgba(31,38,135,0.12)] border border-white/40 p-5 transition-all duration-300 hover:shadow-[0_12px_40px_rgba(31,38,135,0.18)] hover:-translate-y-0.5">
       {/* Header */}
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex gap-3">
-          <Link to={`/profile/${post.author.id}`}>
-            <img
-              src={
-                post.author.avatar ||
-                `https://ui-avatars.com/api/?name=${post.author.name}`
-              }
-              alt={post.author.name}
-              className="w-10 h-10 rounded-full object-cover border border-gray-200"
-            />
-          </Link>
-          <div>
-            <Link to={`/profile/${post.author.id}`}>
-              <h3 className="font-bold text-gray-900 leading-tight">
-                {post.author.name}
-              </h3>
-            </Link>
+      <div className="flex justify-between items-center mb-4">
+        <Link to={`/profile/${post.author.id}`} className="flex gap-3">
+          <Avatar
+            src={
+              post.author.avatar ||
+              `https://ui-avatars.com/api/?name=${post.author.name}`
+            }
+            alt={post.author.name}
+            size={11}
+          />
+          <div className="flex flex-col items-start justify-between">
+            <h3 className="font-bold text-gray-900 leading-tight">
+              {post.author.name}
+            </h3>
             <p className="text-sm text-gray-500">
               @{post.author.handle} • {safeFormatDate(post.timestamp)}
             </p>
           </div>
-        </div>
+        </Link>
         {isAuthor && (
           <button
             onClick={handleDelete}
-            className="text-gray-400 hover:text-red-600"
+            className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all"
           >
             <Trash2 size={18} />
           </button>
@@ -226,7 +222,7 @@ export default function PostCard({ post, onDelete }) {
 
       {/* Media */}
       {post.image && !post.sharePost && (
-        <div className="mb-4 rounded-xl overflow-hidden border border-gray-100">
+        <div className="mb-4 rounded-xl overflow-hidden border border-gray-200/60 shadow-sm">
           <img
             src={post.image}
             alt="Post content"
@@ -238,12 +234,12 @@ export default function PostCard({ post, onDelete }) {
       {/*Shared Post / if isrepost */}
       {post.sharedPost && (
         <div
-          className="mb-4 border border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:bg-gray-50 transition-colors"
+          className="mb-4 border border-primary-300/50 rounded-xl overflow-hidden cursor-pointer bg-gradient-to-br from-primary-50/30 to-transparent hover:from-primary-50/50 transition-all shadow-sm"
           onClick={() => navigate(`/post/${post.sharedPost.id}`)} //og post link
         >
           {/* Sharedpost media */}
           {post.sharedPost.image && (
-            <div className="h-48 w-full overflow-hidden bg-gray-100">
+            <div className="h-48 w-full overflow-hidden bg-gray-100 border-b border-neutral-300">
               <img
                 src={post.sharedPost.image}
                 alt="Shared post content"
@@ -251,13 +247,14 @@ export default function PostCard({ post, onDelete }) {
               />
             </div>
           )}
-
           {/* Sharedpost in4 */}
           <div className="p-3">
             <div className="flex items-center gap-2 mb-2">
               <img
-                src={post.sharedPost.author.avatar||
-                  `https://ui-avatars.com/api/?name=${post.sharedPost.author.name}`}
+                src={
+                  post.sharedPost.author.avatar ||
+                  `https://ui-avatars.com/api/?name=${post.sharedPost.author.name}`
+                }
                 alt={post.sharedPost.author.name}
                 className="w-6 h-6 rounded-full object-cover border border-gray-200"
               />
@@ -276,44 +273,46 @@ export default function PostCard({ post, onDelete }) {
       )}
 
       {/* Actions */}
-      <div className="flex items-center gap-4 border-t border-gray-100 pt-3 mt-2">
+      <div className="flex items-center gap-6 border-t border-gray-200/60 pt-4 mt-3">
         <button
           onClick={toggleLike}
-          className={`flex items-center gap-2 text-sm font-medium transition-colors ${
-            isLiked ? "text-red-500" : "text-gray-500 hover:text-gray-700"
+          className={`flex items-center gap-2 text-sm font-semibold transition-all hover:scale-105 ${
+            isLiked ? "text-[#ff6b9d]" : "text-gray-600 hover:text-primary-500"
           }`}
         >
-          <Heart size={20} className={isLiked ? "fill-current" : ""} />
+          <Heart size={21} className={isLiked ? "fill-current" : ""} />
           <span>{likeCount > 0 ? likeCount : "Like"}</span>
         </button>
 
         <button
           onClick={handleFetchComments}
-          className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700"
+          className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-primary-500 transition-all hover:scale-105"
         >
-          <MessageSquare size={20} />
+          <MessageSquare size={21} />
           <span>{commentCount > 0 ? commentCount : "Comment"}</span>
         </button>
 
         <button
           onClick={handleShare}
           disabled={isSharing}
-          className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50"
+          className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-primary-500 transition-all hover:scale-105 disabled:opacity-50"
         >
-          <Share2 size={20} />
-          <span>{isSharing ? "Sharing..." : shareCount>0 ? shareCount : "Share"}</span>
+          <Share2 size={21} />
+          <span>
+            {isSharing ? "Sharing..." : shareCount > 0 ? shareCount : "Share"}
+          </span>
         </button>
       </div>
       {/* Comments Section  */}
       {showComments && (
-        <div className="mt-4 pt-4 border-t border-gray-100 animate-in fade-in slide-in-from-top-2">
-          <div className="flex gap-2 items-center mb-4">
+        <div className="mt-4 pt-4 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-2">
+          <div className="flex gap-3 items-center mb-4">
             <img
               src={
                 user?.avatar_url ||
                 `https://ui-avatars.com/api/?name=${user?.display_name}`
               }
-              className="w-8 h-8 rounded-full"
+              className="w-9 h-9 rounded-full ring-2 ring-primary-400/20"
             />
             <input
               type="text"
@@ -321,7 +320,7 @@ export default function PostCard({ post, onDelete }) {
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={handlePostComment}
               placeholder="Write a comment..."
-              className="w-full bg-gray-100 rounded-full py-2 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
+              className="w-full bg-gradient-to-r from-gray-50 to-primary-50/30 rounded-full py-2.5 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400/40 transition-all"
             />
           </div>
 
@@ -340,16 +339,16 @@ export default function PostCard({ post, onDelete }) {
                       className="w-8 h-8 rounded-full"
                     />
                   </Link>
-                  <div className="bg-gray-50 rounded-2xl rounded-tl-none px-4 py-2">
+                  <div className="bg-gradient-to-br from-gray-50 to-primary-50/20 rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm border border-gray-100/50">
                     <div className="flex justify-between items-baseline gap-2">
                       <Link
                         to={`/profile/${item.author.id || item.author.userId}`}
                       >
-                        <span className="font-semibold text-sm">
+                        <span className="font-semibold text-sm text-gray-800">
                           {item.author.display_name}
                         </span>
                       </Link>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-500">
                         {safeFormatDate(item.comment.created_at)} ago
                       </span>
                     </div>
