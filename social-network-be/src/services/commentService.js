@@ -20,3 +20,7 @@ export async function createComment({ authorId, postId, content, parentCommentId
 export async function getComments(postId, limit = 50) {
   return await commentRepo.getCommentsForPost(postId, limit);
 }
+
+export async function deleteComment(commentId, userId) {
+    return await commentRepo.deleteComment(commentId, userId);
+}
