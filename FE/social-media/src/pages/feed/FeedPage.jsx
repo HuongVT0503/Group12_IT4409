@@ -3,8 +3,8 @@ import PostCard from "../../components/feed/PostCard";
 //import Button from "../../components/common/ButtonComponent";
 import CreatePost from "../../components/feed/CreatePost.jsx";
 import { getFeed } from "../../services/postService";
-import {useSocket} from "../../context/SocketContext";
-
+import { useSocket } from "../../context/SocketContext";
+import RightPanel from "../../components/layout/RightPanel.jsx";
 
 export default function FeedPage() {
   const [posts, setPosts] = useState([]);
@@ -69,7 +69,7 @@ export default function FeedPage() {
       const response = await getFeed();
       //be returns: { posts: [...] }
       //map backend data structure to frontend component expectations
-      const formattedPosts = response.data.posts.map ( formatPostData );
+      const formattedPosts = response.data.posts.map(formatPostData);
       setPosts(formattedPosts);
     } catch (err) {
       console.error(err);
@@ -85,69 +85,66 @@ export default function FeedPage() {
   }, []);
 
   const handlePostCreated = (newPostData) => {
-   
-
     const formatted = formatPostData(newPostData);
-    setPosts(prev => {
-        if (prev.some(p => p.id === formatted.id)) return prev;
-        return [formatted, ...prev];
+    setPosts((prev) => {
+      if (prev.some((p) => p.id === formatted.id)) return prev;
+      return [formatted, ...prev];
     });
   };
 
   const handlePostDelete = (postId) => {
-    setPosts(prev => prev.filter(p => p.id !== postId));
-  }
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+  };
 
   // Realtime listener for new posts
   useEffect(() => {
-    if(!socket) return;
+    if (!socket) return;
 
     //listener for 'new_post' event by be realtimeService.js
     const handleNewPost = (newPostData) => {
       const newPostFormatted = formatPostData(newPostData);
-      
+
       //prepend
       setPosts((prevPosts) => {
         // Prevent duplicates
-        if (prevPosts.some(p => p.id === newPostFormatted.id)) return prevPosts;
+        if (prevPosts.some((p) => p.id === newPostFormatted.id))
+          return prevPosts;
         return [newPostFormatted, ...prevPosts];
       });
     };
 
-    socket.on('new_post', (handleNewPost));
-    return () => socket.off('new_post', handleNewPost);
+    socket.on("new_post", handleNewPost);
+    return () => socket.off("new_post", handleNewPost);
   }, [socket]);
-
-
 
   if (loading) return <div className="text-center pt-10">Loading feed...</div>;
   if (error)
     return <div className="text-center pt-10 text-red-500">{error}</div>;
 
-
-  //////////////////////////////
   return (
-    <div className="w-full min-h-screen bg-[#F3F4F6] pb-20 lg:pb-0">
-      
-      <div className="max-w-xl mx-auto pt-6 px-4">
-        {/* Create Post Input */}
+    <div className="w-full min-h-screen flex relative bg-gradient-feedpage">
+      <div className="w-full flex justify-center">
+        <div className="w-full max-w-2xl pt-8 px-4 sm:px-6 bg-primary-300/20 ">
+          {/* Create Post Input */}
 
-        <CreatePost onPostCreated={handlePostCreated} />
+          <CreatePost onPostCreated={handlePostCreated} />
 
+          {/* Feed List */}
+          <div className="flex flex-col gap-4">
+            {posts.map((post) => (
+              <PostCard key={post.id} post={post} onDelete={handlePostDelete} />
+            ))}
 
-        {/* Feed List */}
-        <div className="flex flex-col gap-2">
-          {posts.map((post) => (
-            <PostCard key={post.id} post={post} onDelete={handlePostDelete}/>
-          ))}
-
-        
-
-          {posts.length === 0 && (
-            <p className="text-center text-gray-500 mt-10">No posts yet. Be the first!</p>
-          )}
-
+            {posts.length === 0 && (
+              <p className="text-center text-gray-500 mt-10">
+                No posts yet. Be the first!
+              </p>
+            )}
+          </div>
         </div>
+        <aside className="hidden xl:block w-[320px] h-[calc(100vh-80px)] overflow-y-auto no-scrollbar sticky top-20 ml-10">
+          <RightPanel />
+        </aside>
       </div>
     </div>
   );

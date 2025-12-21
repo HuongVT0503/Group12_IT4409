@@ -14,7 +14,8 @@ import { formatDistanceToNow } from "date-fns";
 import { getProfile } from "../../services/userService";
 import { searchUsers } from "../../services/userService";
 
-//
+import { Avatar, Badge, Button } from "@heroui/react";
+
 //validate date b4 passing it to formatDistanceToNow
 const getRelativeTime = (dateInput) => {
   if (!dateInput) return "Just now";
@@ -179,8 +180,6 @@ export default function TopBar() {
     }
   }, [notis, senderNames, user?.id]);
 
-  /////////
-
   const handleClearSearch = () => {
     setSearchQuery("");
     setSearchResults([]);
@@ -264,28 +263,30 @@ export default function TopBar() {
   };
 
   return (
-    <header className="fixed top-0 left-0 w-full bg-white h-16 lg:h-20 border-b border-gray-100 z-50 px-4 lg:px-10 flex items-center justify-between shadow-sm">
+    <header
+      className="fixed top-0 left-0 z-100
+     w-full bg-white border-b border-neutral-300 
+     flex items-center justify-between
+      px-4 h-16 lg:h-20  lg:px-10  shadow-sm"
+    >
       {/* Logo Area */}
       <div className="flex items-center gap-3">
         <img
           src={logo}
           alt="SocioICT Logo"
-          className="h-8 w-8 lg:h-10 lg:w-10 object-contain"
+          className="h-6 w-6 lg:h-8 lg:w-8 object-contain"
         />
-        <span className="text-2xl lg:text-3xl font-extrabold text-primary hidden sm:block">
+        <span className="text-2xl lg:text-2xl font-extrabold text-purple-600 hidden sm:block">
           Social Media
         </span>
       </div>
 
       {/* Center Search*/}
-      <div
-        className=" md:flex flex-1 max-w-md mx-8 relative"
-        ref={searchRef}
-      >
+      <div className=" md:flex flex-1 max-w-lg mx-8 relative" ref={searchRef}>
         <div className="relative w-full">
           <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            size={20}
+            size={22}
           />
           <input
             type="text"
@@ -295,7 +296,7 @@ export default function TopBar() {
             onFocus={() => {
               if (searchResults.length > 0) setShowSearchDropdown(true);
             }}
-            className="w-full bg-gray-100 rounded-full py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+            className="w-full bg-gray-200 rounded-full py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all"
           />
           {/* Clear x btn (show when typing) */}
           {searchQuery && (
@@ -303,7 +304,7 @@ export default function TopBar() {
               onClick={handleClearSearch}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
-              <X size={16} />
+              <X size={18} />
             </button>
           )}
         </div>
@@ -322,7 +323,7 @@ export default function TopBar() {
                     key={user.id}
                     to={`/profile/${user.id}`}
                     onClick={handleClearSearch} //close search on click
-                    className="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-none"
+                    className="flex items-center gap-3 p-3 hover:bg-gray-100 transition-colors border-b border-gray-50 last:border-none"
                   >
                     <img
                       src={
@@ -366,7 +367,7 @@ export default function TopBar() {
 
           {showNoti && (
             <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-              <div className="p-4 border-b border-gray-100 font-bold text-gray-900">
+              <div className="p-4 border-b border-gray-200 font-bold text-gray-900">
                 <span>Notifications</span>
                 {unreadCount > 0 && (
                   <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">

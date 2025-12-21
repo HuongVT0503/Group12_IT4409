@@ -90,6 +90,7 @@ function AppRouter() {
         <Route path="post/:id" element={<PostDetailsPage />} />
         
         <Route path="chat" element={<ChatPage />} />
+        <Route path="chat/:id" element={<ChatPage />} />
         <Route path="connections" element={<ConnectionsPage />} />
         <Route path="create" element={<CreatePostPage />} />
         <Route path="settings" element={<SettingsPage />} />

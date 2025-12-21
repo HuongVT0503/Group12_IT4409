@@ -46,9 +46,16 @@ async function getUserConversations(userId) {
       WHERE participantId <> u.id
       WITH conv, participant, u
       OPTIONAL MATCH (conv)<-[:BELONGS_TO]-(msg:Message)
-      WITH conv, participant, msg
+      OPTIONAL MATCH (sender:User)-[:SENT]->(msg)
+      WITH conv, participant, msg, sender
       ORDER BY msg.created_at DESC
-      WITH conv, participant, collect(msg) AS messages
+
+      WITH conv, participant, collect({
+        id: msg.id,
+        content: msg.content,
+        created_at: msg.created_at,
+        sender: { id: sender.id } 
+      }) AS messages
       WITH conv, participant, messages[0] AS lastMessage
       RETURN {
         id: conv.id,
@@ -66,7 +73,21 @@ async function getUserConversations(userId) {
     `;
 
     const result = await session.run(query, { userId });
-    const conversations = result.records.map((r) => r.get("conversation"));
+    const conversations = result.records.map((r) => {
+      const conv = r.get("conversation");
+
+      if (conv.updated_at) {
+        conv.updated_at = new Date(conv.updated_at.toString()).toISOString();
+      }
+
+      if (conv.lastMessage && conv.lastMessage.created_at) {
+        conv.lastMessage.created_at = new Date(
+          conv.lastMessage.created_at.toString()
+        ).toISOString();
+      }
+
+      return conv;
+    });
 
     return conversations;
   } finally {

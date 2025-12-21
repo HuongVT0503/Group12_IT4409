@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { X, Camera, Image as ImageIcon } from "lucide-react";
 import Button from "../common/ButtonComponent";
 import InputField from "../common/InputField";
+import TextAreaField from "../common/TextAreaField";
 import { updateProfile } from "../../services/userService";
 import { useAuth } from "../../context/AuthContext";
 import { uploadMedia } from "../../services/mediaService";
+import Avatar from "../common/Avatar";
 
 export default function EditProfileModal({
   isOpen,
@@ -88,10 +90,10 @@ export default function EditProfileModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-200 flex items-center p-4 justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl  shadow-xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+        <div className="flex items-center justify-between p-4 border-b border-neutral-300">
           <h2 className="text-xl font-bold text-gray-900">Edit Profile</h2>
           <button
             onClick={onClose}
@@ -110,16 +112,17 @@ export default function EditProfileModal({
           >
             {/* Avatar */}
             <div className="flex flex-col items-center gap-4">
-              <div className="relative group cursor-pointer"
+              <div
+                className="relative group cursor-pointer"
                 onClick={() => !uploading && avatarInputRef.current?.click()}
-                title="Upload new avatar">
-                <img
+                title="Upload new avatar"
+              >
+                <Avatar
                   src={
                     formData.avatar_url ||
                     `https://ui-avatars.com/api/?name=${formData.display_name}`
                   }
-                  alt="Avatar Preview"
-                  className="w-24 h-24 rounded-full object-cover border-4 border-gray-100"
+                  size={25}
                 />
                 <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <Camera className="text-white" />
@@ -132,11 +135,10 @@ export default function EditProfileModal({
                   onChange={(e) => handleImageUpload(e, "avatar_url")}
                 />
               </div>
-              
-                <p className="text-xs text-gray-400 mt-1">
-                  Click on avatar to change.
-                </p>
-              
+
+              <p className="text-xs text-gray-400 mt-1">
+                Click on avatar to change.
+              </p>
             </div>
 
             <InputField
@@ -147,73 +149,78 @@ export default function EditProfileModal({
               required
             />
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-base font-medium text-gray-600 ml-1">
-                Bio
-              </label>
-              <textarea
-                name="bio"
-                value={formData.bio}
-                onChange={handleChange}
-                rows={3}
-                maxLength={150}
-                className="w-full font-medium rounded-[var(--radius-btn)] border border-gray-300 bg-white px-4 py-3 text-base text-black placeholder:text-gray-400 outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 resize-none"
-                placeholder="Tell us about yourself..."
-              />
-              <div className="text-right text-xs text-gray-400">
-                {formData.bio.length}/150
-              </div>
-            </div>
+            <TextAreaField
+              label="Bio"
+              name="bio"
+              value={formData.bio}
+              onChange={handleChange}
+              rows={4}
+              maxLength={150}
+              showCounter={true}
+              placeholder="Tell us about yourself..."
+            />
 
             <div className="w-full">
               <div className="flex justify-between items-center mb-1">
-                <label className="text-sm font-medium text-gray-700 block">
+                <label className="text-sm font-semibold text-gray-700">
                   Edit Cover Photo
                 </label>
-                <div 
-                  className={`relative w-full h-32 bg-gray-50 rounded-xl overflow-hidden cursor-pointer border-2 border-dashed border-gray-200 hover:border-primary/50 transition-all group ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+                <div
+                  className={`relative w-full h-40 bg-gray-50 rounded-xl overflow-hidden cursor-pointer border-2 border-dashed border-gray-200 hover:border-primary/50 transition-all group ${
+                    uploading ? "opacity-50 pointer-events-none" : ""
+                  }`}
                   onClick={() => coverInputRef.current?.click()}
                   title="Click to upload new cover"
                 >
-                   {formData.cover_url ? (
-                      <>
-                        <img 
-                          src={formData.cover_url} 
-                          alt="Cover Preview" 
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Camera className="text-white drop-shadow-md" />
-                        </div>
-                      </>
-                   ) : (
-                      <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
-                          <ImageIcon size={24} />
-                          <span className="text-xs font-medium">Click to upload cover photo</span>
+                  {formData.cover_url ? (
+                    <>
+                      <img
+                        src={formData.cover_url}
+                        alt="Cover Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Camera className="text-white drop-shadow-md" />
                       </div>
-                   )}
-                   
-                   <input 
-                      type="file" 
-                      ref={coverInputRef} 
-                      className="hidden" 
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, 'cover_url')}
-                    />
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
+                      <ImageIcon size={24} />
+                      <span className="text-xs font-medium">
+                        Click to upload cover photo
+                      </span>
+                    </div>
+                  )}
+
+                  <input
+                    type="file"
+                    ref={coverInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e, "cover_url")}
+                  />
                 </div>
-            </div>
+              </div>
             </div>
           </form>
         </div>
 
         {/* Footer */}
         <div className="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
-          <Button variant="ghost" onClick={onClose} type="button">
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            type="button"
+            className="rounded-lg py-2"
+            size="sm"
+          >
             Cancel
           </Button>
           <Button
             type="submit"
             form="edit-profile-form"
+            className="rounded-lg py-2"
+            size="sm"
             loading={loading || uploading}
             disabled={uploading}
           >

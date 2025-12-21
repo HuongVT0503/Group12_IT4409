@@ -5,13 +5,12 @@ import { cn } from "../../utils/cn";
 //   if (typeof document === "undefined") return;
 //   if (document.getElementById("btn-styles")) return; // avoid duplicates
 
-
 const Button = forwardRef(
   (
     {
       as: Comp = "button",
       variant = "primary", // 'primary' | 'outline' | 'ghost'
-      size = "md", // 'sm' | 'md' | 'lg'
+      size = "", // 'sm' | 'md' | 'lg'
       loading = false,
       //disabled,
       className,
@@ -25,13 +24,14 @@ const Button = forwardRef(
     // }, []);
 
     const base =
-      "relative inline-flex items-center justify-center font-medium transition-all active:translate-y-[1px] disabled:opacity-65 disabled:cursor-not-allowed rounded-[var(--radius-btn)]";
+      "relative inline-flex items-center justify-center font-medium transition-all active:translate-y-[1px] disabled:opacity-65 disabled:cursor-not-allowed rounded-[var(--radius-btn)] cursor-pointer";
 
     const variants = {
       primary:
-        "bg-gradient-primary text-white shadow-md hover:brightness-110 border border-transparent",
-      outline: "bg-white text-primary border border-primary hover:bg-gray-50",
-      ghost: "bg-transparent text-primary hover:bg-primary/10",
+        "bg-gradient-primary text-white shadow-sm hover:brightness-110 border border-neutral-300",
+      outline:
+        "bg-white text-primary border border-neutral-300 hover:bg-gray-50",
+      ghost: "bg-neutral-300 text-primary hover:bg-neutral-400",
     };
 
     const sizes = {
