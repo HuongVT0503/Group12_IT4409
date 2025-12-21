@@ -13,10 +13,111 @@ async function createUser({ id, username, email, password_hash, display_name, da
          date_of_birth:$date_of_birth,
          gender:$gender,
          phone:$phone,
+         role: $role, 
+         isBanned: false,
          created_at: datetime()
        }) RETURN u`,
       { id, username, email, password_hash, display_name, date_of_birth, gender, phone }
     );
+    return res.records[0].get('u').properties;
+  } finally {
+    await session.close();
+  }
+}
+
+async function createOAuthUser({ id, email, display_name, provider, providerId, profilePicture }) {
+  const session = getSession();
+  try {
+    const baseUsername = display_name ? display_name.replace(/\s+/g, '').toLowerCase() : email.split('@')[0];
+    let username = baseUsername;
+    let counter = 1;
+    let existing = await findByUsername(username);
+    while (existing) {
+      username = `${baseUsername}${counter}`;
+      existing = await findByUsername(username);
+      counter++;
+    }
+
+    const oauthFieldName = `${provider}_id`;
+    const params = {
+      id,
+      email,
+      username,
+      display_name: display_name || email.split('@')[0],
+      providerId,
+      profilePicture: profilePicture || null,
+      role: 'user',
+      isBanned: false
+    };
+
+    const setClause = `
+      id: $id,
+      email: $email,
+      username: $username,
+      display_name: $display_name,
+      ${oauthFieldName}: $providerId,
+      avatar: $profilePicture,
+      role: $role,
+      isBanned: $isBanned,
+      created_at: datetime()
+    `;
+
+    const res = await session.run(
+      `CREATE (u:User {${setClause}}) RETURN u`,
+      params
+    );
+    return res.records[0].get('u').properties;
+  } finally {
+    await session.close();
+  }
+}
+
+async function findByGoogleId(googleId) {
+  const session = getSession();
+  try {
+    const res = await session.run(
+      `MATCH (u:User {google_id:$googleId}) RETURN u LIMIT 1`, 
+      { googleId }
+    );
+    if (!res.records.length) return null;
+    return res.records[0].get('u').properties;
+  } finally {
+    await session.close();
+  }
+}
+
+async function findByFacebookId(facebookId) {
+  const session = getSession();
+  try {
+    const res = await session.run(
+      `MATCH (u:User {facebook_id:$facebookId}) RETURN u LIMIT 1`, 
+      { facebookId }
+    );
+    if (!res.records.length) return null;
+    return res.records[0].get('u').properties;
+  } finally {
+    await session.close();
+  }
+}
+
+async function updateOAuthProfile(userId, provider, providerId, profilePicture) {
+  const session = getSession();
+  try {
+    const oauthFieldName = `${provider}_id`;
+    const params = {
+      userId,
+      providerId,
+      profilePicture: profilePicture || null
+    };
+
+    const res = await session.run(
+      `MATCH (u:User {id:$userId}) 
+       SET u.${oauthFieldName} = $providerId, u.avatar = $profilePicture 
+       RETURN u`,
+      params
+    );
+    
+    if (!res.records.length) return null;
     return res.records[0].get('u').properties;
   } finally {
     await session.close();
@@ -126,22 +227,62 @@ async function getFollowing(userId, limit = 50) {
   }
 }
 
-export {
-  createUser, findByEmail, findByUsername, findById, updateProfile,
-  followUser, unfollowUser, getFollowers, getFollowing, searchByUsername
-};
-
 async function searchByUsername(q, limit = 50, skip = 0) {
-  const session = getSession();
-  try {
-    const res = await session.run(
-      `MATCH (u:User)
+    const session = getSession();
+    try {
+        const res = await session.run(
+            `MATCH (u:User)
        WHERE toLower(u.username) CONTAINS toLower($q)
        RETURN u SKIP $skip LIMIT $limit`,
-      { q, limit: neo4j.int(limit), skip: neo4j.int(skip) }
+            { q, limit: neo4j.int(limit), skip: neo4j.int(skip) }
+        );
+        return res.records.map(r => r.get('u').properties);
+    } finally {
+        await session.close();
+    }
+}
+
+
+
+// User tạo báo cáo
+async function createReport({ reportId, reporterId, targetId, targetType, reason }) {
+  const session = getSession();
+  try {
+    const idField = targetType === 'User' ? 'userId' : 'postId';
+    const res = await session.run(
+        `MATCH (reporter:User {userId: $reporterId})
+         MATCH (target:${targetType} {${idField}: $targetId})
+         MERGE (reporter)-[r:REPORTED]->(target)
+         ON CREATE SET 
+            r.reportId = $reportId,
+            r.reason = $reason,
+            r.createdAt = datetime()
+         ON MATCH SET
+            r.reason = $reason,
+            r.updatedAt = datetime()
+         RETURN r`,
+        { reportId, reporterId, targetId, reason }
     );
-    return res.records.map(r => r.get('u').properties);
+    return res.records.length > 0;
   } finally {
     await session.close();
   }
 }
+
+export {
+  createUser, 
+  createOAuthUser,
+  findByEmail, 
+  findByUsername, 
+  findById, 
+  findByGoogleId,
+  findByFacebookId,
+  updateProfile,
+  updateOAuthProfile,
+  followUser, 
+  unfollowUser, 
+  getFollowers, 
+  getFollowing,
+  searchByUsername, 
+  createReport
+};
