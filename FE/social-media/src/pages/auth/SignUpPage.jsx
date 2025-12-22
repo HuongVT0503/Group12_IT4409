@@ -18,9 +18,30 @@ export default function SignUpPage({ onSwitch, onSuccess, onBack }) {
     confirmPassword: "",
   });
 
+  // const [layout, setLayout] = useState({
+  //   isShort: false,
+  //   isNarrow: false,
+  //   isWide: false,
+  // });
+
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
+  // useEffect(() => {
+  //   const check = () => {
+  //     if (typeof window === "undefined") return;
+  //     const h = window.innerHeight;
+  //     const w = window.innerWidth;
+  //     setLayout({
+  //       isShort: h < 680,
+  //       isNarrow: w <= 480,
+  //       isWide: w >= 1024,
+  //     });
+  //   };
+  //   check();
+  //   window.addEventListener("resize", check);
+  //   return () => window.removeEventListener("resize", check);
+  // }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,7 +52,19 @@ export default function SignUpPage({ onSwitch, onSuccess, onBack }) {
     e.preventDefault();
     setErr("");
 
-    
+    // if (
+    //   !form.firstName ||
+    //   !form.lastName ||
+    //   !form.email ||
+    //   !form.dob ||
+    //   !form.gender ||
+    //   !form.phone ||
+    //   !form.password ||
+    //   !form.confirmPassword
+    // ) {
+    //   setErr("Please fill in all required fields.");
+    //   return;
+    // }
     if (Object.values(form).some(v => !v)) return setErr("Fill all fields.");
 
     if (form.password !== form.confirmPassword) {
@@ -42,7 +75,25 @@ export default function SignUpPage({ onSwitch, onSuccess, onBack }) {
     setLoading(true);
 
     try {
-      
+      // const res = await fetch("/api/auth/register", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ form
+      //     // firstName: form.firstName,
+      //     // lastName: form.lastName,
+      //     // email: form.email,
+      //     // password: form.password,
+      //     // phone: form.phone,
+      //     // dob: form.dob,
+      //     // gender: form.gender,
+      //   }),
+      // });
+
+      // const data = await res.json();
+      // if (!res.ok)
+      //   throw new Error(data?.error || data?.message || "Sign up failed.");
+
+
       const data = await registerUser({ form });
 
       
@@ -56,6 +107,8 @@ export default function SignUpPage({ onSwitch, onSuccess, onBack }) {
       setLoading(false);
     }
   }
+
+  //const { isShort, isNarrow, isWide } = layout;
 
 
 

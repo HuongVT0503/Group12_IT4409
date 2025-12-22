@@ -40,6 +40,15 @@ const Button = forwardRef(
       lg: "h-14 lg:h-16 px-8 text-xl lg:text-2xl w-full",
     };
 
+    // const classes = cx(
+    //   "btn",
+    //   `btn--${variant}`,
+    //   size && `btn--${size}`,
+    //   className
+    // );
+
+    //const isDisabled = disabled || loading;
+
     return (
       <Comp
         ref={ref}

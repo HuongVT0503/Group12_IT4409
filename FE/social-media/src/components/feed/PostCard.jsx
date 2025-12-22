@@ -15,7 +15,7 @@ import {
 } from "../../services/commentService";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Avatar from "../common/Avatar";
 
 const safeFormatDate = (dateString) => {
@@ -30,7 +30,7 @@ const safeFormatDate = (dateString) => {
 
 export default function PostCard({ post, onDelete }) {
   const { user } = useAuth();
-  //const navigate = useNavigate();
+  const navigate = useNavigate();
   const socket = useSocket();
 
   const [isSharing, setIsSharing] = useState(false);
@@ -43,10 +43,6 @@ export default function PostCard({ post, onDelete }) {
   const [newComment, setNewComment] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
   const [shareCount, setShareCount] = useState(post.stats?.shares || 0);
-
-  //
-  const [replyingToId, setReplyingToId] = useState(null);
-  const [replyText, setReplyText] = useState("");
 
   const commentTree = useMemo(() => {
     const map = {};
@@ -67,13 +63,6 @@ export default function PostCard({ post, onDelete }) {
 
     return roots;
   }, [comments]);
-
-  const submitReply = (parentId) => {
-    if (!replyText.trim()) return;
-    handleReplySubmit(parentId, replyText);
-    setReplyingToId(null);
-    setReplyText("");
-  };
 
   //initialize
   useEffect(() => {}, [post]);
@@ -101,7 +90,7 @@ export default function PostCard({ post, onDelete }) {
 
       if (payload.newComment) {
         if (payload.newComment.author?.id === user?.id) {
-          return;
+            return;
         }
         //be payload: { newComment: commentObj }
         //commentCount;
@@ -128,24 +117,22 @@ export default function PostCard({ post, onDelete }) {
       }
 
       if (payload.deletedCommentId) {
+
         //check existence b4 del //if all cmts r loadedbut this id is missing then it is del locally already
-        const isCommentPresent = comments.some(
-          (c) => c.comment.id === payload.deletedCommentId
-        );
+        const isCommentPresent = comments.some(c => c.comment.id === payload.deletedCommentId);
         if (comments.length > 0 && !isCommentPresent) {
-          return;
+            return;
         }
 
+        
         const idsToRemove = new Set([
           payload.deletedCommentId,
-          ...getDescendantIds(payload.deletedCommentId, comments),
+          ...getDescendantIds(payload.deletedCommentId, comments) 
         ]);
 
         setCommentCount((prev) => Math.max(0, prev - idsToRemove.size));
         if (showComments) {
-          setComments((prev) =>
-            prev.filter((c) => !idsToRemove.has(c.comment.id))
-          );
+          setComments((prev) => prev.filter((c) => !idsToRemove.has(c.comment.id)));
         }
       }
     };
@@ -347,6 +334,47 @@ export default function PostCard({ post, onDelete }) {
         </div>
       )}
 
+      {/*Shared Post / if isrepost */}
+      {post.sharedPost && (
+        <div
+          className="mb-4 border border-primary-300/50 rounded-xl overflow-hidden cursor-pointer bg-gradient-to-br from-primary-50/30 to-transparent hover:from-primary-50/50 transition-all shadow-sm"
+          onClick={() => navigate(`/post/${post.sharedPost.id}`)} //og post link
+        >
+          {/* Sharedpost media */}
+          {post.sharedPost.image && (
+            <div className="h-48 w-full overflow-hidden bg-gray-100 border-b border-neutral-300">
+              <img
+                src={post.sharedPost.image}
+                alt="Shared post content"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+          {/* Sharedpost in4 */}
+          <div className="p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <img
+                src={
+                  post.sharedPost.author.avatar ||
+                  `https://ui-avatars.com/api/?name=${post.sharedPost.author.name}`
+                }
+                alt={post.sharedPost.author.name}
+                className="w-6 h-6 rounded-full object-cover border border-gray-200"
+              />
+              <span className="font-bold text-sm 2xl:text-base">
+                {post.sharedPost.author.name}
+              </span>
+              <span className="text-xs 2xl:text-sm text-gray-500">
+                • {safeFormatDate(post.sharedPost.timestamp)}
+              </span>
+            </div>
+            <p className="text-sm 2xl:text-base text-gray-800 line-clamp-3">
+              {post.sharedPost.content}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex items-center gap-6 border-t border-gray-200/60 pt-4 mt-3">
         <button
@@ -378,11 +406,9 @@ export default function PostCard({ post, onDelete }) {
           </span>
         </button>
       </div>
-
-      {/* Comments Section */}
+      {/* Comments Section  */}
       {showComments && (
         <div className="mt-4 pt-4 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-2">
-          {/* Main Comment Input */}
           <div className="flex gap-3 items-center mb-4">
             <img
               src={
@@ -405,187 +431,36 @@ export default function PostCard({ post, onDelete }) {
             <p className="text-xs 2xl:text-sm text-center">Loading...</p>
           ) : (
             <div className="space-y-4">
-              {/*INLINE RENDERING OF CMT TREE*/}
-              {commentTree.map((root) => {
-                const rootIsAuthor =
-                  user?.id === root.author.id ||
-                  user?.id === root.author.userId;
-                return (
-                  <div key={root.comment.id} className="flex flex-col gap-3">
-                    {/*PARENT CMT*/}
-                    <div className="flex gap-3">
+              {comments.map((item) => (
+                <div key={item.comment.id} className="flex gap-3">
+                  <Link to={`/profile/${item.author.id || item.author.userId}`}>
+                    <img
+                      src={
+                        item.author.avatar_url ||
+                        `https://ui-avatars.com/api/?name=${item.author.display_name}`
+                      }
+                      className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-full"
+                    />
+                  </Link>
+                  <div className="bg-gradient-to-br from-gray-50 to-primary-50/20 rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm border border-gray-100/50">
+                    <div className="flex justify-between items-baseline gap-2">
                       <Link
-                        to={`/profile/${root.author.id || root.author.userId}`}
+                        to={`/profile/${item.author.id || item.author.userId}`}
                       >
-                        <img
-                          src={
-                            root.author.avatar_url ||
-                            `https://ui-avatars.com/api/?name=${root.author.display_name}`
-                          }
-                          className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-full"
-                        />
+                        <span className="font-semibold text-sm text-gray-800">
+                          {item.author.display_name}
+                        </span>
                       </Link>
-                      <div className="flex-1">
-                        <div className="bg-gradient-to-br from-gray-50 to-primary-50/20 rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm border border-gray-100/50 inline-block min-w-[200px]">
-                          <div className="flex justify-between items-baseline gap-2">
-                            <Link
-                              to={`/profile/${
-                                root.author.id || root.author.userId
-                              }`}
-                            >
-                              <span className="font-semibold text-sm text-gray-800">
-                                {root.author.display_name}
-                              </span>
-                            </Link>
-                            <span className="text-xs text-gray-500">
-                              {safeFormatDate(root.comment.created_at)} ago
-                            </span>
-                          </div>
-                          <p className="text-sm 2xl:text-base text-gray-700 mt-1">
-                            {root.comment.content}
-                          </p>
-                        </div>
-                        {/* Parent Actions*/}
-                        <div className="flex gap-3 mt-1 ml-2 text-xs font-semibold text-gray-500">
-                          <button
-                            onClick={() => {
-                              setReplyingToId(
-                                replyingToId === root.comment.id
-                                  ? null
-                                  : root.comment.id
-                              );
-                              setReplyText("");
-                            }}
-                            className="hover:text-primary-600"
-                          >
-                            Reply
-                          </button>
-                          {(rootIsAuthor || isAuthor) && (
-                            <button
-                              onClick={() =>
-                                handleDeleteComment(root.comment.id)
-                              }
-                              className="hover:text-red-500"
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </div>
-
-                        {replyingToId === root.comment.id && (
-                          <div className="mt-2 flex gap-2 items-center">
-                            <input
-                              autoFocus
-                              type="text"
-                              value={replyText}
-                              onChange={(e) => setReplyText(e.target.value)}
-                              onKeyDown={(e) =>
-                                e.key === "Enter" &&
-                                submitReply(root.comment.id)
-                              }
-                              placeholder={`Reply to ${root.author.display_name}...`}
-                              className="bg-gray-50 rounded-full px-3 py-1.5 text-sm border border-gray-200 w-full focus:outline-none focus:border-primary-300"
-                            />
-                          </div>
-                        )}
-                      </div>
+                      <span className="text-xs text-gray-500">
+                        {safeFormatDate(item.comment.created_at)} ago
+                      </span>
                     </div>
-
-                    {/* NESTED REPLIES*/}
-                    {root.replies && root.replies.length > 0 && (
-                      <div className="pl-12 space-y-3">
-                        {root.replies.map((child) => {
-                          const childIsAuthor =
-                            user?.id === child.author.id ||
-                            user?.id === child.author.userId;
-                          return (
-                            <div key={child.comment.id} className="flex gap-3">
-                              <Link
-                                to={`/profile/${
-                                  child.author.id || child.author.userId
-                                }`}
-                              >
-                                <img
-                                  src={
-                                    child.author.avatar_url ||
-                                    `https://ui-avatars.com/api/?name=${child.author.display_name}`
-                                  }
-                                  className="w-7 h-7 rounded-full"
-                                />
-                              </Link>
-                              <div className="flex-1">
-                                <div className="bg-gray-50 rounded-2xl rounded-tl-none px-3 py-2 border border-gray-100 inline-block min-w-[150px]">
-                                  <div className="flex justify-between items-baseline gap-2">
-                                    <Link
-                                      to={`/profile/${
-                                        child.author.id || child.author.userId
-                                      }`}
-                                    >
-                                      <span className="font-semibold text-sm text-gray-800">
-                                        {child.author.display_name}
-                                      </span>
-                                    </Link>
-                                    <span className="text-xs text-gray-500">
-                                      {safeFormatDate(child.comment.created_at)}
-                                    </span>
-                                  </div>
-                                  <p className="text-sm text-gray-700 mt-1">
-                                    {child.comment.content}
-                                  </p>
-                                </div>
-                                {/* Child Actions*/}
-                                <div className="flex gap-3 mt-1 ml-2 text-xs font-semibold text-gray-500">
-                                  <button
-                                    onClick={() => {
-                                      setReplyingToId(
-                                        replyingToId === child.comment.id
-                                          ? null
-                                          : child.comment.id
-                                      );
-                                      setReplyText("");
-                                    }}
-                                    className="hover:text-primary-600"
-                                  >
-                                    Reply
-                                  </button>
-                                  {(childIsAuthor || isAuthor) && (
-                                    <button
-                                      onClick={() =>
-                                        handleDeleteComment(child.comment.id)
-                                      }
-                                      className="hover:text-red-500"
-                                    >
-                                      Delete
-                                    </button>
-                                  )}
-                                </div>
-                                {replyingToId === child.comment.id && (
-                                  <div className="mt-2 flex gap-2 items-center">
-                                    <input
-                                      autoFocus
-                                      type="text"
-                                      value={replyText}
-                                      onChange={(e) =>
-                                        setReplyText(e.target.value)
-                                      }
-                                      onKeyDown={(e) =>
-                                        e.key === "Enter" &&
-                                        submitReply(child.comment.id)
-                                      }
-                                      placeholder={`Reply to ${child.author.display_name}...`}
-                                      className="bg-gray-50 rounded-full px-3 py-1.5 text-sm border border-gray-200 w-full focus:outline-none focus:border-primary-300"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                    <p className="text-sm 2xl:text-base text-gray-700 mt-1">
+                      {item.comment.content}
+                    </p>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
         </div>

@@ -1,12 +1,31 @@
 //login logout register func
 
+// src/services/authService.js
+
 //helper to handle response parsing n errors
 
 import api from "./api";
 
+// const handleResponse = async (response) => {
+//   const data = await response.json();
+//   if (!response.ok) {
+//     throw new Error(data?.error || data?.message || "Request failed.");
+//   }
+//   return data;
+// };
 
 export const loginUser = async (credentials) => {
  
+
+  // const res = await fetch("/api/auth/login", {
+  //   method: "POST",
+  //   headers: { "Content-Type": "application/json" },
+  //   body: JSON.stringify(credentials),
+  // });
+
+
+  //credentials be expects: { email,pswd }
+  //credential.identifier = email
   const payload = {
     email: credentials.identifier,
     password: credentials.password
@@ -39,6 +58,12 @@ export const registerUser = async (payload) => {
   //return await api.post('/auth/register', body);
 
 
+  // const res = await fetch("/api/auth/register", {
+  //   method: "POST",
+  //   headers: { "Content-Type": "application/json" },
+  //   body: JSON.stringify(payload), 
+  // });
+  // return handleResponse(res);
 };
 
 export const logoutUser = () => {

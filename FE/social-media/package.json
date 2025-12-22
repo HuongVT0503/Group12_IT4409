@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@heroui/button": "^2.2.29",
-    "@heroui/react": "^2.8.7",
+    "@heroui/react": "^2.8.6",
     "@heroui/system": "^2.4.25",
     "@heroui/theme": "^2.4.25",
     "@tailwindcss/postcss": "^4.1.17",

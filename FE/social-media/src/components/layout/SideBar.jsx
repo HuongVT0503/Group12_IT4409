@@ -8,7 +8,7 @@ import {
   ListboxItem,
   Card,
   CardBody,
-  //Divider,
+  Divider,
 } from "@heroui/react";
 
 export default function SideBar() {
