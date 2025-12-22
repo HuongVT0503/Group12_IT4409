@@ -1,6 +1,6 @@
 import { getSession, neo4j } from '../config/neo4j.js';
 
-async function createUser({ id, username, email, password_hash, display_name, date_of_birth, gender, phone }) {
+async function createUser({ id, username, email, password_hash, display_name, date_of_birth, gender, phone, role='user' }) {
   const session = getSession();
   try {
     const res = await session.run(
@@ -17,7 +17,7 @@ async function createUser({ id, username, email, password_hash, display_name, da
          isBanned: false,
          created_at: datetime()
        }) RETURN u`,
-      { id, username, email, password_hash, display_name, date_of_birth, gender, phone }
+      { id, username, email, password_hash, display_name, date_of_birth, gender, phone ,role}
     );
     return res.records[0].get('u').properties;
   } finally {

@@ -1,12 +1,17 @@
 
-require('dotenv').config();
-const fs = require('fs');
-const path = require('path');
-const { getSession, driver } = require('../config/neo4j');
+import dotenv from 'dotenv';
+dotenv.config();
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { getSession, driver } from '../config/neo4j.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function runFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
-  const statements = content.split(/;\s*$/m).filter(Boolean);
+  const statements = content.split(/;\s*$/m).filter(stmt => stmt.trim().length > 0);
   const session = getSession();
   try {
     for (const stmt of statements) {
@@ -15,6 +20,9 @@ async function runFile(filePath) {
       await session.run(trimmed);
       console.log('Ran statement:', trimmed.split('\n')[0]);
     }
+  } catch (err) {
+    console.error('Error executing statement:', err);
+    throw err;
   } finally {
     await session.close();
   }
