@@ -14,7 +14,7 @@ import { formatDistanceToNow } from "date-fns";
 import { getProfile } from "../../services/userService";
 import { searchUsers } from "../../services/userService";
 
-import { Avatar, Badge, Button } from "@heroui/react";
+//import { Avatar, Badge, Button } from "@heroui/react";
 
 //validate date b4 passing it to formatDistanceToNow
 const getRelativeTime = (dateInput) => {
@@ -437,7 +437,7 @@ export default function TopBar() {
             </span>
           </button>
 
-          {/* The Dropdown Menu */}
+          {/*Dropdown Menu */}
           {showUserMenu && (
             <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200 py-2">
               {/* Profile Header in Menu */}
@@ -450,7 +450,7 @@ export default function TopBar() {
                 </p>
               </div>
 
-              {/* Menu Links */}
+              {/*Links */}
               <Link
                 to="/profile"
                 onClick={() => setShowUserMenu(false)}
@@ -470,7 +470,7 @@ export default function TopBar() {
               </Link>
 
               <div className="h-px bg-gray-100 my-2"></div>
-              {/* Logout Button */}
+              {/* Logout*/}
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"

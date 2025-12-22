@@ -122,7 +122,6 @@ async function likePost(req, res, next) {
     const postId = req.params.id;
     const result = await postService.likePost(userId, postId);
 
-    // Like bài viết
     emitPostUpdate(postId, { likedBy: userId });
 
     const postData = await postService.getPost(postId); //fetch post data
@@ -156,7 +155,6 @@ async function unlikePost(req, res, next) {
     const postId = req.params.id;
     const result = await postService.unlikePost(userId, postId);
 
-    // Unlike
     emitPostUpdate(postId, { unlikedBy: userId });
 
     res.json(result);

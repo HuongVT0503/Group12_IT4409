@@ -36,7 +36,7 @@ async function follow(req, res, next) {
       }),
     });
 
-    // Emit realtime
+    //emit realtime
     emitNotification(followeeId, {
       type: "follow",
       from: followerId,
@@ -54,7 +54,6 @@ async function unfollow(req, res, next) {
     const followeeId = req.params.id;
     await userService.unfollow(followerId, followeeId);
 
-    // Emit realtime
     emitFollowUpdate(followeeId, { removedFollower: followerId });
 
     res.json({ following: false });

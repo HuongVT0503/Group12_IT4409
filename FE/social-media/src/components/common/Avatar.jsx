@@ -1,8 +1,6 @@
 export default function Avatar({
   src,
-  // size follows Tailwind spacing scale by default (e.g., 11 → 44px)
   size = 11,
-  // optionally set explicit pixel size; overrides size if provided
   sizePx,
   alt = "avatar",
   className = "",
@@ -10,7 +8,7 @@ export default function Avatar({
   const computedPx =
     typeof sizePx === "number" && sizePx > 0
       ? sizePx
-      : (typeof size === "number" ? size : parseInt(size, 10)) * 4; // Tailwind scale unit → px
+      : (typeof size === "number" ? size : parseInt(size, 10)) * 4; 
 
   return (
     <img

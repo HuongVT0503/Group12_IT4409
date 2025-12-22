@@ -137,7 +137,7 @@ export default function ProfilePage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  //////////////////////////////
+  //
 
   const calculateAge = (dob) => {
     if (!dob) return null;
@@ -200,7 +200,7 @@ export default function ProfilePage() {
     }));
   };
 
-  ///
+  //
   const handleFollowToggle = async () => {
     if (!profile?.id) return;
     setFollowLoading(true);
