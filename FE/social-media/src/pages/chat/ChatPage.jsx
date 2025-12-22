@@ -364,16 +364,16 @@ export default function ChatPage() {
     }&background=random`;
 
   return (
-    <div className="flex h-[calc(100vh-80px)] lg:h-[calc(100vh-100px)] bg-white rounded-[var(--radius-box)] shadow-sm border border-gray-100 overflow-hidden mt-4">
+    <div className="flex h-[calc(100vh-80px)] lg:h-[calc(100vh-100px)] bg-white  overflow-hidden">
       {/* LEFT: Conversation List */}
       <div
         className={cn(
-          "w-full md:w-[350px] border-r border-gray-100 flex flex-col bg-white",
+          "w-full md:w-[350px] h-full border-r border-neutral-300 flex flex-col bg-white",
           !isMobileListVisible && "hidden md:flex" //hide on mobile if chat open
         )}
       >
         {/* Search Header */}
-        <div className="p-4 border-b border-gray-100">
+        <div className="p-4 border-b border-neutral-300 ">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Messages</h2>
           <div className="relative">
             <Search
@@ -383,14 +383,14 @@ export default function ChatPage() {
             <input
               type="text"
               placeholder="Search for something..."
-              className="w-full bg-gray-50 rounded-full py-2.5 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full bg-gray-50 rounded-full py-2.5 pl-10 pr-4 text-sm outline-none bg-neutral-100 focus:ring-2 focus:ring-neutral-400 transition-all"
             />
           </div>
         </div>
 
         {/*Horizontal Friends List */}
         {friends.length > 0 && (
-          <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+          <div className="flex gap-4 overflow-x-auto  no-scrollbar  border-b border-neutral-300 px-4 py-3">
             {/* Friend Items */}
             {friends.map((friend) => (
               <div
