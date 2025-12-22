@@ -17,6 +17,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
 import { Link, useNavigate } from "react-router-dom";
 import Avatar from "../common/Avatar";
+import CommentItem from "./CommentItem"; 
 
 const safeFormatDate = (dateString) => {
   try {
@@ -431,36 +432,17 @@ export default function PostCard({ post, onDelete }) {
             <p className="text-xs 2xl:text-sm text-center">Loading...</p>
           ) : (
             <div className="space-y-4">
-              {comments.map((item) => (
-                <div key={item.comment.id} className="flex gap-3">
-                  <Link to={`/profile/${item.author.id || item.author.userId}`}>
-                    <img
-                      src={
-                        item.author.avatar_url ||
-                        `https://ui-avatars.com/api/?name=${item.author.display_name}`
-                      }
-                      className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-full"
-                    />
-                  </Link>
-                  <div className="bg-gradient-to-br from-gray-50 to-primary-50/20 rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm border border-gray-100/50">
-                    <div className="flex justify-between items-baseline gap-2">
-                      <Link
-                        to={`/profile/${item.author.id || item.author.userId}`}
-                      >
-                        <span className="font-semibold text-sm text-gray-800">
-                          {item.author.display_name}
-                        </span>
-                      </Link>
-                      <span className="text-xs text-gray-500">
-                        {safeFormatDate(item.comment.created_at)} ago
-                      </span>
-                    </div>
-                    <p className="text-sm 2xl:text-base text-gray-700 mt-1">
-                      {item.comment.content}
-                    </p>
-                  </div>
-                </div>
-              ))}
+              
+{commentTree.map((item) => (
+  <CommentItem
+    key={item.comment.id}
+    item={item}
+    user={user}
+    postAuthorId={post.author.id}
+    onReplySubmit={handleReplySubmit}
+    onDelete={handleDeleteComment}
+  />
+))}
             </div>
           )}
         </div>
