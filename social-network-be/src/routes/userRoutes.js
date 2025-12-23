@@ -1,11 +1,12 @@
 import express from 'express';
 import * as ctrl from '../controllers/userController.js';
 import { verifyToken } from '../middlewares/authMiddleware.js';
+import { updateProfileValidators } from '../middlewares/vallidateMiddleware.js';
 
 const router = express.Router();
 router.get('/search', ctrl.searchUsers);
 router.get('/:id', ctrl.getProfile);
-router.put('/me', verifyToken, ctrl.updateProfile);
+router.put('/me', verifyToken, updateProfileValidators, ctrl.updateProfile);
 router.post('/:id/follow', verifyToken, ctrl.follow);
 router.delete('/:id/follow', verifyToken, ctrl.unfollow);
 router.get('/:id/followers', ctrl.getFollowers);
