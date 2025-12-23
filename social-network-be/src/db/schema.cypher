@@ -4,7 +4,7 @@
 
 // User
 CREATE CONSTRAINT user_id_unique IF NOT EXISTS
-FOR (u:User) REQUIRE u.userId IS UNIQUE;
+FOR (u:User) REQUIRE u.id IS UNIQUE;
 
 // Post
 CREATE CONSTRAINT post_id_unique IF NOT EXISTS

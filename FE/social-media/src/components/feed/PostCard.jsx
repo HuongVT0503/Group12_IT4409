@@ -1,6 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { formatDistanceToNow } from "date-fns"; //?date-fns
-import { Heart, MessageSquare, Trash2, Share2 } from "lucide-react"; //share2
+import {
+  Heart,
+  MessageSquare,
+  Trash2,
+  Share2,
+  MoreVertical,
+  Flag,
+} from "lucide-react"; //share2
 //import Button from "../common/ButtonComponent";
 import {
   likePost,
@@ -8,11 +15,17 @@ import {
   deletePost,
   sharePost,
 } from "../../services/postService";
-import { getComments, createComment } from "../../services/commentService";
+import {
+  getComments,
+  createComment,
+  deleteComment,
+} from "../../services/commentService";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
 import { Link, useNavigate } from "react-router-dom";
 import Avatar from "../common/Avatar";
+import CommentItem from "./CommentItem";
+import ReportModal from "../common/ReportModal";
 
 const safeFormatDate = (dateString) => {
   try {
@@ -40,6 +53,29 @@ export default function PostCard({ post, onDelete }) {
   const [loadingComments, setLoadingComments] = useState(false);
   const [shareCount, setShareCount] = useState(post.stats?.shares || 0);
 
+  const [showMenu, setShowMenu] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
+
+  const commentTree = useMemo(() => {
+    const map = {};
+    const roots = [];
+
+    //innit
+    comments.forEach((c) => {
+      map[c.comment.id] = { ...c, replies: [] };
+    });
+    //link
+    comments.forEach((c) => {
+      if (c.parentId && map[c.parentId]) {
+        map[c.parentId].replies.push(map[c.comment.id]);
+      } else {
+        roots.push(map[c.comment.id]);
+      }
+    });
+
+    return roots;
+  }, [comments]);
+
   //initialize
   useEffect(() => {}, [post]);
 
@@ -65,24 +101,52 @@ export default function PostCard({ post, onDelete }) {
       }
 
       if (payload.newComment) {
-        // Backend payload: { newComment: commentObj }
-        commentCount;
+        if (payload.newComment.author?.id === user?.id) {
+          return;
+        }
+        //be payload: { newComment: commentObj }
+        //commentCount;
         setCommentCount((prev) => prev + 1);
 
         //be 'createComment' needs author info?
         if (showComments) {
-          const incomingAuthorId =
-            payload.newComment.authorId || payload.newComment.from;
-          if (incomingAuthorId !== user?.id) {
-            //only push, doent fetch
-            setComments((prev) => [
+          setComments((prev) => {
+            if (prev.find((c) => c.comment.id === payload.newComment.id))
+              return prev;
+            return [
+              ...prev,
               {
                 comment: payload.newComment,
-                author: { display_name: "User", avatar_url: "" }, // Placeholder if BE doesnt send author
+                author: payload.newComment.author || {
+                  display_name: "User",
+                  avatar_url: "",
+                },
+                parentId: payload.newComment.parentId,
               },
-              ...prev,
-            ]);
-          }
+            ];
+          });
+        }
+      }
+
+      if (payload.deletedCommentId) {
+        //check existence b4 del //if all cmts r loadedbut this id is missing then it is del locally already
+        const isCommentPresent = comments.some(
+          (c) => c.comment.id === payload.deletedCommentId
+        );
+        if (comments.length > 0 && !isCommentPresent) {
+          return;
+        }
+
+        const idsToRemove = new Set([
+          payload.deletedCommentId,
+          ...getDescendantIds(payload.deletedCommentId, comments),
+        ]);
+
+        setCommentCount((prev) => Math.max(0, prev - idsToRemove.size));
+        if (showComments) {
+          setComments((prev) =>
+            prev.filter((c) => !idsToRemove.has(c.comment.id))
+          );
         }
       }
     };
@@ -94,7 +158,7 @@ export default function PostCard({ post, onDelete }) {
       socket.off("post_update", handleUpdate);
       socket.emit("leave_post", post.id);
     };
-  }, [socket, post.id, user?.id, showComments]);
+  }, [socket, post.id, user?.id, showComments, onDelete, comments]);
 
   const toggleLike = async () => {
     // UI update
@@ -115,6 +179,15 @@ export default function PostCard({ post, onDelete }) {
     }
   };
 
+  const getDescendantIds = (rootId, allComments) => {
+    const children = allComments.filter((c) => c.parentId === rootId);
+    let ids = children.map((c) => c.comment.id);
+    children.forEach((child) => {
+      ids = [...ids, ...getDescendantIds(child.comment.id, allComments)];
+    });
+    return ids;
+  };
+
   const handleFetchComments = async () => {
     if (!showComments && comments.length === 0) {
       setLoadingComments(true);
@@ -133,11 +206,39 @@ export default function PostCard({ post, onDelete }) {
     if (e.key === "Enter" && newComment.trim()) {
       try {
         const res = await createComment(post.id, newComment);
-        setComments([{ comment: res.data.comment, author: user }, ...comments]);
+        setComments((prev) => {
+          if (prev.some((c) => c.comment.id === res.data.comment.id))
+            return prev;
+
+          return [
+            ...prev,
+            { comment: res.data.comment, author: user, parentId: null },
+          ];
+        });
         setNewComment("");
+        setCommentCount((prev) => prev + 1);
       } catch (err) {
         console.error(err);
       }
+    }
+  };
+
+  const handleReplySubmit = async (parentId, content) => {
+    try {
+      const res = await createComment(post.id, content, parentId);
+
+      setComments((prev) => {
+        if (prev.some((c) => c.comment.id === res.data.comment.id)) return prev;
+
+        return [
+          ...prev,
+          { comment: res.data.comment, author: user, parentId: parentId },
+        ];
+      });
+
+      setCommentCount((prev) => prev + 1);
+    } catch (err) {
+      console.error("Reply failed", err);
     }
   };
 
@@ -145,6 +246,33 @@ export default function PostCard({ post, onDelete }) {
     if (window.confirm("Delete this post?")) {
       await deletePost(post.id);
       if (onDelete) onDelete(post.id);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("Delete this comment?")) return;
+
+    const idsToRemove = new Set([
+      commentId,
+      ...getDescendantIds(commentId, comments),
+    ]);
+
+    //error safety
+    const previousComments = [...comments];
+    const previousCount = commentCount;
+
+    //
+    setComments((prev) => prev.filter((c) => !idsToRemove.has(c.comment.id)));
+    setCommentCount((prev) => Math.max(0, prev - idsToRemove.size));
+
+    try {
+      await deleteComment(commentId);
+    } catch (err) {
+      console.error("Delete failed", err);
+      alert("Could not delete comment");
+      // Revert on error
+      setComments(previousComments);
+      setCommentCount(previousCount);
     }
   };
 
@@ -192,13 +320,37 @@ export default function PostCard({ post, onDelete }) {
             </p>
           </div>
         </Link>
-        {isAuthor && (
+        {isAuthor ? (
           <button
             onClick={handleDelete}
             className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all"
           >
-            <Trash2 size={20} className="2xl:w-6 2xl:h-6" />
+            <Trash2 size={20} />
           </button>
+        ) : (
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="text-gray-400 hover:bg-gray-100 p-2 rounded-lg transition-all"
+            >
+              <MoreVertical size={20} />
+            </button>
+
+            {/* Dropdown Menu */}
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-100 z-10 overflow-hidden">
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    setIsReportOpen(true);
+                  }}
+                  className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                >
+                  <Flag size={16} /> Report
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -317,40 +469,26 @@ export default function PostCard({ post, onDelete }) {
             <p className="text-xs 2xl:text-sm text-center">Loading...</p>
           ) : (
             <div className="space-y-4">
-              {comments.map((item) => (
-                <div key={item.comment.id} className="flex gap-3">
-                  <Link to={`/profile/${item.author.id || item.author.userId}`}>
-                    <img
-                      src={
-                        item.author.avatar_url ||
-                        `https://ui-avatars.com/api/?name=${item.author.display_name}`
-                      }
-                      className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-full"
-                    />
-                  </Link>
-                  <div className="bg-gradient-to-br from-gray-50 to-primary-50/20 rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm border border-gray-100/50">
-                    <div className="flex justify-between items-baseline gap-2">
-                      <Link
-                        to={`/profile/${item.author.id || item.author.userId}`}
-                      >
-                        <span className="font-semibold text-sm text-gray-800">
-                          {item.author.display_name}
-                        </span>
-                      </Link>
-                      <span className="text-xs text-gray-500">
-                        {safeFormatDate(item.comment.created_at)} ago
-                      </span>
-                    </div>
-                    <p className="text-sm 2xl:text-base text-gray-700 mt-1">
-                      {item.comment.content}
-                    </p>
-                  </div>
-                </div>
+              {commentTree.map((item) => (
+                <CommentItem
+                  key={item.comment.id}
+                  item={item}
+                  user={user}
+                  postAuthorId={post.author.id}
+                  onReplySubmit={handleReplySubmit}
+                  onDelete={handleDeleteComment}
+                />
               ))}
             </div>
           )}
         </div>
       )}
+      <ReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        targetId={post.id}
+        targetType="Post"
+      />
     </div>
   );
 }

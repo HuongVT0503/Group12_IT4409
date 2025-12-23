@@ -53,4 +53,24 @@ async function getComments(req, res, next) {
   } catch (err) { next(err); }
 }
 
-export { createComment, getComments };
+
+async function deleteComment(req, res, next) {
+    try {
+        const commentId = req.params.commentId;
+        const userId = req.user.id;
+        
+        const postId = await commentService.deleteComment(commentId, userId);
+        
+        if (!postId) {
+            return res.status(403).json({ message: "Cannot delete comment (not found or unauthorized)" });
+        }
+
+        emitPostUpdate(postId, { deletedCommentId: commentId });
+        
+        res.status(200).json({ message: "Comment deleted" });
+    } catch (err) {
+        next(err);
+    }
+}
+
+export { createComment, getComments, deleteComment };

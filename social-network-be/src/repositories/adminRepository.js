@@ -26,8 +26,14 @@ export async function findAllUsers(statusFilter = 'all') {
         if (statusFilter === 'banned') query += `WHERE u.isBanned = true `;
         else if (statusFilter === 'active') query += `WHERE u.isBanned = false `;
 
-        query += `RETURN u { .userId, .username, .email, .role, .isBanned, .createdAt } 
-                  ORDER BY u.createdAt DESC`;
+        query += `RETURN { 
+            userId: u.id, 
+            username: u.username, 
+            email: u.email, 
+            role: u.role, 
+            isBanned: u.isBanned, 
+            createdAt: u.createdAt 
+        } as u ORDER BY u.createdAt DESC`;
         const res = await session.run(query);
         return res.records.map(r => r.get('u'));
     } finally {
@@ -40,9 +46,9 @@ export async function setUserBanStatus(userId, isBanned) {
     const session = getSession();
     try {
         const res = await session.run(
-            `MATCH (u:User {userId: $userId}) 
+            `MATCH (u:User {id: $userId}) 
        SET u.isBanned = $isBanned 
-       RETURN u { .userId, .username, .isBanned }`,
+       RETURN u { .id, .username, .isBanned }`,
             { userId, isBanned }
         );
         return res.records[0]?.get('u') || null;
