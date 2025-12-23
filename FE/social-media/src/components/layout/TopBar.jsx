@@ -14,7 +14,7 @@ import { formatDistanceToNow } from "date-fns";
 import { getProfile } from "../../services/userService";
 import { searchUsers } from "../../services/userService";
 
-import { Avatar, Badge, Button } from "@heroui/react";
+//import { Avatar, Badge, Button } from "@heroui/react";
 
 //validate date b4 passing it to formatDistanceToNow
 const getRelativeTime = (dateInput) => {
