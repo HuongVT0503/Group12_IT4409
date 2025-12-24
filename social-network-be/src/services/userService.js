@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import * as userRepo from "../repositories/userRepository.js";
 import * as adminRepo from "../repositories/adminRepository.js";
 import * as notificationRepo from "../repositories/notificationRepository.js";
+import { emitNotification } from "./realtimeService.js";
 
 async function getProfile(usernameOrId) {
   // allow id or username
@@ -67,26 +68,43 @@ async function createUserReport(reporterId, data) {
     throw { status: 400, message: "The report is invalid" };
   }
   if (targetType === "User" && reporterId === targetId) {
-    throw { status: 400, message: "Unable to report myself" };
+    throw { status: 400, message: "Unable to report youself" };
   }
   const reportId = uuidv4();
 
-  const success = await userRepo.createReport({reportId, reporterId, targetId, targetType, reason});
-  
+  const success = await userRepo.createReport({
+    reportId,
+    reporterId,
+    targetId,
+    targetType,
+    reason,
+  });
 
   if (success) {
+    const reporter = await userRepo.findById(reporterId);
+
+    let targetName = "content";
+    if (targetType === "User") {
+      const targetUser = await userRepo.findById(targetId);
+      targetName = targetUser ? targetUser.display_name : "Unknown User";
+    } else if (targetType === "Post") {
+      targetName = "a post";
+    }
+
+
     const allUsers = await adminRepo.findAllUsers("all");
     const admins = allUsers.filter((u) => u.role === "admin");
 
-    //notify admins
-    const reporter = await userRepo.findById(reporterId);
 
     const notifPromises = admins.map(async (admin) => {
       const notifId = uuidv4();
       const notifData = {
         //id: notifId,
+        from: reporterId,
         type: "report",
-        text: "reported a ${targetType.toLowerCase()}",
+        targetType: targetType,
+        text: `reported a ${targetType.toLowerCase()}`,
+        reason: reason,
         targetId: targetId,
         reportId: reportId,
         senderName: reporter.display_name,
@@ -99,6 +117,7 @@ async function createUserReport(reporterId, data) {
         type: "report",
         data: JSON.stringify(notifData),
       });
+
       emitNotification(admin.userId, {
         id: notifId,
         type: "report",
@@ -110,7 +129,8 @@ async function createUserReport(reporterId, data) {
 
     await Promise.all(notifPromises);
   }
-  return success;
+
+return success;
 }
 export {
   getProfile,

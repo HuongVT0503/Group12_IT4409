@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
+  // User,
 } from "lucide-react";
 import Avatar from "../../components/common/Avatar";
 //import Button from "../../components/common/ButtonComponent";
@@ -61,7 +62,14 @@ export default function UserManagement() {
   // };
 
   const handleBanAndDismiss = async (report) => {
-    if (!confirm(`Ban user ${report.targetId} and close this report?`)) return;
+    if (
+      !confirm(
+        `Ban user ${
+          report.targetUsername || report.targetId
+        } and close this report?`
+      )
+    )
+      return;
 
     try {
       await banUser(report.targetId, true);
@@ -185,55 +193,62 @@ export default function UserManagement() {
                 reports.map((report) => (
                   <tr key={report.reportId} className="hover:bg-gray-50/80">
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-red-100 text-red-600 rounded-lg">
-                          <AlertTriangle size={20} />
-                        </div>
+                      <div className="flex items-start gap-3">
+                        <Avatar
+                          src={
+                            report.targetAvatar ||
+                            `https://ui-avatars.com/api/?name=${report.targetName}`
+                          }
+                          size={10}
+                        />
                         <div>
-                          <div className="font-bold text-gray-900">
-                            Reported User ID: {report.targetId}
+                          {/* SHOW DISPLAY NAME HERE */}
+                          <div className="font-bold text-gray-900 text-base">
+                            {report.targetName || "Unknown User"}
                           </div>
-                          <div className="text-red-600 font-medium text-xs bg-red-50 px-2 py-0.5 rounded inline-block mt-1">
-                            Reason: {report.reason}
+                          <div className="text-gray-500 text-xs mb-1">
+                            @{report.targetUsername || "username"}
+                          </div>
+
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="p-1 bg-red-100 text-red-600 rounded">
+                              <AlertTriangle size={14} />
+                            </span>
+                            <span className="font-medium text-red-600 text-sm">
+                              Reason: {report.reason}
+                            </span>
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">
-                        {report.fromUser}
+                      <div className="flex items-center gap-2">
+                        <Avatar
+                          src={`https://ui-avatars.com/api/?name=${report.fromUser}`}
+                          size={6}
+                        />
+                        <span className="font-medium text-gray-900">
+                          {report.fromUser}
+                        </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      {(() => {
-                        if (!report.createdAt) return "-";
-                        try {
-                          return (
-                            formatDistanceToNow(new Date(report.createdAt)) +
-                            " ago"
-                          );
-                        } catch (e) {
-                          console.error("Date error:", report.createdAt, e);
-                          return "Unknown date";
-                        }
-                      })()}{" "}
+                    <td className="px-6 py-4 text-gray-500">
+                      {report.createdAt
+                        ? formatDistanceToNow(new Date(report.createdAt)) +
+                          " ago"
+                        : "-"}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-3">
-                        {/*REJECT*/}
                         <button
                           onClick={() => handleRejectReport(report.reportId)}
-                          className="flex items-center gap-1 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-xs font-bold"
-                          title="Dismiss report (keep user active)"
+                          className="flex items-center gap-1 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-xs font-bold border border-gray-200"
                         >
                           <CheckCircle size={16} /> Ignore
                         </button>
-
-                        {/* BAN*/}
                         <button
                           onClick={() => handleBanAndDismiss(report)}
                           className="flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-xs font-bold shadow-sm"
-                          title="Ban User and Close Report"
                         >
                           <XCircle size={16} /> Ban User
                         </button>
@@ -275,71 +290,63 @@ export default function UserManagement() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {loading ? (
-                  <tr>
-                    <td colSpan="4" className="px-6 py-8 text-center">
-                      Loading...
-                    </td>
-                  </tr>
-                ) : (
-                  filteredUsers.map((user) => (
-                    <tr
-                      key={user.userId}
-                      className="hover:bg-gray-50/80 transition-colors"
-                    >
-                      <td className="px-6 py-4 flex items-center gap-3">
-                        <Avatar
-                          src={`https://ui-avatars.com/api/?name=${user.username}`}
-                          size={9}
-                        />
-                        <div>
-                          <div className="font-semibold text-gray-900">
-                            {user.username}
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            {user.email || "No email"}
-                          </div>
+                {filteredUsers.map((user) => (
+                  <tr
+                    key={user.userId}
+                    className="hover:bg-gray-50/80 transition-colors"
+                  >
+                    <td className="px-6 py-4 flex items-center gap-3">
+                      <Avatar
+                        src={`https://ui-avatars.com/api/?name=${user.username}`}
+                        size={9}
+                      />
+                      <div>
+                        <div className="font-semibold text-gray-900">
+                          {user.username}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 capitalize">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-bold ${
-                            user.role === "admin"
-                              ? "bg-purple-100 text-purple-700"
-                              : "bg-gray-100 text-gray-600"
+                        <div className="text-xs text-gray-400">
+                          {user.email || "No email"}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 capitalize">
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-bold ${
+                          user.role === "admin"
+                            ? "bg-purple-100 text-purple-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {user.isBanned ? (
+                        <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-semibold flex items-center w-fit gap-1">
+                          <XCircle size={12} /> Banned
+                        </span>
+                      ) : (
+                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-semibold flex items-center w-fit gap-1">
+                          <UserCheck size={12} /> Active
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      {user.role !== "admin" && (
+                        <button
+                          onClick={() => handleBanToggle(user)}
+                          className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors border ${
+                            user.isBanned
+                              ? "bg-white border-green-200 text-green-600 hover:bg-green-50"
+                              : "bg-white border-red-200 text-red-600 hover:bg-red-50"
                           }`}
                         >
-                          {user.role}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        {user.isBanned ? (
-                          <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-semibold flex items-center w-fit gap-1">
-                            <XCircle size={12} /> Banned
-                          </span>
-                        ) : (
-                          <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-semibold flex items-center w-fit gap-1">
-                            <UserCheck size={12} /> Active
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        {user.role !== "admin" && (
-                          <button
-                            onClick={() => handleBanToggle(user)}
-                            className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors border ${
-                              user.isBanned
-                                ? "bg-white border-green-200 text-green-600 hover:bg-green-50"
-                                : "bg-white border-red-200 text-red-600 hover:bg-red-50"
-                            }`}
-                          >
-                            {user.isBanned ? "Unban User" : "Ban User"}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
+                          {user.isBanned ? "Unban User" : "Ban User"}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
