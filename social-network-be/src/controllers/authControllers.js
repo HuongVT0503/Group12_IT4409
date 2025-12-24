@@ -8,6 +8,7 @@ const COOKIE_OPTIONS = {
     maxAge: 30 * 24 * 60 * 60 * 1000
 };
 
+
 export async function registerUser(req, res, next) {
     try {
         const { username, email, password, display_name, date_of_birth, gender, phone } = req.body;
@@ -91,6 +92,7 @@ export async function facebookCallback(req, res, next) {
 
         const user = await oauthService.handleFacebookAuth(req.user);
         const tokens = await oauthService.generateTokens(user);
+
         res.cookie('refreshToken', tokens.refreshToken, COOKIE_OPTIONS);
 
         const redirectUrl = `${process.env.FRONTEND_URL}/auth/oauth-success?accessToken=${tokens.accessToken}&userId=${user.userId || user.id}`;
