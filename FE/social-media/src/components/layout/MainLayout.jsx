@@ -17,7 +17,7 @@ export default function MainLayout() {
       <div className="flex justify-center w-full mx-auto pt-16 lg:pt-20">
         {/* LEFT: Sidebar (Desktop only) */}
         {/* Hidden on mobile, visible on lg screens */}
-        <aside className="hidden lg:block w-[280px] fixed left-0 top-20 h-[calc(100vh-80px)] z-100 overflow-y-auto no-scrollbar">
+        <aside className="hidden md:block w-[280px] fixed left-0 top-20 h-[calc(100vh-80px)] z-100 overflow-y-auto no-scrollbar">
           <SideBar />
         </aside>
 
