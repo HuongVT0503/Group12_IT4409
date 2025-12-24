@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { useSocket } from "../../context/SocketContext";
+import { useSocketContext } from "../../context/SocketContext";
 import {
   getConversations,
   getMessages,
@@ -21,11 +21,12 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "../../utils/cn";
 import { uploadMedia } from "../../services/mediaService";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 
 export default function ChatPage() {
   const { user } = useAuth();
-  const socket = useSocket();
+  const { socket, isUserOnline, updateUnreadCount } = useSocketContext();
+  const location = useLocation();
 
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -157,6 +158,18 @@ export default function ChatPage() {
 
   //restore last active chat
   useEffect(() => {
+    if (location.state?.conversation) {
+      const passedConvo = location.state.conversation;
+      setConversations((prev) => {
+        if (prev.find((c) => c.id === passedConvo.id)) return prev;
+        return [passedConvo, ...prev];
+      });
+      handleSelectChat(passedConvo);
+
+      window.history.replaceState({}, document.title);
+      return;
+    }
+
     //convo are loaded
     if (conversations.length === 0) return;
 
@@ -168,7 +181,7 @@ export default function ChatPage() {
         handleSelectChat(conv);
       }
     }
-  }, [routeChatId, conversations]); //run when URL changes or convos load
+  }, [routeChatId, conversations, location.state]); //run when URL changes or convos load
 
   //select chat &fetch
   const handleSelectChat = async (conv) => {
@@ -186,6 +199,8 @@ export default function ChatPage() {
 
       //join Socket Room for Typing Indicators
       socket.emit("join_conversation", conv.id);
+
+      if(updateUnreadCount) updateUnreadCount();
     } catch (error) {
       console.error("Failed to fetch messages", error);
     }
@@ -358,7 +373,7 @@ export default function ChatPage() {
     }, 100);
   };
 
-  //merge following n ppl i ve chat w 
+  //merge following n ppl i ve chat w
   const horizontalListUsers = useMemo(() => {
     const uniqueMap = new Map();
 
@@ -377,7 +392,7 @@ export default function ChatPage() {
     const lowerQuery = searchQuery.toLowerCase();
     const name = chat.otherUser?.display_name?.toLowerCase() || "";
     const username = chat.otherUser?.username?.toLowerCase() || "";
-    
+
     return name.includes(lowerQuery) || username.includes(lowerQuery);
   });
 
@@ -408,7 +423,7 @@ export default function ChatPage() {
               type="text"
               placeholder="Search conversations..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)} 
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-gray-50 rounded-full py-2.5 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
@@ -431,7 +446,9 @@ export default function ChatPage() {
                     className="w-12 h-12 rounded-full object-cover border border-gray-100 group-hover:border-primary transition-colors"
                   />
 
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                  {isUserOnline(friend.id) && (
+                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                  )}
                 </div>
                 <span className="text-xs text-gray-600 font-medium truncate w-[64px] text-center">
                   {friend.display_name?.split(" ")[0]}
@@ -466,8 +483,10 @@ export default function ChatPage() {
                   className="w-12 h-12 rounded-full object-cover border border-gray-200"
                   alt={chat.otherUser?.display_name}
                 />
-                {/* Online Status: always online??*/}
-                <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
+                {/* Online Status*/}
+                {isUserOnline(chat.otherUser?.id) && (
+                  <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
+                )}
               </div>
 
               <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -553,12 +572,18 @@ export default function ChatPage() {
                     <h3 className="font-bold text-gray-900 leading-tight">
                       {selectedChat.otherUser?.display_name}
                     </h3>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                    {isUserOnline(selectedChat.otherUser?.id) ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span className="text-xs text-gray-500 font-medium">
+                          Online
+                        </span>
+                      </div>
+                    ) : (
                       <span className="text-xs text-gray-500 font-medium">
-                        Online
+                        Offline
                       </span>
-                    </div>
+                    )}
                   </div>
                 </Link>
               </div>

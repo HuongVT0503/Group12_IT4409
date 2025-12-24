@@ -10,8 +10,10 @@ import {
   CardBody,
   //Divider,
 } from "@heroui/react";
+import { useSocketContext } from "../../context/SocketContext";
 
 export default function SideBar() {
+  const {unreadCount} = useSocketContext();
   const navItems = [
     { icon: Home, label: "Feed", path: "/", key: "feed" },
     { icon: User, label: "Profile", path: "/profile", key: "profile" },
@@ -42,6 +44,11 @@ export default function SideBar() {
                 startContent={
                   <div className="flex items-center justify-center w-10 h-10 rounded-lg transition-colors">
                     <item.icon size={24} strokeWidth={2.5} />
+                    {item.key === "chat" && unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
                   </div>
                 }
                 className="

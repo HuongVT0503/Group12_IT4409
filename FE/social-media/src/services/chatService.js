@@ -15,3 +15,7 @@ export const sendMessage = async (receiverId, content) => {
 export const getOrCreateConversation = async (userId) => {
   return await api.get(`/chat/conversation/${userId}`);
 };
+
+export const getUnreadCount = async () => {
+  return await api.get('/chat/unread/count');
+};

@@ -57,6 +57,7 @@ async function getUserConversations(userId) {
         sender: { id: sender.id } 
       }) AS messages
       WITH conv, participant, messages[0] AS lastMessage
+      WHERE lastMessage.id IS NOT NULL
       RETURN {
         id: conv.id,
         participants: conv.participants,
