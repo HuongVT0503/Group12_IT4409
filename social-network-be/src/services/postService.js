@@ -14,20 +14,20 @@ async function createPost({ authorId, content, media, privacy }) {
   return result;
 }
 
-async function getPost(id) {
-  return await postRepo.getPostById(id);
+async function getPost(id, userId) {
+  return await postRepo.getPostById(id,userId);
 }
 
 async function deletePost(id, userId) {
   return await postRepo.deletePost(id, userId);
 }
 
-async function getFeed(limit) {
-  return await postRepo.getRecentPublicPosts(limit);
+async function getFeed(limit, userId  ) {
+  return await postRepo.getRecentPublicPosts(limit,userId);
 }
 
-async function getPostsByUser(userId, limit) {
-  return await postRepo.getPostsByAuthor(userId, limit);
+async function getPostsByUser(targetUserId, limit, currentUserId) {
+  return await postRepo.getPostsByAuthor(targetUserId, limit, currentUserId);
 }
 
 async function likePost(userId, postId) {

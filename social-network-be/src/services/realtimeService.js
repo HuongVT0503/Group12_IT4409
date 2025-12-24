@@ -18,7 +18,7 @@ export function emitNewPost(post, followers = []) {
 
 export function emitPostUpdate(postId, payload) {
     const postRoomId = `post_${postId}`;
-    io.to(postRoomId).emit('post_update', payload);
+    io.to(postRoomId).emit('post_update', {...payload,postId});
 }
 
 export function emitCommentUpdate(postId, payload) {
