@@ -1,32 +1,32 @@
-import { getSession } from '../config/neo4j.js';
+import { getSession } from "../config/neo4j.js";
 
- // Lấy tổng số user và tổng số bài viết
+// Lấy tổng số user và tổng số bài viết
 export async function getAdminStats() {
-    const session = getSession();
-    try {
-        const res = await session.run(
-            `MATCH (u:User) WITH count(u) as totalUsers
+  const session = getSession();
+  try {
+    const res = await session.run(
+      `MATCH (u:User) WITH count(u) as totalUsers
        MATCH (p:Post) RETURN totalUsers, count(p) as totalPosts`
-        );
-        const record = res.records[0];
-        return {
-            totalUsers: record.get('totalUsers').low || 0,
-            totalPosts: record.get('totalPosts').low || 0
-        };
-    } finally {
-        await session.close();
-    }
+    );
+    const record = res.records[0];
+    return {
+      totalUsers: record.get("totalUsers").low || 0,
+      totalPosts: record.get("totalPosts").low || 0,
+    };
+  } finally {
+    await session.close();
+  }
 }
 
 // Lấy danh sách user
-export async function findAllUsers(statusFilter = 'all') {
-    const session = getSession();
-    try {
-        let query = `MATCH (u:User) `;
-        if (statusFilter === 'banned') query += `WHERE u.isBanned = true `;
-        else if (statusFilter === 'active') query += `WHERE u.isBanned = false `;
+export async function findAllUsers(statusFilter = "all") {
+  const session = getSession();
+  try {
+    let query = `MATCH (u:User) `;
+    if (statusFilter === "banned") query += `WHERE u.isBanned = true `;
+    else if (statusFilter === "active") query += `WHERE u.isBanned = false `;
 
-        query += `RETURN { 
+    query += `RETURN { 
             userId: u.id, 
             username: u.username, 
             email: u.email, 
@@ -34,97 +34,104 @@ export async function findAllUsers(statusFilter = 'all') {
             isBanned: u.isBanned, 
             createdAt: u.createdAt 
         } as u ORDER BY u.createdAt DESC`;
-        const res = await session.run(query);
-        return res.records.map(r => r.get('u'));
-    } finally {
-        await session.close();
-    }
+    const res = await session.run(query);
+    return res.records.map((r) => r.get("u"));
+  } finally {
+    await session.close();
+  }
 }
 
 // Ban/Unban user
 export async function setUserBanStatus(userId, isBanned) {
-    const session = getSession();
-    try {
-        const res = await session.run(
-            `MATCH (u:User {id: $userId}) 
+  const session = getSession();
+  try {
+    const res = await session.run(
+      `MATCH (u:User {id: $userId}) 
        SET u.isBanned = $isBanned 
        RETURN u { .id, .username, .isBanned }`,
-            { userId, isBanned }
-        );
-        return res.records[0]?.get('u') || null;
-    } finally {
-        await session.close();
-    }
+      { userId, isBanned }
+    );
+    return res.records[0]?.get("u") || null;
+  } finally {
+    await session.close();
+  }
 }
 
 // Lấy danh sách báo cáo từ người dùng
 export async function getAllReports() {
-    const session = getSession();
-    try {
-        const res = await session.run(
-            `MATCH (reporter:User)-[r:REPORTED]->(target)
+  const session = getSession();
+  try {
+    const res = await session.run(
+      `MATCH (reporter:User)-[r:REPORTED]->(target)
        RETURN {
          reportId: r.reportId,
          fromUser: reporter.username,
          reason: r.reason,
          createdAt: r.createdAt,
          targetType: labels(target)[0],
-         targetId: target.id 
+         targetId: target.id,
+
+         targetName: CASE WHEN 'User' IN labels(target) THEN target.display_name ELSE NULL END,
+         targetUsername: CASE WHEN 'User' IN labels(target) THEN target.username ELSE NULL END,
+         targetAvatar: CASE WHEN 'User' IN labels(target) THEN target.avatar_url ELSE NULL END,
+         
+         postContent: CASE WHEN 'Post' IN labels(target) THEN target.content ELSE NULL END
+
        } as reportData ORDER BY r.createdAt DESC`
-        );
-        return res.records.map(r => {
-            const data = r.get('reportData');
-            if (data.createdAt) {
-                data.createdAt = new Date(data.createdAt.toString()).toISOString();
-            }
-            return data;
-        });
-    } finally {
-        await session.close();
-    }
+    );
+    return res.records.map((r) => {
+      const data = r.get("reportData");
+      if (data.createdAt) {
+        data.createdAt = new Date(data.createdAt.toString()).toISOString();
+      }
+      return data;
+    });
+  } finally {
+    await session.close();
+  }
 }
 
 // Admin xóa bài viết vi phạm
 export async function deletePostById(postId) {
-    const session = getSession();
-    try {
-        await session.run(
-            `MATCH (p:Post {id: $postId}) 
+  const session = getSession();
+  try {
+    await session.run(
+      `MATCH (p:Post {id: $postId}) 
        DETACH DELETE p`,
-            { postId }
-        );
-        return true;
-    } finally {
-        await session.close();
-    }
+      { postId }
+    );
+    return true;
+  } finally {
+    await session.close();
+  }
 }
 
 // Admin xem chi tiết post từ report
 export async function getPostDetail(postId) {
-    const session = getSession();
-    try {
-        const res = await session.run(
-            `MATCH (u:User)-[:POSTED]->(p:Post {id: $postId})
+  const session = getSession();
+  try {
+    const res = await session.run(
+      `MATCH (u:User)-[:POSTED]->(p:Post {id: $postId})
              RETURN p {.*, author: u.username}`,
-            { postId }
-        );
-        return res.records[0]?.get('p') || null;
-    } finally {
-        await session.close();
-    }
+      { postId }
+    );
+    return res.records[0]?.get("p") || null;
+  } finally {
+    await session.close();
+  }
 }
 
 // Admin gỡ 1 báo cáo
 export async function dismissReport(reportId) {
-    const session = getSession();
-    try {
-        await session.run(
-            `MATCH ()-[r:REPORTED {reportId: $reportId}]->() 
+  const session = getSession();
+  try {
+    await session.run(
+      `MATCH ()-[r:REPORTED {reportId: $reportId}]->() 
              DELETE r`,
-            { reportId }
-        );
-        return true;
-    } finally {
-        await session.close();
-    }
+      { reportId }
+    );
+    return true;
+  } finally {
+    await session.close();
+  }
 }

@@ -1,7 +1,7 @@
 //mobile header //llogo, search, notification, profile
 
 import logo from "../../assets/img/logo/logo.png";
-import { Search, Bell, LogOut, User, Settings, X } from "lucide-react";
+import { Search, Bell, LogOut, User, Settings, X,  } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -130,11 +130,11 @@ export default function TopBar() {
     const handleNewNotification = (payload) => {
       //emitNotification
       const newNoti = {
-        id: Date.now(), //temp id until refreshed
+        id: payload.id || Date.now(), //temp id until refreshed
         type: payload.type,
         read: false,
-        created_at: new Date().toISOString(),
-        data: payload, // direct payload
+        created_at: payload.created_at||new Date().toISOString(),
+        data: payload.data||payload, // direct payload
       };
 
       setNotis((prev) => [newNoti, ...prev]);
@@ -226,6 +226,7 @@ export default function TopBar() {
 
     const fromId = n.data?.from || n.data?.userId;
     const postId = n.data?.postId;
+    
 
     if (n.type === "follow" && fromId) {
       navigate(`/profile/${fromId}`);
@@ -405,6 +406,7 @@ export default function TopBar() {
                   </div>
                 ))}
               </div>
+              {unreadCount > 0 && (
               <div className="p-2 text-center border-t border-gray-100">
                 <button
                   onClick={handleMarkAllAsRead}
@@ -412,7 +414,7 @@ export default function TopBar() {
                 >
                   Mark all as read
                 </button>
-              </div>
+              </div>)}
             </div>
           )}
         </div>
