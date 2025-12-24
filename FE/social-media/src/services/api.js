@@ -6,6 +6,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+    withCredentials: true,
 });
 
 //req interceptor used to attach token
@@ -52,15 +53,11 @@ api.interceptors.response.use(
 
       //refresh token
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
+          const { data } = await axios.post("api/v1/auth/refresh-token",
+          {},
+          { withCredentials: true }
+      );
 
-        if (!refreshToken) {
-            return Promise.reject(error.response?.data || error.message);
-        }
-
-        const { data } = await axios.post("/api/v1/auth/refresh-token", {
-          refreshToken,
-        });
         localStorage.setItem("token", data.accessToken);
 
         api.defaults.headers.common[
