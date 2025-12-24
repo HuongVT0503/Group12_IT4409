@@ -7,6 +7,19 @@ import {
 } from "../services/realtimeService.js";
 import { v4 as uuidv4 } from "uuid";
 import * as notificationRepo from "../repositories/notificationRepository.js";
+import jwt from "jsonwebtoken";
+
+const getUserIdFromRequest = (req) => {
+    try {
+        if (req.user) return req.user.id; // If verifyToken middleware ran
+        const token = req.headers['authorization']?.split(' ')[1];
+        if (!token) return null;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        return decoded.id;
+    } catch (e) {
+        return null;
+    }
+};
 
 // Tạo bài viết mới
 async function createPost(req, res, next) {
@@ -70,7 +83,8 @@ async function createPost(req, res, next) {
 async function getPost(req, res, next) {
   try {
     const id = req.params.id;
-    const post = await postService.getPost(id);
+    const userId = getUserIdFromRequest(req);
+    const post = await postService.getPost(id, userId);
     if (!post) return res.status(404).json({ message: "Post not found" });
     res.json({ post });
   } catch (err) {
@@ -97,7 +111,8 @@ async function deletePost(req, res, next) {
 async function getFeed(req, res, next) {
   try {
     const limit = parseInt(req.query.limit) || 20;
-    const posts = await postService.getFeed(limit);
+    const userId = getUserIdFromRequest(req);
+    const posts = await postService.getFeed(limit, userId);
     res.json({ posts });
   } catch (err) {
     next(err);
@@ -106,9 +121,10 @@ async function getFeed(req, res, next) {
 
 async function getUserPosts(req, res, next) {
   try {
-    const userId = req.params.userId;
+    const targetUserId = req.params.userId;
     const limit = parseInt(req.query.limit) || 20;
-    const posts = await postService.getPostsByUser(userId, limit);
+    const currentUserId = getUserIdFromRequest(req);
+    const posts = await postService.getPostsByUser(targetUserId, limit, currentUserId);
     res.json({ posts });
   } catch (err) {
     next(err);

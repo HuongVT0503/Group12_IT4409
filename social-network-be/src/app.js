@@ -5,6 +5,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import path from 'path';
+import cookieParser from 'cookie-parser';
 import { fileURLToPath } from 'url';
 import passport from './config/passportConfig.js';
 import session from 'express-session';
@@ -23,7 +24,13 @@ import chatRoutes from './routes/chatRoutes.js';
 import errorHandler from './middlewares/errorMiddleware.js';
 
 const app = express();
-app.use(cors());
+
+// Middleware
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true,
+}));
+app.use(cookieParser());
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 

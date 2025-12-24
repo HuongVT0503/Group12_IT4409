@@ -2,6 +2,7 @@ import * as commentService from '../services/commentService.js';
 import { emitNotification, emitPostUpdate } from '../services/realtimeService.js';
 import * as postRepo from '../repositories/postRepository.js';
 import * as notificationRepo from '../repositories/notificationRepository.js';
+import * as commentRepo from '../repositories/commentRepository.js';
 import {v4 as uuidv4} from 'uuid';
 
 async function createComment(req, res, next) {
@@ -38,6 +39,37 @@ async function createComment(req, res, next) {
         from: authorId,
       });
     }
+
+    //emit notif to author of PARENT COMMENT
+    if (parent_comment_id) {
+      const parentAuthor = await commentRepo.getCommentAuthor(parent_comment_id);
+
+      if (parentAuthor && parentAuthor.id !== authorId) { 
+        const notifId = uuidv4();
+        const notifData = {
+          from: authorId,
+          postId: postId,
+          text: "replied to your comment", 
+          commentId: comment.id, //of the reply
+          parentCommentId: parent_comment_id
+        };
+
+        //save to db
+        await notificationRepo.createNotification({
+          id: notifId,
+          userId: parentAuthor.id,
+          type: "reply", 
+          data: JSON.stringify(notifData),
+        });
+
+        emitNotification(parentAuthor.id, {
+          id: notifId,
+          type: "reply",
+          created_at: new Date().toISOString(),
+          read: false,
+          data: notifData,
+        });
+      }}
     // Emit update realtime cho post
     emitPostUpdate(postId, { newComment: comment });
 

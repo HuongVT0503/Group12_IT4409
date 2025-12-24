@@ -52,6 +52,9 @@ const mapPostResult = (r) => {
     comments: r.get("comments").toNumber(),
     shares: r.get("shares").toNumber(),
   };
+
+  const isLiked = r.keys.includes('isLiked') ? r.get('isLiked') : false;
+
   if (post.created_at)
     post.created_at = new Date(post.created_at).toISOString();
 
@@ -65,10 +68,10 @@ const mapPostResult = (r) => {
     sharedPost = { ...sp, author: sa };
   }
 
-  return { post, author, stats, sharedPost };
+  return { post, author, stats, sharedPost, isLiked };
 };
 
-async function getPostById(id) {
+async function getPostById(id, currentUserId=null) {
   const session = getSession();
   try {
     const res = await session.run(
@@ -77,8 +80,10 @@ async function getPostById(id) {
       OPTIONAL MATCH (c:Comment)-[:ON]->(p)
       OPTIONAL MATCH (s:Post)-[:SHARES]->(p)
       OPTIONAL MATCH (p)-[:SHARES]->(sp:Post)<-[:AUTHORED]-(sa:User)
-      RETURN p, u,count(DISTINCT l) as likes, count(DISTINCT c) as comments, count(DISTINCT s) as shares,sp,sa LIMIT 1`,
-      { id }
+
+      OPTIONAL MATCH (me:User {id:$currentUserId})-[myLike:LIKED]->(p)
+      RETURN p, u,count(DISTINCT l) as likes, count(DISTINCT c) as comments, count(DISTINCT s) as shares,sp,sa, count (myLike)>0 as isLiked LIMIT 1`,
+      { id, currentUserId }
     );
     if (!res.records.length) return null;
 
@@ -104,7 +109,7 @@ async function deletePost(id, userId) {
   }
 }
 
-async function getRecentPublicPosts(limit = 20) {
+async function getRecentPublicPosts(limit = 20, currentUserId=null) {
   const session = getSession();
   try {
     const res = await session.run(
@@ -114,9 +119,11 @@ async function getRecentPublicPosts(limit = 20) {
        OPTIONAL MATCH (c:Comment)-[:ON]->(p)
        OPTIONAL MATCH (s:Post)-[:SHARES]->(p)
        OPTIONAL MATCH (p)-[:SHARES]->(sp:Post)<-[:AUTHORED]-(sa:User)
-       RETURN p, u, count(DISTINCT l) as likes, count(DISTINCT c) as comments, count(DISTINCT s) as shares, sp, sa
+
+       OPTIONAL MATCH (me:User {id:$currentUserId})-[myLike:LIKED]->(p)
+       RETURN p, u, count(DISTINCT l) as likes, count(DISTINCT c) as comments, count(DISTINCT s) as shares, sp, sa, count (myLike)>0 as isLiked
        ORDER BY p.created_at DESC LIMIT $limit`,
-      { limit: neo4j.int(limit) }
+      { limit: neo4j.int(limit), currentUserId   }
     );
     return res.records.map(mapPostResult);
   } finally {
@@ -124,7 +131,7 @@ async function getRecentPublicPosts(limit = 20) {
   }
 }
 
-async function getPostsByAuthor(authorId, limit = 20) {
+async function getPostsByAuthor(authorId, limit = 20, currentUserId=null) {
   const session = getSession();
   try {
     const res = await session.run(
@@ -133,9 +140,11 @@ async function getPostsByAuthor(authorId, limit = 20) {
       OPTIONAL MATCH (c:Comment)-[:ON]->(p)
       OPTIONAL MATCH (s:Post)-[:SHARES]->(p)
       OPTIONAL MATCH (p)-[:SHARES]->(sp:Post)<-[:AUTHORED]-(sa:User)
-      RETURN p, u, count(DISTINCT l) as likes, count(DISTINCT c) as comments, count(DISTINCT s) as shares,sp,sa
+
+      OPTIONAL MATCH (me:User {id:$currentUserId})-[myLike:LIKED]->(p)
+      RETURN p, u, count(DISTINCT l) as likes, count(DISTINCT c) as comments, count(DISTINCT s) as shares,sp,sa, count (myLike)>0 as isLiked
       ORDER BY p.created_at DESC LIMIT $limit`,
-      { authorId, limit: neo4j.int(limit) }
+      { authorId, limit: neo4j.int(limit), currentUserId }
     );
     return res.records.map(mapPostResult);
   } finally {

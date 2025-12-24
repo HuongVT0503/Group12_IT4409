@@ -37,13 +37,13 @@ const safeFormatDate = (dateString) => {
   }
 };
 
-export default function PostCard({ post, onDelete }) {
+export default function PostCard({ post, onDelete, highlightId }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const socket = useSocket();
 
   const [isSharing, setIsSharing] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [showComments, setShowComments] = useState(false);
   const [likeCount, setLikeCount] = useState(post.stats?.likes || 0);
   const [commentCount, setCommentCount] = useState(post.stats?.comments || 0);
@@ -55,6 +55,7 @@ export default function PostCard({ post, onDelete }) {
 
   const [showMenu, setShowMenu] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  
 
   const commentTree = useMemo(() => {
     const map = {};
@@ -87,8 +88,14 @@ export default function PostCard({ post, onDelete }) {
     socket.emit("join_post", post.id);
 
     const handleUpdate = (payload) => {
+      if (payload.postId && payload.postId !== post.id) return;
+      
       if (payload.deleted) {
         if (onDelete) onDelete(post.id);
+        return;
+      }
+
+      if (payload.likedBy === user?.id || payload.unlikedBy === user?.id) {
         return;
       }
 
@@ -159,6 +166,28 @@ export default function PostCard({ post, onDelete }) {
       socket.emit("leave_post", post.id);
     };
   }, [socket, post.id, user?.id, showComments, onDelete, comments]);
+
+  //auto openning & scrolling
+  useEffect(() => {
+    if (highlightId && !showComments) {
+      handleFetchComments();
+    }
+  }, [highlightId]); 
+
+
+  //scroll once cmt is loaded
+  useEffect(() => {
+    if (highlightId && showComments && comments.length > 0) {
+      setTimeout(() => {
+        const element = document.getElementById(`comment-${highlightId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          element.classList.add("bg-blue-50", "transition-colors", "duration-1000");
+          setTimeout(() => element.classList.remove("bg-blue-50"), 2000);
+        }
+      }, 500);
+    }
+  }, [highlightId, showComments, comments.length]);
 
   const toggleLike = async () => {
     // UI update
@@ -299,7 +328,11 @@ export default function PostCard({ post, onDelete }) {
     user?.id === post.author.id || user?.id === post.author.userId;
 
   return (
-    <div className="w-full bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_8px_32px_rgba(31,38,135,0.12)] border border-white/40 p-5 transition-all duration-300 hover:shadow-[0_12px_40px_rgba(31,38,135,0.18)] hover:-translate-y-0.5">
+    <div
+      className={`w-full bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_8px_32px_rgba(31,38,135,0.12)] border border-white/40 p-5 transition-all duration-300 hover:shadow-[0_12px_40px_rgba(31,38,135,0.18)] hover:-translate-y-0.5 ${
+        showMenu ? "relative z-20" : ""
+      }`}
+    >
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <Link to={`/profile/${post.author.id}`} className="flex gap-3">

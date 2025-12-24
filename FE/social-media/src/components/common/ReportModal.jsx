@@ -3,6 +3,8 @@ import { X, AlertTriangle } from "lucide-react";
 import Button from "./ButtonComponent";
 import TextAreaField from "./TextAreaField";
 import { submitReport } from "../../services/userService";
+import {createPortal} from "react-dom";
+
 export default function ReportModal({ isOpen, onClose, targetId, targetType }) {
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,8 +29,8 @@ export default function ReportModal({ isOpen, onClose, targetId, targetType }) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
+  return createPortal (
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
           <h3 className="font-bold text-red-600 flex items-center gap-2">
@@ -65,6 +67,7 @@ export default function ReportModal({ isOpen, onClose, targetId, targetType }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
