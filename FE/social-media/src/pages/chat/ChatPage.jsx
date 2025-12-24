@@ -379,7 +379,7 @@ export default function ChatPage() {
     }&background=random`;
 
   return (
-    <div className="flex h-[calc(100vh-80px)] lg:h-[calc(100vh-100px)] bg-white rounded-[var(--radius-box)] shadow-sm border border-gray-100 overflow-hidden mt-4">
+    <div className="flex h-[calc(100vh-140px)] lg:h-[calc(100vh-100px)] bg-white rounded-[var(--radius-box)] shadow-sm border border-gray-100 overflow-hidden mt-4">
       {/* LEFT: Conversation List */}
       <div
         className={cn(

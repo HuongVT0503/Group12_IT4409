@@ -61,7 +61,12 @@ export default function Login({ onSwitch, onForgot }) {
         navigate(from, { replace: true }); //redirect to intended page
       }
     } catch (e2) {
-      setErr(e2.message || "Login failed");
+      const msg = e2?.error?.message || e2?.message;
+      if (msg === 'Your account has been locked') {
+          navigate("/banned");
+          return;
+      }
+      setErr(msg);
     } finally {
       setLoading(false);
     }

@@ -69,10 +69,16 @@ export async function getAllReports() {
          reason: r.reason,
          createdAt: r.createdAt,
          targetType: labels(target)[0],
-         targetId: target.userId || target.postId
+         targetId: target.id 
        } as reportData ORDER BY r.createdAt DESC`
         );
-        return res.records.map(r => r.get('reportData'));
+        return res.records.map(r => {
+            const data = r.get('reportData');
+            if (data.createdAt) {
+                data.createdAt = new Date(data.createdAt.toString()).toISOString();
+            }
+            return data;
+        });
     } finally {
         await session.close();
     }
@@ -83,7 +89,7 @@ export async function deletePostById(postId) {
     const session = getSession();
     try {
         await session.run(
-            `MATCH (p:Post {postId: $postId}) 
+            `MATCH (p:Post {id: $postId}) 
        DETACH DELETE p`,
             { postId }
         );
@@ -98,7 +104,7 @@ export async function getPostDetail(postId) {
     const session = getSession();
     try {
         const res = await session.run(
-            `MATCH (u:User)-[:POSTED]->(p:Post {postId: $postId})
+            `MATCH (u:User)-[:POSTED]->(p:Post {id: $postId})
              RETURN p {.*, author: u.username}`,
             { postId }
         );

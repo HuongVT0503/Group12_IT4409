@@ -299,7 +299,11 @@ export default function PostCard({ post, onDelete }) {
     user?.id === post.author.id || user?.id === post.author.userId;
 
   return (
-    <div className="w-full bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_8px_32px_rgba(31,38,135,0.12)] border border-white/40 p-5 transition-all duration-300 hover:shadow-[0_12px_40px_rgba(31,38,135,0.18)] hover:-translate-y-0.5">
+    <div
+      className={`w-full bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_8px_32px_rgba(31,38,135,0.12)] border border-white/40 p-5 transition-all duration-300 hover:shadow-[0_12px_40px_rgba(31,38,135,0.18)] hover:-translate-y-0.5 ${
+        showMenu ? "relative z-20" : ""
+      }`}
+    >
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <Link to={`/profile/${post.author.id}`} className="flex gap-3">
