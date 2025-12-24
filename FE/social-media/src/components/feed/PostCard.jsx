@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { formatDistanceToNow } from "date-fns"; //?date-fns
 import { Heart, MessageSquare, Trash2, Share2 } from "lucide-react"; //share2
 //import Button from "../common/ButtonComponent";
@@ -8,7 +8,11 @@ import {
   deletePost,
   sharePost,
 } from "../../services/postService";
-import { getComments, createComment } from "../../services/commentService";
+import {
+  getComments,
+  createComment,
+  deleteComment,
+} from "../../services/commentService";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
 import { Link, useNavigate } from "react-router-dom";
@@ -40,6 +44,26 @@ export default function PostCard({ post, onDelete }) {
   const [loadingComments, setLoadingComments] = useState(false);
   const [shareCount, setShareCount] = useState(post.stats?.shares || 0);
 
+  const commentTree = useMemo(() => {
+    const map = {};
+    const roots = [];
+
+    //innit
+    comments.forEach((c) => {
+      map[c.comment.id] = { ...c, replies: [] };
+    });
+    //link
+    comments.forEach((c) => {
+      if (c.parentId && map[c.parentId]) {
+        map[c.parentId].replies.push(map[c.comment.id]);
+      } else {
+        roots.push(map[c.comment.id]);
+      }
+    });
+
+    return roots;
+  }, [comments]);
+
   //initialize
   useEffect(() => {}, [post]);
 
@@ -65,24 +89,50 @@ export default function PostCard({ post, onDelete }) {
       }
 
       if (payload.newComment) {
-        // Backend payload: { newComment: commentObj }
-        commentCount;
+        if (payload.newComment.author?.id === user?.id) {
+            return;
+        }
+        //be payload: { newComment: commentObj }
+        //commentCount;
         setCommentCount((prev) => prev + 1);
 
         //be 'createComment' needs author info?
         if (showComments) {
-          const incomingAuthorId =
-            payload.newComment.authorId || payload.newComment.from;
-          if (incomingAuthorId !== user?.id) {
-            //only push, doent fetch
-            setComments((prev) => [
+          setComments((prev) => {
+            if (prev.find((c) => c.comment.id === payload.newComment.id))
+              return prev;
+            return [
+              ...prev,
               {
                 comment: payload.newComment,
-                author: { display_name: "User", avatar_url: "" }, // Placeholder if BE doesnt send author
+                author: payload.newComment.author || {
+                  display_name: "User",
+                  avatar_url: "",
+                },
+                parentId: payload.newComment.parentId,
               },
-              ...prev,
-            ]);
-          }
+            ];
+          });
+        }
+      }
+
+      if (payload.deletedCommentId) {
+
+        //check existence b4 del //if all cmts r loadedbut this id is missing then it is del locally already
+        const isCommentPresent = comments.some(c => c.comment.id === payload.deletedCommentId);
+        if (comments.length > 0 && !isCommentPresent) {
+            return;
+        }
+
+        
+        const idsToRemove = new Set([
+          payload.deletedCommentId,
+          ...getDescendantIds(payload.deletedCommentId, comments) 
+        ]);
+
+        setCommentCount((prev) => Math.max(0, prev - idsToRemove.size));
+        if (showComments) {
+          setComments((prev) => prev.filter((c) => !idsToRemove.has(c.comment.id)));
         }
       }
     };
@@ -94,7 +144,7 @@ export default function PostCard({ post, onDelete }) {
       socket.off("post_update", handleUpdate);
       socket.emit("leave_post", post.id);
     };
-  }, [socket, post.id, user?.id, showComments]);
+  }, [socket, post.id, user?.id, showComments, onDelete, comments]);
 
   const toggleLike = async () => {
     // UI update
@@ -115,6 +165,15 @@ export default function PostCard({ post, onDelete }) {
     }
   };
 
+  const getDescendantIds = (rootId, allComments) => {
+    const children = allComments.filter((c) => c.parentId === rootId);
+    let ids = children.map((c) => c.comment.id);
+    children.forEach((child) => {
+      ids = [...ids, ...getDescendantIds(child.comment.id, allComments)];
+    });
+    return ids;
+  };
+
   const handleFetchComments = async () => {
     if (!showComments && comments.length === 0) {
       setLoadingComments(true);
@@ -133,11 +192,39 @@ export default function PostCard({ post, onDelete }) {
     if (e.key === "Enter" && newComment.trim()) {
       try {
         const res = await createComment(post.id, newComment);
-        setComments([{ comment: res.data.comment, author: user }, ...comments]);
+        setComments((prev) => {
+          if (prev.some((c) => c.comment.id === res.data.comment.id))
+            return prev;
+
+          return [
+            ...prev,
+            { comment: res.data.comment, author: user, parentId: null },
+          ];
+        });
         setNewComment("");
+        setCommentCount((prev) => prev + 1);
       } catch (err) {
         console.error(err);
       }
+    }
+  };
+
+  const handleReplySubmit = async (parentId, content) => {
+    try {
+      const res = await createComment(post.id, content, parentId);
+
+      setComments((prev) => {
+        if (prev.some((c) => c.comment.id === res.data.comment.id)) return prev;
+
+        return [
+          ...prev,
+          { comment: res.data.comment, author: user, parentId: parentId },
+        ];
+      });
+
+      setCommentCount((prev) => prev + 1);
+    } catch (err) {
+      console.error("Reply failed", err);
     }
   };
 
@@ -145,6 +232,33 @@ export default function PostCard({ post, onDelete }) {
     if (window.confirm("Delete this post?")) {
       await deletePost(post.id);
       if (onDelete) onDelete(post.id);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("Delete this comment?")) return;
+
+    const idsToRemove = new Set([
+      commentId,
+      ...getDescendantIds(commentId, comments),
+    ]);
+
+    //error safety
+    const previousComments = [...comments];
+    const previousCount = commentCount;
+
+    //
+    setComments((prev) => prev.filter((c) => !idsToRemove.has(c.comment.id)));
+    setCommentCount((prev) => Math.max(0, prev - idsToRemove.size));
+
+    try {
+      await deleteComment(commentId);
+    } catch (err) {
+      console.error("Delete failed", err);
+      alert("Could not delete comment");
+      // Revert on error
+      setComments(previousComments);
+      setCommentCount(previousCount);
     }
   };
 

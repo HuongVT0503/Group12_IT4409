@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
 import {
@@ -357,6 +357,21 @@ export default function ChatPage() {
     }, 100);
   };
 
+  //merge following n ppl i ve chat w
+  const horizontalListUsers = useMemo(() => {
+    const uniqueMap = new Map();
+
+    friends.forEach((f) => uniqueMap.set(f.id, f));
+
+    conversations.forEach((c) => {
+      if (c.otherUser && !uniqueMap.has(c.otherUser.id)) {
+        uniqueMap.set(c.otherUser.id, c.otherUser);
+      }
+    });
+
+    return Array.from(uniqueMap.values());
+  }, [friends, conversations]);
+
   const getAvatar = (u) =>
     u?.avatar_url ||
     `https://ui-avatars.com/api/?name=${
@@ -389,10 +404,10 @@ export default function ChatPage() {
         </div>
 
         {/*Horizontal Friends List */}
-        {friends.length > 0 && (
-          <div className="flex gap-4 overflow-x-auto  no-scrollbar  border-b border-neutral-300 px-4 py-3">
+        {horizontalListUsers.length > 0 && (
+          <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
             {/* Friend Items */}
-            {friends.map((friend) => (
+            {horizontalListUsers.map((friend) => (
               <div
                 key={friend.id}
                 onClick={() => handleStartChatWithFriend(friend)}
