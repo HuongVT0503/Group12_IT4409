@@ -50,7 +50,8 @@ async function createComment(req, res, next) {
           from: authorId,
           postId: postId,
           text: "replied to your comment", 
-          commentId: comment.id 
+          commentId: comment.id, //of the reply
+          parentCommentId: parent_comment_id
         };
 
         //save to db

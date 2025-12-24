@@ -226,6 +226,7 @@ export default function TopBar() {
 
     const fromId = n.data?.from || n.data?.userId;
     const postId = n.data?.postId;
+    const highlightId = n.data?.parentCommentId||n.data?.commentId;
     
 
     if (n.type === "follow" && fromId) {
@@ -234,10 +235,12 @@ export default function TopBar() {
       (n.type === "like" ||
         n.type === "comment" ||
         n.type === "new_post" ||
-        n.type === "share_post") &&
+        n.type === "share_post" ||
+        n.type === "reply"
+      ) &&
       postId
     ) {
-      navigate(`/post/${postId}`);
+      navigate(`/post/${postId}`, { state: { highlightId } });
     }
   };
 

@@ -32,7 +32,9 @@ export default function CommentItem({
   };
 
   return (
-    <div className={`flex flex-col ${depth > 0 ? (depth < 4 ? "ml-8 mt-2" : "mt-2 border-l-2 pl-2") : "mt-4"}`}>
+    <div
+    id={`comment-${item.comment.id}`} 
+    className={`flex flex-col ${depth > 0 ? (depth < 4 ? "ml-8 mt-2" : "mt-2 border-l-2 pl-2") : "mt-4"}`}>
       <div className="flex gap-3">
         {/* Avatar */}
         <Link to={`/profile/${item.author.id || item.author.userId}`}>
