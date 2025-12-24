@@ -6,6 +6,7 @@ import {
   getFollowing,
   getFollowers,
 } from "../../services/userService";
+import { getOrCreateConversation } from "../../services/chatService";
 
 import { useAuth } from "../../context/AuthContext";
 import EditProfileModal from "../../components/profile/EditProfile";
@@ -13,7 +14,14 @@ import PostCard from "../../components/feed/PostCard";
 import { getUserPosts } from "../../services/postService";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Button from "../../components/common/ButtonComponent"; //
-import { UserPlus, UserCheck, MoreHorizontal, Flag, ShieldAlert } from "lucide-react";
+import {
+  UserPlus,
+  UserCheck,
+  MoreHorizontal,
+  Flag,
+  ShieldAlert,
+  MessageCircle,
+} from "lucide-react";
 import CreatePost from "../../components/feed/CreatePost";
 import Avatar from "../../components/common/Avatar";
 import ReportModal from "../../components/common/ReportModal";
@@ -40,6 +48,24 @@ export default function ProfilePage() {
     typeof window !== "undefined" ? window.innerWidth >= 1024 : false
   );
 
+  const [messageLoading, setMessageLoading] = useState(false);
+
+  const handleMessage = async () => {
+    if (!profile?.id) return;
+    setMessageLoading(true);
+    try {
+      const res = await getOrCreateConversation(profile.id);
+      if (res.data?.success && res.data?.conversation) {
+        navigate(`/chat/${res.data.conversation.id}`);
+      }
+    } catch (err) {
+      console.error("Failed to open chat", err);
+      // Optional: alert("Could not open chat");
+    } finally {
+      setMessageLoading(false);
+    }
+  };
+
   const targetId = id || user?.id; //url id or user id
 
   //fetch user profile
@@ -57,9 +83,12 @@ export default function ProfilePage() {
 
         const errorMessage = err?.error?.message || err?.message;
 
-        if (errorMessage === 'User not exist' || (err.response && err.response.status === 403)) {
+        if (
+          errorMessage === "User not exist" ||
+          (err.response && err.response.status === 403)
+        ) {
           setError("You do not have permission to view this profile.");
-          setIsBanned(true); 
+          setIsBanned(true);
         } else {
           setError("Failed to load profile.");
         }
@@ -287,7 +316,7 @@ export default function ProfilePage() {
     return (
       <div className="p-8 text-center text-red-600 font-semibold">{error}</div>
     );
-  
+
   if (!profile) return <div className="p-8 text-center">User not found</div>;
 
   const isOwnProfile = profile.id === user?.id;
@@ -328,7 +357,17 @@ export default function ProfilePage() {
                   Edit Profile
                 </button>
               ) : (
-                <div className="">
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={handleMessage}
+                    loading={messageLoading}
+                    variant="outline"
+                    className="rounded-lg px-4 py-2 text-sm border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-primary"
+                  >
+                    <MessageCircle size={18} className="mr-2" />
+                    Message
+                  </Button>
+
                   <Button
                     onClick={handleFollowToggle}
                     loading={followLoading}

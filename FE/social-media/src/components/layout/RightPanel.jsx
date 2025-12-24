@@ -8,10 +8,12 @@ import { getConversations } from "../../services/chatService";
 import { getFollowing } from "../../services/userService";
 import { formatDistanceToNow } from "date-fns";
 import { MessageCircle, UserPlus, Users } from "lucide-react";
+import { useSocket } from "../../context/SocketContext";
 
 export default function RightPanel() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const socket=useSocket();
 
   const [conversations, setConversations] = useState([]);
   const [contacts, setContacts] = useState([]);
@@ -63,6 +65,88 @@ export default function RightPanel() {
     `https://ui-avatars.com/api/?name=${
       u?.display_name || "User"
     }&background=random`;
+
+  const isImageUrl = (url) => {
+    if (!url) return false;
+    return (
+      url.match(/\.(jpeg|jpg|gif|png|webp)$/) != null ||
+      url.includes("/uploads/")
+    );
+  };
+
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewMessage = (payload) => {
+      setConversations((prev) => {
+        const others = prev.filter((c) => c.id !== payload.conversationId);
+        let updatedConv = prev.find((c) => c.id === payload.conversationId);
+
+        if (updatedConv) {
+          updatedConv = {
+            ...updatedConv,
+            lastMessage: {
+              ...payload.message,
+              sender: payload.sender || payload.message.sender,
+            },
+            updated_at: new Date().toISOString(),
+          };
+          return [updatedConv, ...others];
+        }
+        
+        return prev; 
+      });
+    };
+
+    const handleMessageRead = ({ messageId }) => {
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.lastMessage?.id === messageId) {
+            return {
+              ...c,
+              lastMessage: { ...c.lastMessage, is_read: true },
+            };
+          }
+          return c;
+        })
+      );
+    };
+
+    socket.on("new_message", handleNewMessage);
+    socket.on("message_read", handleMessageRead);
+
+    return () => {
+      socket.off("new_message", handleNewMessage);
+      socket.off("message_read", handleMessageRead);
+    };
+  }, [socket]);
+
+  
+
+  
+
+  const renderLastMessage = (chat) => {
+    const msg = chat.lastMessage;
+    //no message
+    if (!msg) return "Start a conversation";
+
+    //is img
+    const isImage = isImageUrl(msg.content);
+
+    //did current user sent it
+    const isMe = msg.sender?.id === user?.id;
+
+    if (isImage) {
+      if (isMe) return "You sent a picture";
+      return `${
+        chat.otherUser?.display_name?.split(" ")[0] || "User"
+      } sent a picture`;
+    }
+
+    if (isMe) return `You: ${msg.content}`;
+    return msg.content;
+  };
 
   return (
     <div className="flex flex-col gap-6 h-full py-2 2xl:py-6 w-full">
@@ -135,10 +219,7 @@ export default function RightPanel() {
           <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
             <MessageCircle size={16} className="text-primary" /> Messages
           </h3>
-          <Link
-            to="/chat"
-            className="text-xs text-primary font-semibold hover:underline"
-          >
+          <Link to="/chat" className="text-xs text-primary font-semibold hover:underline">
             Open Chat
           </Link>
         </div>
@@ -146,10 +227,7 @@ export default function RightPanel() {
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-12 bg-gray-100 rounded-lg animate-pulse"
-              />
+              <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : conversations.length > 0 ? (
@@ -169,6 +247,7 @@ export default function RightPanel() {
                   <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-primary transition-colors">
                     {chat.otherUser?.display_name}
                   </p>
+                  
                   <p
                     className={`text-xs truncate ${
                       !chat.lastMessage?.is_read &&
@@ -177,9 +256,9 @@ export default function RightPanel() {
                         : "text-gray-500"
                     }`}
                   >
-                    {chat.lastMessage?.sender?.id === user?.id && "You: "}
-                    {chat.lastMessage?.content || "Sent an attachment"}
+                    {renderLastMessage(chat)}
                   </p>
+
                 </div>
                 {chat.updated_at && (
                   <span className="text-[10px] text-gray-400 whitespace-nowrap self-start mt-1">
