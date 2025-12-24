@@ -258,6 +258,9 @@ export default function TopBar() {
         return `${senderName} posted a new update.`;
       case "share_post":
         return `${senderName} ${n.data?.text || "shared a post"}.`;
+      
+      case "reply":
+        return `${senderName} replied to your comment.`;
       default:
         return n.data?.text || "New notification";
     }

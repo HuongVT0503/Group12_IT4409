@@ -41,7 +41,12 @@ export function emitNotificationRead(userId, notificationId) {
 
 export function emitMessage(userId, payload) {
     const conversationRoomId = `conversation_${payload.conversationId}`;
+
     io.to(conversationRoomId).emit('new_message', payload);
+
+    if (userId) {
+        io.to(userId).emit('new_message', payload);//emit to recipients personal room for sidebar
+    }
 }
 
 export function emitMessageRead(conversationId, messageId) {
