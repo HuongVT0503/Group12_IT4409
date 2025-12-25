@@ -44,4 +44,19 @@ async function markAsRead(notificationId) {
   }
 }
 
-export { createNotification, getNotifications, markAsRead };
+async function getUnreadNotificationsByType(userId, type) {
+  const session = getSession();
+  try {
+    const res = await session.run(
+      `MATCH (u:User {id:$userId})-[:HAS_NOTIFICATION]->(n:Notification)
+       WHERE n.read = false AND n.type = $type
+       RETURN n`,
+      { userId, type }
+    );
+    return res.records.map((r) => r.get("n").properties);
+  } finally {
+    await session.close();
+  }
+}
+
+export { createNotification, getNotifications, markAsRead, getUnreadNotificationsByType };

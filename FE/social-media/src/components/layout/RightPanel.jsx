@@ -8,12 +8,12 @@ import { getConversations } from "../../services/chatService";
 import { getFollowing } from "../../services/userService";
 import { formatDistanceToNow } from "date-fns";
 import { MessageCircle, UserPlus, Users } from "lucide-react";
-import { useSocket } from "../../context/SocketContext";
+import { useSocketContext } from "../../context/SocketContext";
 
 export default function RightPanel() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const socket=useSocket();
+  const { socket, isUserOnline } = useSocketContext();
 
   const [conversations, setConversations] = useState([]);
   const [contacts, setContacts] = useState([]);
@@ -74,7 +74,6 @@ export default function RightPanel() {
     );
   };
 
-
   useEffect(() => {
     if (!socket) return;
 
@@ -94,8 +93,8 @@ export default function RightPanel() {
           };
           return [updatedConv, ...others];
         }
-        
-        return prev; 
+
+        return prev;
       });
     };
 
@@ -121,10 +120,6 @@ export default function RightPanel() {
       socket.off("message_read", handleMessageRead);
     };
   }, [socket]);
-
-  
-
-  
 
   const renderLastMessage = (chat) => {
     const msg = chat.lastMessage;
@@ -187,7 +182,9 @@ export default function RightPanel() {
                     alt={contact.display_name}
                     className="w-9 h-9 rounded-full object-cover border border-gray-100 group-hover:border-primary/50 transition-colors"
                   />
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+                  {isUserOnline(contact.id) && (
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-primary transition-colors">
@@ -219,7 +216,10 @@ export default function RightPanel() {
           <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
             <MessageCircle size={16} className="text-primary" /> Messages
           </h3>
-          <Link to="/chat" className="text-xs text-primary font-semibold hover:underline">
+          <Link
+            to="/chat"
+            className="text-xs text-primary font-semibold hover:underline"
+          >
             Open Chat
           </Link>
         </div>
@@ -227,7 +227,10 @@ export default function RightPanel() {
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
+              <div
+                key={i}
+                className="h-12 bg-gray-100 rounded-lg animate-pulse"
+              />
             ))}
           </div>
         ) : conversations.length > 0 ? (
@@ -238,16 +241,21 @@ export default function RightPanel() {
                 onClick={() => navigate(`/chat/${chat.id}`)}
                 className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-xl -mx-2 transition-colors group"
               >
-                <img
-                  src={getAvatar(chat.otherUser)}
-                  alt={chat.otherUser?.display_name}
-                  className="w-10 h-10 rounded-full object-cover border border-gray-100"
-                />
+                <div className="relative">
+                  <img
+                    src={getAvatar(chat.otherUser)}
+                    alt={chat.otherUser?.display_name}
+                    className="w-10 h-10 rounded-full object-cover border border-gray-100"
+                  />
+                  {isUserOnline(chat.otherUser?.id) && (
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-primary transition-colors">
                     {chat.otherUser?.display_name}
                   </p>
-                  
+
                   <p
                     className={`text-xs truncate ${
                       !chat.lastMessage?.is_read &&
@@ -258,7 +266,6 @@ export default function RightPanel() {
                   >
                     {renderLastMessage(chat)}
                   </p>
-
                 </div>
                 {chat.updated_at && (
                   <span className="text-[10px] text-gray-400 whitespace-nowrap self-start mt-1">

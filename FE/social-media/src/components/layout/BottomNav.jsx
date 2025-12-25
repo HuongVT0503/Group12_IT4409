@@ -3,7 +3,11 @@
 import { Home, User, MessageCircle, Users, PlusSquare } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
+import { useSocketContext } from "../../context/SocketContext";
+
 export default function BottomNav() {
+  const { unreadCount } = useSocketContext();
+
   const navItems = [
     { icon: Home, label: "Feed", path: "/" },
     { icon: Users, label: "Connect", path: "/connections" },
@@ -31,7 +35,14 @@ export default function BottomNav() {
                   <item.icon size={24} />
                 </div>
               ) : (
-                <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                <div className="relative">
+                  <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                  {item.label === "Chat" && unreadCount > 0 && (
+                    <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-1 ring-white">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           )}
