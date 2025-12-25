@@ -2,8 +2,11 @@ import * as chatService from "../services/chatService.js";
 import { 
   emitMessage,
   emitMessageRead,
-  emitTypingIndicator 
+  emitTypingIndicator,
+  emitNotification
 } from "../services/realtimeService.js";
+import * as notificationRepo from "../repositories/notificationRepository.js";
+import { v4 as uuidv4 } from "uuid";
 
 
 async function getConversations(req, res, next) {
@@ -83,6 +86,30 @@ async function sendMessage(req, res, next) {
       message: result.message,
       sender: result.sender,
     });
+
+    const notifId = uuidv4();
+    const notifData = {
+      from: senderId,
+      conversationId: result.conversationId,
+      messageId: result.message.id,
+      content: content,
+    };
+
+    await notificationRepo.createNotification({
+      id: notifId,
+      userId: receiverId,
+      type: "chat",
+      data: JSON.stringify(notifData),
+    });
+
+    // Emit notis real-time
+    emitNotification(receiverId, {
+      id: notifId,
+      type: "chat",
+      created_at: new Date().toISOString(),
+      read: false,
+      data: notifData,
+    });
     
     res.status(201).json({
       success: true,
@@ -97,6 +124,7 @@ async function sendMessage(req, res, next) {
 async function markMessageAsRead(req, res, next) {
   try {
     const { messageId } = req.params;
+    const { conversationId } = req.body;
     
     const message = await chatService.markMessageAsRead(messageId);
     
@@ -105,6 +133,11 @@ async function markMessageAsRead(req, res, next) {
         success: false,
         message: "Message not found",
       });
+    }
+
+    // Emit message read event to conversation participants
+    if (conversationId) {
+      emitMessageRead(conversationId, messageId);
     }
     
     res.json({

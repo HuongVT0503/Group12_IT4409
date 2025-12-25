@@ -17,30 +17,7 @@ async function createComment(req, res, next) {
       parentCommentId: parent_comment_id,
     });
 
-    //Lấy thông tin tác giả và emit notification cho tác giả nếu có cmt
-    const postData = await postRepo.getPostById(postId);
-    if (postData?.author && postData.author.id !== authorId) {
-      //save to db
-      await notificationRepo.createNotification({
-        id: uuidv4(),
-        userId: postData.author.id,
-        type: "comment",
-        data: JSON.stringify({
-          from: authorId,
-          postId: postId,
-          text: "commented on your post",
-        }),
-      });
-
-      emitNotification(postData.author.id, {
-        type: "comment",
-        postId,
-        comment,
-        from: authorId,
-      });
-    }
-
-    //emit notif to author of PARENT COMMENT
+    // Handle reply notification
     if (parent_comment_id) {
       const parentAuthor = await commentRepo.getCommentAuthor(parent_comment_id);
 
@@ -50,7 +27,7 @@ async function createComment(req, res, next) {
           from: authorId,
           postId: postId,
           text: "replied to your comment", 
-          commentId: comment.id, //of the reply
+          commentId: comment.id,
           parentCommentId: parent_comment_id
         };
 
@@ -69,7 +46,9 @@ async function createComment(req, res, next) {
           read: false,
           data: notifData,
         });
-      }}
+      }
+    }
+    
     // Emit update realtime cho post
     emitPostUpdate(postId, { newComment: comment });
 

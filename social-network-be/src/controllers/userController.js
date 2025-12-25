@@ -1,8 +1,6 @@
 import * as userService from '../services/userService.js';
-import { emitNotification, emitFollowUpdate } from '../services/realtimeService.js';
+import { emitFollowUpdate } from '../services/realtimeService.js';
 import { validationResult } from 'express-validator';
-import { v4 as uuidv4 } from 'uuid';
-import * as notificationRepo from '../repositories/notificationRepository.js';
 
 async function getProfile(req, res, next) {
   try {
@@ -32,23 +30,7 @@ async function follow(req, res, next) {
     const followeeId = req.params.id;
     await userService.follow(followerId, followeeId);
 
-    //save to db
-    await notificationRepo.createNotification({
-      id: uuidv4(),
-      userId: followeeId,
-      type: "follow",
-      data: JSON.stringify({
-        from: followerId,
-        text: "started following you",
-      }),
-    });
-
-    // Emit realtime
-    emitNotification(followeeId, {
-      type: "follow",
-      from: followerId,
-    });
-
+    // Emit follow update realtime
     emitFollowUpdate(followeeId, { newFollower: followerId });
 
     res.json({ following: true });
@@ -60,8 +42,6 @@ async function unfollow(req, res, next) {
     const followerId = req.user.id;
     const followeeId = req.params.id;
     await userService.unfollow(followerId, followeeId);
-
-    // Emit realtime
     emitFollowUpdate(followeeId, { removedFollower: followerId });
 
     res.json({ following: false });
