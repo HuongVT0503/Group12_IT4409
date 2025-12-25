@@ -7,6 +7,7 @@ import {
   Share2,
   MoreVertical,
   Flag,
+  Smile,
 } from "lucide-react"; //share2
 //import Button from "../common/ButtonComponent";
 import {
@@ -26,6 +27,8 @@ import { Link, useNavigate } from "react-router-dom";
 import Avatar from "../common/Avatar";
 import CommentItem from "./CommentItem";
 import ReportModal from "../common/ReportModal";
+import EmojiPicker from "emoji-picker-react";
+import ShareModal from "../common/ShareModal";
 
 const safeFormatDate = (dateString) => {
   try {
@@ -55,6 +58,9 @@ export default function PostCard({ post, onDelete, highlightId }) {
 
   const [showMenu, setShowMenu] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
+
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const commentTree = useMemo(() => {
     const map = {};
@@ -307,12 +313,13 @@ export default function PostCard({ post, onDelete, highlightId }) {
     }
   };
 
-  const handleShare = async () => {
-    //caption
-    const caption = window.prompt("Say something about this post (optional):");
-    if (caption === null) return; //user cancel
+  const handleShareClick = () => {
+    setShowShareModal(true);
+  };
 
+  const handleShareSubmit = async (caption) => {
     setIsSharing(true);
+    setShowShareModal(false);
     try {
       await sharePost(post.id, caption);
       alert("Post shared successfully!");
@@ -323,6 +330,11 @@ export default function PostCard({ post, onDelete, highlightId }) {
     } finally {
       setIsSharing(false);
     }
+  };
+
+  const onEmojiClick = (emojiData) => {
+    setNewComment((prev) => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
   };
 
   ///
@@ -475,7 +487,7 @@ export default function PostCard({ post, onDelete, highlightId }) {
         </button>
 
         <button
-          onClick={handleShare}
+          onClick={handleShareClick}
           disabled={isSharing}
           className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-primary-500 transition-all hover:scale-105 disabled:opacity-50"
         >
@@ -488,7 +500,7 @@ export default function PostCard({ post, onDelete, highlightId }) {
       {/* Comments Section  */}
       {showComments && (
         <div className="mt-4 pt-4 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-2">
-          <div className="flex gap-3 items-center mb-4">
+          <div className="flex gap-3 items-center mb-4 relative">
             <img
               src={
                 user?.avatar_url ||
@@ -502,9 +514,31 @@ export default function PostCard({ post, onDelete, highlightId }) {
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={handlePostComment}
               placeholder="Write a comment..."
-              className="w-full bg-gradient-to-r from-gray-50 to-primary-50/30 rounded-full py-2.5 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400/40 transition-all"
+              className="w-full bg-gradient-to-r from-gray-50 to-primary-50/30 rounded-full py-2.5 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400/40 transition-all pr-10"
             />
+            <button
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-500"
+            >
+              <Smile size={20} />
+            </button>
           </div>
+
+          {showEmojiPicker && (
+            <div className="absolute top-10 right-0 z-50">
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowEmojiPicker(false)}
+              />
+              <div className="relative z-50">
+                <EmojiPicker
+                  onEmojiClick={onEmojiClick}
+                  width={300}
+                  height={350}
+                />
+              </div>
+            </div>
+          )}
 
           {loadingComments ? (
             <p className="text-xs 2xl:text-sm text-center">Loading...</p>
@@ -529,6 +563,13 @@ export default function PostCard({ post, onDelete, highlightId }) {
         onClose={() => setIsReportOpen(false)}
         targetId={post.id}
         targetType="Post"
+      />
+
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        onShare={handleShareSubmit}
+        loading={isSharing}
       />
     </div>
   );

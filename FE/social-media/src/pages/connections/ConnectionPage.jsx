@@ -5,6 +5,7 @@ import {
   getFollowers,
   getFollowing,
   unfollowUser,
+  getProfile,
 } from "../../services/userService";
 import { useSocketContext } from "../../context/SocketContext";
 
@@ -20,7 +21,10 @@ export default function ConnectionsPage() {
   ); // 'following' or 'followers'
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { isUserOnline } = useSocketContext();
+  const { socket,isUserOnline } = useSocketContext();
+
+  const isOwnProfile = targetId === currentUser?.id;
+
 
   useEffect(() => {
     if (!targetId) return;
@@ -47,6 +51,41 @@ export default function ConnectionsPage() {
     fetchData();
   }, [targetId, activeTab]);
 
+  useEffect(() => { //own profile
+    if (!socket || !isOwnProfile || activeTab !== "followers") return;
+
+    const handleFollowUpdate = async (payload) => {
+      if (payload.newFollower) {
+        setData((prev) => {
+          if (prev.some((u) => u.id === payload.newFollower)) return prev;
+          return prev; 
+        });
+
+        try {
+          const res = await getProfile(payload.newFollower);
+          const newUser = res.data.user;
+          
+          setData((prev) => {
+            if (prev.some((u) => u.id === newUser.id)) return prev;
+            return [newUser, ...prev]; // Add to top
+          });
+        } catch (error) {
+          console.error("Failed to fetch new follower details", error);
+        }
+      }
+
+      if (payload.removedFollower) {
+        setData((prev) => prev.filter((u) => u.id !== payload.removedFollower));
+      }
+    };
+
+    socket.on("follow_update", handleFollowUpdate);
+
+    return () => {
+      socket.off("follow_update", handleFollowUpdate);
+    };
+  }, [socket, isOwnProfile, activeTab]);
+
   const handleUnfollow = async (targetId) => {
     if (!confirm("Unfollow this user?")) return;
     try {
@@ -59,7 +98,6 @@ export default function ConnectionsPage() {
     }
   };
 
-  const isOwnProfile = targetId === currentUser?.id;
 
   return (
     <div className="bg-white min-h-screen pb-20">

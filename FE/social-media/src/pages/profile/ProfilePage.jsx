@@ -121,6 +121,7 @@ export default function ProfilePage() {
           const sharedObj = item.sharedPost;
           return {
             id: item.post.id,
+            isLiked: item.isLiked||false,
             content: item.post.content,
             timestamp: item.post.created_at,
             image: item.post.media?.[0] || null,
