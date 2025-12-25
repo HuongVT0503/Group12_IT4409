@@ -2,14 +2,15 @@ import { v4 as uuidv4 } from 'uuid';
 import * as commentRepo from '../repositories/commentRepository.js';
 import * as notificationRepo from '../repositories/notificationRepository.js';
 
-export async function createComment({ authorId, postId, content, parentCommentId = null }) {
+export async function createComment({ authorId, postId, content, parentCommentId = null, media = [] }) {
   const id = uuidv4();
   const comment = await commentRepo.createComment({
     id,
     authorId,
     postId,
     content,
-    parentCommentId
+    parentCommentId,
+    media
   });
 
   // TODO: notify author using notificationRepo
