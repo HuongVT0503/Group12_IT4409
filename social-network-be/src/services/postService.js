@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import * as postRepo from "../repositories/postRepository.js";
 import * as notificationRepo from "../repositories/notificationRepository.js";
-import { emitNotification } from "./realtimeService.js";
 
 async function createPost({ authorId, content, media, privacy }) {
   const id = uuidv4();
@@ -35,27 +34,13 @@ async function likePost(userId, postId) {
   await postRepo.likePost(userId, postId);
   const post = await postRepo.getPostById(postId);
   if (post && post.author && post.author.id !== userId) {
-    const notifId = uuidv4();
-    const notifData = {
-      from: userId,
-      postId: postId,
-    };
     const notif = {
-      id: notifId,
+      id: uuidv4(),
       userId: post.author.id,
       type: "like",
-      data: JSON.stringify(notifData),
+      data: JSON.stringify({ from: userId, postId }),
     };
     await notificationRepo.createNotification(notif);
-    
-    // Emit real-time notification
-    emitNotification(post.author.id, {
-      id: notifId,
-      type: "like",
-      created_at: new Date().toISOString(),
-      read: false,
-      data: notifData,
-    });
   }
   const count = await postRepo.countLikes(postId);
   return { liked: true, likes_count: count };

@@ -38,27 +38,6 @@ async function follow(followerId, followeeId) {
   if (followerId === followeeId)
     throw { status: 400, message: "Cannot follow yourself" };
   await userRepo.followUser(followerId, followeeId);
-  
-  const notifId = uuidv4();
-  const notifData = {
-    from: followerId,
-  };
-  
-  await notificationRepo.createNotification({
-    id: notifId,
-    userId: followeeId,
-    type: "follow",
-    data: JSON.stringify(notifData),
-  });
-
-  emitNotification(followeeId, {
-    id: notifId,
-    type: "follow",
-    created_at: new Date().toISOString(),
-    read: false,
-    data: notifData,
-  });
-  
   return true;
 }
 
