@@ -21,7 +21,7 @@ import {
   deleteComment,
 } from "../../services/commentService";
 import { useAuth } from "../../context/AuthContext";
-import { useSocket } from "../../context/SocketContext";
+import { useSocketContext } from "../../context/SocketContext";
 import { Link, useNavigate } from "react-router-dom";
 import Avatar from "../common/Avatar";
 import CommentItem from "./CommentItem";
@@ -40,7 +40,7 @@ const safeFormatDate = (dateString) => {
 export default function PostCard({ post, onDelete, highlightId }) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const socket = useSocket();
+  const { socket, isUserOnline } = useSocketContext();
 
   const [isSharing, setIsSharing] = useState(false);
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
@@ -55,7 +55,6 @@ export default function PostCard({ post, onDelete, highlightId }) {
 
   const [showMenu, setShowMenu] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
-  
 
   const commentTree = useMemo(() => {
     const map = {};
@@ -89,7 +88,7 @@ export default function PostCard({ post, onDelete, highlightId }) {
 
     const handleUpdate = (payload) => {
       if (payload.postId && payload.postId !== post.id) return;
-      
+
       if (payload.deleted) {
         if (onDelete) onDelete(post.id);
         return;
@@ -172,8 +171,7 @@ export default function PostCard({ post, onDelete, highlightId }) {
     if (highlightId && !showComments) {
       handleFetchComments();
     }
-  }, [highlightId]); 
-
+  }, [highlightId]);
 
   //scroll once cmt is loaded
   useEffect(() => {
@@ -182,7 +180,11 @@ export default function PostCard({ post, onDelete, highlightId }) {
         const element = document.getElementById(`comment-${highlightId}`);
         if (element) {
           element.scrollIntoView({ behavior: "smooth", block: "center" });
-          element.classList.add("bg-blue-50", "transition-colors", "duration-1000");
+          element.classList.add(
+            "bg-blue-50",
+            "transition-colors",
+            "duration-1000"
+          );
           setTimeout(() => element.classList.remove("bg-blue-50"), 2000);
         }
       }, 500);
@@ -336,14 +338,20 @@ export default function PostCard({ post, onDelete, highlightId }) {
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <Link to={`/profile/${post.author.id}`} className="flex gap-3">
-          <Avatar
-            src={
-              post.author.avatar ||
-              `https://ui-avatars.com/api/?name=${post.author.name}`
-            }
-            alt={post.author.name}
-            size={11}
-          />
+          <div className="relative">
+            <Avatar
+              src={
+                post.author.avatar ||
+                `https://ui-avatars.com/api/?name=${post.author.name}`
+              }
+              alt={post.author.name}
+              size={11}
+            />
+            {isUserOnline(post.author.id) && (
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+            )}
+          </div>
+
           <div className="flex flex-col items-start justify-between">
             <h3 className="font-bold text-gray-900 leading-tight">
               {post.author.name}

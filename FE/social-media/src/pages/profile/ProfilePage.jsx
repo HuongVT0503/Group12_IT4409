@@ -25,6 +25,7 @@ import {
 import CreatePost from "../../components/feed/CreatePost";
 import Avatar from "../../components/common/Avatar";
 import ReportModal from "../../components/common/ReportModal";
+import { useSocketContext } from "../../context/SocketContext";
 
 export default function ProfilePage() {
   const { id } = useParams(); //id from url
@@ -43,6 +44,7 @@ export default function ProfilePage() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
+  const { isUserOnline } = useSocketContext();
 
   const [isLgScreen, setIsLgScreen] = useState(
     typeof window !== "undefined" ? window.innerWidth >= 1024 : false
@@ -56,7 +58,15 @@ export default function ProfilePage() {
     try {
       const res = await getOrCreateConversation(profile.id);
       if (res.data?.success && res.data?.conversation) {
-        navigate(`/chat/${res.data.conversation.id}`);
+        const conversationData = {
+          ...res.data.conversation,
+          otherUser: profile, //pass current profile as the other user
+        };
+        navigate(`/chat/${res.data.conversation.id}`, {
+          state: {
+            conversation: conversationData,
+          },
+        });
       }
     } catch (err) {
       console.error("Failed to open chat", err);
@@ -340,15 +350,23 @@ export default function ProfilePage() {
 
           <div className="lg:px-8 px-4">
             <div className="relative flex justify-between items-end lg:-mt-16 -mt-14 mb-4 ">
-              <Avatar
-                src={
-                  profile.avatar_url ||
-                  `https://ui-avatars.com/api/?name=${profile.display_name}`
-                }
-                size={isLgScreen ? 32 : 28}
-                alt="Avatar"
-                className="ring-3 ring-white shadow-md"
-              />
+              <div className="relative">
+                <Avatar
+                  src={
+                    profile.avatar_url ||
+                    `https://ui-avatars.com/api/?name=${profile.display_name}`
+                  }
+                  size={isLgScreen ? 32 : 28}
+                  alt="Avatar"
+                  className="ring-3 ring-white shadow-md"
+                />
+                {isUserOnline(profile.id) && (
+                  <span
+                    title="Online"
+                    className="absolute bottom-2 right-2 w-5 h-5 bg-green-500 border-4 border-white rounded-full"
+                  ></span>
+                )}
+              </div>
               {isOwnProfile ? (
                 <button
                   onClick={() => setIsEditModalOpen(true)}
