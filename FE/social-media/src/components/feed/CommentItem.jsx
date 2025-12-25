@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { CornerDownRight } from "lucide-react";
+import { CornerDownRight, Smile } from "lucide-react";
 import { useSocketContext } from "../../context/SocketContext";
+import EmojiPicker from "emoji-picker-react";
 
 export default function CommentItem({
   item,
@@ -14,7 +15,13 @@ export default function CommentItem({
 }) {
   const [isReplying, setIsReplying] = useState(false);
   const [replyText, setReplyText] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const { isUserOnline } = useSocketContext();
+
+  const onEmojiClick = (emojiData) => {
+    setReplyText((prev) => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
+  };
 
   const isCommentAuthor =
     user?.id === item.author.id || user?.id === item.author.userId;
@@ -105,19 +112,42 @@ export default function CommentItem({
 
       {/* Reply Input */}
       {isReplying && (
-        <div className="flex gap-2 items-center mt-2 ml-10">
+        <div className="flex gap-2 items-center mt-2 ml-10 relative">
           <CornerDownRight size={16} className="text-gray-300" />
-          <input
-            autoFocus
-            type="text"
-            value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleReply()}
-            placeholder={`Reply to ${
-              item.author.display_name.split(" ")[0]
-            }...`}
-            className="flex-1 bg-gray-100 rounded-full py-1.5 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
-          />
+          <div className="relative flex-1">
+            <input
+              autoFocus
+              type="text"
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleReply()}
+              placeholder={`Reply to ${
+                item.author.display_name.split(" ")[0]
+              }...`}
+              className="flex-1 bg-gray-100 rounded-full py-1.5 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
+            />
+            <button
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-500"
+            >
+              <Smile size={16} />
+            </button>
+          </div>
+          {showEmojiPicker && (
+            <div className="absolute top-10 left-0 z-50">
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowEmojiPicker(false)}
+              />
+              <div className="relative z-50">
+                <EmojiPicker
+                  onEmojiClick={onEmojiClick}
+                  width={280}
+                  height={300}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 

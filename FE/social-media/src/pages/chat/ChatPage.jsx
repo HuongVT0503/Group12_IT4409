@@ -17,11 +17,13 @@ import {
   Image as ImageIcon,
   Check,
   CheckCheck,
+  Smile,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "../../utils/cn";
 import { uploadMedia } from "../../services/mediaService";
 import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
+import EmojiPicker from "emoji-picker-react";
 
 export default function ChatPage() {
   const { user } = useAuth();
@@ -44,6 +46,7 @@ export default function ChatPage() {
 
   const [friends, setFriends] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const { id: routeChatId } = useParams();
   const navigate = useNavigate();
@@ -200,7 +203,7 @@ export default function ChatPage() {
       //join Socket Room for Typing Indicators
       socket.emit("join_conversation", conv.id);
 
-      if(updateUnreadCount) updateUnreadCount();
+      if (updateUnreadCount) updateUnreadCount();
     } catch (error) {
       console.error("Failed to fetch messages", error);
     }
@@ -395,6 +398,10 @@ export default function ChatPage() {
 
     return name.includes(lowerQuery) || username.includes(lowerQuery);
   });
+
+  const onEmojiClick = (emojiData) => {
+    setInputText((prev) => prev + emojiData.emoji);
+  };
 
   const getAvatar = (u) =>
     u?.avatar_url ||
@@ -677,7 +684,22 @@ export default function ChatPage() {
             </div>
 
             {/* Input Area */}
-            <div className="p-4 bg-white border-t border-gray-100">
+            <div className="p-4 bg-white border-t border-gray-100 relative">
+              {showEmojiPicker && (
+                <div className="absolute bottom-20 left-4 z-50 shadow-xl">
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowEmojiPicker(false)}
+                  />
+                  <div className="relative z-50">
+                    <EmojiPicker
+                      onEmojiClick={onEmojiClick}
+                      width={300}
+                      height={350}
+                    />
+                  </div>
+                </div>
+              )}
               <div className="flex items-center gap-2 max-w-4xl mx-auto">
                 <label className="p-2.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-full transition-colors">
                   <input
@@ -695,6 +717,12 @@ export default function ChatPage() {
                     <ImageIcon size={22} />
                   </button>
                 </label>
+                <button
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="p-2.5 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 rounded-full transition-colors"
+                >
+                  <Smile size={22} />
+                </button>
 
                 <div className="flex-1 relative">
                   <input
