@@ -20,23 +20,27 @@ async function createComment(req, res, next) {
     //Lấy thông tin tác giả và emit notification cho tác giả nếu có cmt
     const postData = await postRepo.getPostById(postId);
     if (postData?.author && postData.author.id !== authorId) {
+      const notifId = uuidv4();
+      const notifData = {
+        from: authorId,
+        postId: postId,
+        text: "commented on your post",
+      };
+      
       //save to db
       await notificationRepo.createNotification({
-        id: uuidv4(),
+        id: notifId,
         userId: postData.author.id,
         type: "comment",
-        data: JSON.stringify({
-          from: authorId,
-          postId: postId,
-          text: "commented on your post",
-        }),
+        data: JSON.stringify(notifData),
       });
 
       emitNotification(postData.author.id, {
+        id: notifId,
         type: "comment",
-        postId,
-        comment,
-        from: authorId,
+        created_at: new Date().toISOString(),
+        read: false,
+        data: notifData,
       });
     }
 
