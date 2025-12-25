@@ -227,10 +227,13 @@ export default function TopBar() {
     const fromId = n.data?.from || n.data?.userId;
     const postId = n.data?.postId;
     const highlightId = n.data?.parentCommentId||n.data?.commentId;
+    const conversationId = n.data?.conversationId;
     
 
     if (n.type === "follow" && fromId) {
       navigate(`/profile/${fromId}`);
+    } else if (n.type === "new_message" && conversationId) {
+      navigate(`/chat/${conversationId}`);
     } else if (
       (n.type === "like" ||
         n.type === "comment" ||
@@ -264,6 +267,10 @@ export default function TopBar() {
       
       case "reply":
         return `${senderName} replied to your comment.`;
+
+      case "new_message": 
+        return `${senderName} sent you a message.`;
+
       default:
         return n.data?.text || "New notification";
     }
