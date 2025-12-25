@@ -138,26 +138,7 @@ async function likePost(req, res, next) {
     const postId = req.params.id;
     const result = await postService.likePost(userId, postId);
 
-    // Like bài viết
     emitPostUpdate(postId, { likedBy: userId });
-
-    const postData = await postService.getPost(postId); //fetch post data
-
-    const liker = await userService.getProfile(userId);
-
-    //dont notify if liking own post
-    if (postData && postData.author && postData.author.id !== userId) {
-      emitNotification(postData.author.id, {
-        type: "like",
-        data: {
-          from: userId,
-          postId: postId,
-          text: "liked your post", //safety fallback
-          senderName: liker.display_name,
-          senderAvatar: liker.avatar_url,
-        },
-      });
-    }
 
     res.json(result);
   } catch (err) {
