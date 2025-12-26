@@ -100,4 +100,22 @@ async function deleteComment(commentId, userId) {
     }
 }
 
-export { createComment, getCommentsForPost, deleteComment };
+async function getCommentAuthor(commentId) {
+  const session = getSession();
+  try {
+    const res = await session.run(
+      `MATCH (u:User)-[:COMMENTED]->(c:Comment {id: $commentId}) 
+       RETURN u`,
+      { commentId }
+    );
+    
+    if (res.records.length === 0) return null;
+    
+    const author = res.records[0].get("u").properties;
+    return author;
+  } finally {
+    await session.close();
+  }
+}
+
+export { createComment, getCommentsForPost, deleteComment, getCommentAuthor };

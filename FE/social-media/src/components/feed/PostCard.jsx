@@ -1,6 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { formatDistanceToNow } from "date-fns"; //?date-fns
-import { Heart, MessageSquare, Trash2, Share2 } from "lucide-react"; //share2
+import {
+  Heart,
+  MessageSquare,
+  Trash2,
+  Share2,
+  MoreVertical,
+  Flag,
+} from "lucide-react"; //share2
 //import Button from "../common/ButtonComponent";
 import {
   likePost,
@@ -17,6 +24,8 @@ import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
 import { Link, useNavigate } from "react-router-dom";
 import Avatar from "../common/Avatar";
+import CommentItem from "./CommentItem";
+import ReportModal from "../common/ReportModal";
 
 const safeFormatDate = (dateString) => {
   try {
@@ -28,13 +37,13 @@ const safeFormatDate = (dateString) => {
   }
 };
 
-export default function PostCard({ post, onDelete }) {
+export default function PostCard({ post, onDelete, highlightId }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const socket = useSocket();
 
   const [isSharing, setIsSharing] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [showComments, setShowComments] = useState(false);
   const [likeCount, setLikeCount] = useState(post.stats?.likes || 0);
   const [commentCount, setCommentCount] = useState(post.stats?.comments || 0);
@@ -43,6 +52,10 @@ export default function PostCard({ post, onDelete }) {
   const [newComment, setNewComment] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
   const [shareCount, setShareCount] = useState(post.stats?.shares || 0);
+
+  const [showMenu, setShowMenu] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  
 
   const commentTree = useMemo(() => {
     const map = {};
@@ -75,8 +88,14 @@ export default function PostCard({ post, onDelete }) {
     socket.emit("join_post", post.id);
 
     const handleUpdate = (payload) => {
+      if (payload.postId && payload.postId !== post.id) return;
+      
       if (payload.deleted) {
         if (onDelete) onDelete(post.id);
+        return;
+      }
+
+      if (payload.likedBy === user?.id || payload.unlikedBy === user?.id) {
         return;
       }
 
@@ -90,7 +109,7 @@ export default function PostCard({ post, onDelete }) {
 
       if (payload.newComment) {
         if (payload.newComment.author?.id === user?.id) {
-            return;
+          return;
         }
         //be payload: { newComment: commentObj }
         //commentCount;
@@ -117,22 +136,24 @@ export default function PostCard({ post, onDelete }) {
       }
 
       if (payload.deletedCommentId) {
-
         //check existence b4 del //if all cmts r loadedbut this id is missing then it is del locally already
-        const isCommentPresent = comments.some(c => c.comment.id === payload.deletedCommentId);
+        const isCommentPresent = comments.some(
+          (c) => c.comment.id === payload.deletedCommentId
+        );
         if (comments.length > 0 && !isCommentPresent) {
-            return;
+          return;
         }
 
-        
         const idsToRemove = new Set([
           payload.deletedCommentId,
-          ...getDescendantIds(payload.deletedCommentId, comments) 
+          ...getDescendantIds(payload.deletedCommentId, comments),
         ]);
 
         setCommentCount((prev) => Math.max(0, prev - idsToRemove.size));
         if (showComments) {
-          setComments((prev) => prev.filter((c) => !idsToRemove.has(c.comment.id)));
+          setComments((prev) =>
+            prev.filter((c) => !idsToRemove.has(c.comment.id))
+          );
         }
       }
     };
@@ -145,6 +166,28 @@ export default function PostCard({ post, onDelete }) {
       socket.emit("leave_post", post.id);
     };
   }, [socket, post.id, user?.id, showComments, onDelete, comments]);
+
+  //auto openning & scrolling
+  useEffect(() => {
+    if (highlightId && !showComments) {
+      handleFetchComments();
+    }
+  }, [highlightId]); 
+
+
+  //scroll once cmt is loaded
+  useEffect(() => {
+    if (highlightId && showComments && comments.length > 0) {
+      setTimeout(() => {
+        const element = document.getElementById(`comment-${highlightId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          element.classList.add("bg-blue-50", "transition-colors", "duration-1000");
+          setTimeout(() => element.classList.remove("bg-blue-50"), 2000);
+        }
+      }, 500);
+    }
+  }, [highlightId, showComments, comments.length]);
 
   const toggleLike = async () => {
     // UI update
@@ -285,7 +328,11 @@ export default function PostCard({ post, onDelete }) {
     user?.id === post.author.id || user?.id === post.author.userId;
 
   return (
-    <div className="w-full bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_8px_32px_rgba(31,38,135,0.12)] border border-white/40 p-5 transition-all duration-300 hover:shadow-[0_12px_40px_rgba(31,38,135,0.18)] hover:-translate-y-0.5">
+    <div
+      className={`w-full bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_8px_32px_rgba(31,38,135,0.12)] border border-white/40 p-5 transition-all duration-300 hover:shadow-[0_12px_40px_rgba(31,38,135,0.18)] hover:-translate-y-0.5 ${
+        showMenu ? "relative z-20" : ""
+      }`}
+    >
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <Link to={`/profile/${post.author.id}`} className="flex gap-3">
@@ -306,13 +353,37 @@ export default function PostCard({ post, onDelete }) {
             </p>
           </div>
         </Link>
-        {isAuthor && (
+        {isAuthor ? (
           <button
             onClick={handleDelete}
             className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all"
           >
-            <Trash2 size={20} className="2xl:w-6 2xl:h-6" />
+            <Trash2 size={20} />
           </button>
+        ) : (
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="text-gray-400 hover:bg-gray-100 p-2 rounded-lg transition-all"
+            >
+              <MoreVertical size={20} />
+            </button>
+
+            {/* Dropdown Menu */}
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-100 z-10 overflow-hidden">
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    setIsReportOpen(true);
+                  }}
+                  className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                >
+                  <Flag size={16} /> Report
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -431,40 +502,26 @@ export default function PostCard({ post, onDelete }) {
             <p className="text-xs 2xl:text-sm text-center">Loading...</p>
           ) : (
             <div className="space-y-4">
-              {comments.map((item) => (
-                <div key={item.comment.id} className="flex gap-3">
-                  <Link to={`/profile/${item.author.id || item.author.userId}`}>
-                    <img
-                      src={
-                        item.author.avatar_url ||
-                        `https://ui-avatars.com/api/?name=${item.author.display_name}`
-                      }
-                      className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-full"
-                    />
-                  </Link>
-                  <div className="bg-gradient-to-br from-gray-50 to-primary-50/20 rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm border border-gray-100/50">
-                    <div className="flex justify-between items-baseline gap-2">
-                      <Link
-                        to={`/profile/${item.author.id || item.author.userId}`}
-                      >
-                        <span className="font-semibold text-sm text-gray-800">
-                          {item.author.display_name}
-                        </span>
-                      </Link>
-                      <span className="text-xs text-gray-500">
-                        {safeFormatDate(item.comment.created_at)} ago
-                      </span>
-                    </div>
-                    <p className="text-sm 2xl:text-base text-gray-700 mt-1">
-                      {item.comment.content}
-                    </p>
-                  </div>
-                </div>
+              {commentTree.map((item) => (
+                <CommentItem
+                  key={item.comment.id}
+                  item={item}
+                  user={user}
+                  postAuthorId={post.author.id}
+                  onReplySubmit={handleReplySubmit}
+                  onDelete={handleDeleteComment}
+                />
               ))}
             </div>
           )}
         </div>
       )}
+      <ReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        targetId={post.id}
+        targetType="Post"
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 //mobile header //llogo, search, notification, profile
 
 import logo from "../../assets/img/logo/logo.png";
-import { Search, Bell, LogOut, User, Settings, X } from "lucide-react";
+import { Search, Bell, LogOut, User, Settings, X,  } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -14,7 +14,7 @@ import { formatDistanceToNow } from "date-fns";
 import { getProfile } from "../../services/userService";
 import { searchUsers } from "../../services/userService";
 
-import { Avatar, Badge, Button } from "@heroui/react";
+//import { Avatar, Badge, Button } from "@heroui/react";
 
 //validate date b4 passing it to formatDistanceToNow
 const getRelativeTime = (dateInput) => {
@@ -130,11 +130,11 @@ export default function TopBar() {
     const handleNewNotification = (payload) => {
       //emitNotification
       const newNoti = {
-        id: Date.now(), //temp id until refreshed
+        id: payload.id || Date.now(), //temp id until refreshed
         type: payload.type,
         read: false,
-        created_at: new Date().toISOString(),
-        data: payload, // direct payload
+        created_at: payload.created_at||new Date().toISOString(),
+        data: payload.data||payload, // direct payload
       };
 
       setNotis((prev) => [newNoti, ...prev]);
@@ -226,6 +226,8 @@ export default function TopBar() {
 
     const fromId = n.data?.from || n.data?.userId;
     const postId = n.data?.postId;
+    const highlightId = n.data?.parentCommentId||n.data?.commentId;
+    
 
     if (n.type === "follow" && fromId) {
       navigate(`/profile/${fromId}`);
@@ -233,10 +235,12 @@ export default function TopBar() {
       (n.type === "like" ||
         n.type === "comment" ||
         n.type === "new_post" ||
-        n.type === "share_post") &&
+        n.type === "share_post" ||
+        n.type === "reply"
+      ) &&
       postId
     ) {
-      navigate(`/post/${postId}`);
+      navigate(`/post/${postId}`, { state: { highlightId } });
     }
   };
 
@@ -257,6 +261,9 @@ export default function TopBar() {
         return `${senderName} posted a new update.`;
       case "share_post":
         return `${senderName} ${n.data?.text || "shared a post"}.`;
+      
+      case "reply":
+        return `${senderName} replied to your comment.`;
       default:
         return n.data?.text || "New notification";
     }
@@ -405,6 +412,7 @@ export default function TopBar() {
                   </div>
                 ))}
               </div>
+              {unreadCount > 0 && (
               <div className="p-2 text-center border-t border-gray-100">
                 <button
                   onClick={handleMarkAllAsRead}
@@ -412,7 +420,7 @@ export default function TopBar() {
                 >
                   Mark all as read
                 </button>
-              </div>
+              </div>)}
             </div>
           )}
         </div>

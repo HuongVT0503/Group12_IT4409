@@ -42,6 +42,7 @@ export default function ChatPage() {
   //const [selectedFile, setSelectedFile] = useState(null);
 
   const [friends, setFriends] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { id: routeChatId } = useParams();
   const navigate = useNavigate();
@@ -372,6 +373,14 @@ export default function ChatPage() {
     return Array.from(uniqueMap.values());
   }, [friends, conversations]);
 
+  const filteredConversations = conversations.filter((chat) => {
+    const lowerQuery = searchQuery.toLowerCase();
+    const name = chat.otherUser?.display_name?.toLowerCase() || "";
+    const username = chat.otherUser?.username?.toLowerCase() || "";
+
+    return name.includes(lowerQuery) || username.includes(lowerQuery);
+  });
+
   const getAvatar = (u) =>
     u?.avatar_url ||
     `https://ui-avatars.com/api/?name=${
@@ -379,7 +388,7 @@ export default function ChatPage() {
     }&background=random`;
 
   return (
-    <div className="flex h-[calc(100vh-80px)] lg:h-[calc(100vh-100px)] bg-white  overflow-hidden">
+    <div className="flex h-[calc(100vh-140px)] lg:h-[calc(100vh-100px)] bg-white rounded-[var(--radius-box)] shadow-sm border border-gray-100 overflow-hidden mt-4">
       {/* LEFT: Conversation List */}
       <div
         className={cn(
@@ -397,8 +406,10 @@ export default function ChatPage() {
             />
             <input
               type="text"
-              placeholder="Search for something..."
-              className="w-full bg-gray-50 rounded-full py-2.5 pl-10 pr-4 text-sm outline-none bg-neutral-100 focus:ring-2 focus:ring-neutral-400 transition-all"
+              placeholder="Search conversations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-gray-50 rounded-full py-2.5 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
         </div>
@@ -438,7 +449,7 @@ export default function ChatPage() {
             </div>
           )}
 
-          {conversations.map((chat) => (
+          {filteredConversations.map((chat) => (
             <div
               key={chat.id}
               onClick={() => handleSelectChat(chat)}

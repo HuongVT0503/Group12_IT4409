@@ -78,10 +78,15 @@ export async function refresh({ refreshToken }) {
   if (user.isBanned === true) {
       throw { status: 403, message: 'Your account has been locked' };
   }
-
   const accessToken = signAccessToken({ sub: user.id, id: user.id, role: user.role || 'user' });
 
-  return { accessToken, user };
+  const newRawRefresh = uuidv4() + '.' + uuidv4();
+  const newTokenHash = sha256(newRawRefresh);
+  const newExpiresAt = new Date(Date.now() + (Number(process.env.REFRESH_TOKEN_EXPIRES_DAYS || 30) * 24 * 3600 * 1000)).toISOString();
+
+  await tokenRepo.revokeRefreshToken(hash);
+  await tokenRepo.saveRefreshToken(user.id, newTokenHash, newExpiresAt);
+  return { accessToken, user, refreshToken: newRawRefresh }
 }
 
 export async function logout({ refreshToken }) {

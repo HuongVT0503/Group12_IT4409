@@ -30,3 +30,8 @@ export const getFollowing = async (userId) => {
 export const searchUsers = async (query) => {
   return await api.get(`/users/search?q=${query}`);
 };
+
+export const submitReport = async (data) => {
+  //{ targetId, targetType, reason }
+  return await api.post('/users/report', data);
+};
