@@ -13,7 +13,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 h-16 px-6 flex items-center justify-between z-50 pb-safe">
+    <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 h-16 px-6 flex items-center justify-between z-50 pb-safe">
       {navItems.map((item) => (
         <NavLink key={item.label} to={item.path} className="w-full h-full">
           {({ isActive }) => (
