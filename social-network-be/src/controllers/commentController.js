@@ -87,7 +87,8 @@ async function createComment(req, res, next) {
 async function getComments(req, res, next) {
   try {
     const postId = req.params.postId;
-    const data = await commentService.getComments(postId, req.query.limit || 50);
+    const userId = req.user?.id || null;
+    const data = await commentService.getComments(postId, userId, req.query.limit || 50);
     res.json({ data });
   } catch (err) { next(err); }
 }
@@ -123,7 +124,8 @@ async function reactToComment(req, res, next) {
     // notify comment author
     if (result.author && result.author.id !== userId) {
       const notifId = uuidv4();
-      const notifData = { from: userId, commentId, text: 'reacted to your comment', reaction: type };
+      const notifText = type === 'like' ? 'liked your comment' : `reacted to your comment`;
+      const notifData = { from: userId, commentId, text: notifText, reaction: type };
       await notificationRepo.createNotification({ id: notifId, userId: result.author.id, type: 'reaction', data: JSON.stringify(notifData) });
       emitNotification(result.author.id, { id: notifId, type: 'reaction', created_at: new Date().toISOString(), read: false, data: notifData });
     }
