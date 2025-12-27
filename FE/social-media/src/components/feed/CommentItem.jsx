@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { CornerDownRight, Smile, Image as ImageIcon, X, 
+import { CornerDownRight, Smile, Image as ImageIcon, X, Heart,
   //PlayCircle 
   } from "lucide-react"; // Added PlayCircle
 import { useSocketContext } from "../../context/SocketContext";
 import EmojiPicker from "emoji-picker-react";
 import { uploadMedia } from "../../services/mediaService";
+import { likeComment, unlikeComment } from "../../services/commentService";
 
 export default function CommentItem({
   item,
@@ -22,6 +23,9 @@ export default function CommentItem({
   const { isUserOnline } = useSocketContext();
   const [replyFile, setReplyFile] = useState(null);
   const [replyPreview, setReplyPreview] = useState(null);
+
+  const [isLiked, setIsLiked] = useState(item.isLiked || false);
+  const [likeCount, setLikeCount] = useState(item.comment.stats?.likes || 0);
 
   const onEmojiClick = (emojiData) => {
     setReplyText((prev) => prev + emojiData.emoji);
@@ -44,6 +48,26 @@ export default function CommentItem({
   const isVideoUrl = (url) => {
     if (!url) return false;
     return url.match(/\.(mp4|webm|ogg|mov)$/i) != null;
+  };
+
+  const handleLike = async () => {
+    const prevLiked = isLiked;
+    const prevCount = likeCount;
+
+    setIsLiked(!prevLiked);
+    setLikeCount(prevLiked ? prevCount - 1 : prevCount + 1);
+
+    try {
+      if (prevLiked) {
+        await unlikeComment(item.comment.id);
+      } else {
+        await likeComment(item.comment.id);
+      }
+    } catch (error) {
+      console.error("Failed to toggle comment like", error);
+      setIsLiked(prevLiked);
+      setLikeCount(prevCount);
+    }
   };
 
   const handleReply = async () => {
@@ -138,6 +162,17 @@ export default function CommentItem({
 
           {/* Actions Line */}
           <div className="flex items-center gap-4 mt-1 ml-1">
+            <button
+              onClick={handleLike}
+              className={`text-xs font-semibold transition-colors flex items-center gap-1 ${
+                isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500"
+              }`}
+            >
+              <Heart size={12} className={isLiked ? "fill-current" : ""} />
+              {likeCount > 0 && <span>{likeCount}</span>}
+              Like
+            </button>
+            
             <button
               onClick={() => setIsReplying(!isReplying)}
               className="text-xs font-semibold text-gray-500 hover:text-primary transition-colors flex items-center gap-1"

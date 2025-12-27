@@ -177,6 +177,40 @@ export default function PostCard({ post, onDelete, highlightId }) {
           );
         }
       }
+
+      if (payload.reactionChange) {
+        const { commentId, userId, reaction } = payload.reactionChange;
+        
+        setComments((prev) => 
+          prev.map((c) => {
+            if (c.comment.id === commentId) {
+              const isMe = userId === user?.id;
+              
+              let newCount = c.comment.stats?.likes || 0;
+              
+              if (reaction) {
+                 newCount++;
+              } else {
+                 newCount = Math.max(0, newCount - 1);
+              }
+
+              return {
+                ...c,
+                isLiked: isMe ? !!reaction : c.isLiked,
+                comment: {
+                  ...c.comment,
+                  stats: {
+                    ...c.comment.stats,
+                    likes: newCount
+                  }
+                }
+              };
+            }
+            return c;
+          })
+        );
+      }
+    
     };
 
     socket.on("post_update", handleUpdate);

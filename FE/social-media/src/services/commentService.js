@@ -13,10 +13,18 @@ export const createComment = async (
   return await api.post(`/comments/posts/${postId}`, {
     content,
     parent_comment_id: parentCommentId,
-    media: mediaUrl ? [mediaUrl] : [], // Assuming BE accepts 'media' array or similar
+    media: mediaUrl ? [mediaUrl] : [],
   });
 };
 
 export const deleteComment = async (commentId) => {
   return await api.delete(`/comments/${commentId}`);
+};
+
+export const likeComment = async (commentId) => {
+  return await api.post(`/comments/${commentId}/reactions`, { type: 'like' });
+};
+
+export const unlikeComment = async (commentId) => {
+  return await api.delete(`/comments/${commentId}/reactions`);
 };
