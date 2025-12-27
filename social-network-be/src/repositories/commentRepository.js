@@ -121,3 +121,76 @@ async function getCommentAuthor(commentId) {
 }
 
 export { createComment, getCommentsForPost, deleteComment, getCommentAuthor };
+
+async function reactToComment({ commentId, userId, reactionType }) {
+  const session = getSession();
+  try {
+    const query = `
+      MATCH (u:User {id:$userId}), (c:Comment {id:$commentId})
+      MERGE (u)-[r:REACTED]->(c)
+      SET r.type = $reactionType, r.created_at = datetime()
+      RETURN r, u, c
+    `;
+
+    const res = await session.run(query, { commentId, userId, reactionType });
+    if (res.records.length === 0) return null;
+    const r = res.records[0].get('r').properties;
+    if (r.created_at) r.created_at = new Date(r.created_at).toISOString();
+    return r;
+  } finally {
+    await session.close();
+  }
+}
+
+async function removeReaction({ commentId, userId }) {
+  const session = getSession();
+  try {
+    const query = `
+      MATCH (u:User {id:$userId})-[r:REACTED]->(c:Comment {id:$commentId})
+      WITH r, u, c
+      DELETE r
+      RETURN c.id as commentId
+    `;
+    const res = await session.run(query, { commentId, userId });
+    return res.records.length > 0 ? res.records[0].get('commentId') : null;
+  } finally {
+    await session.close();
+  }
+}
+
+async function getReactionsForComment(commentId) {
+  const session = getSession();
+  try {
+    const query = `
+      MATCH (u:User)-[r:REACTED]->(c:Comment {id:$commentId})
+      RETURN r.type as type, count(r) as count, collect(u.id) as users
+    `;
+    const res = await session.run(query, { commentId });
+    return res.records.map((rec) => ({
+      type: rec.get('type'),
+      count: rec.get('count').toNumber ? rec.get('count').toNumber() : rec.get('count'),
+      users: rec.get('users')
+    }));
+  } finally {
+    await session.close();
+  }
+}
+
+export { reactToComment, removeReaction, getReactionsForComment };
+
+async function getCommentPostId(commentId) {
+  const session = getSession();
+  try {
+    const query = `
+      MATCH (c:Comment {id:$commentId})-[:ON]->(p:Post)
+      RETURN p.id as postId
+    `;
+    const res = await session.run(query, { commentId });
+    if (res.records.length === 0) return null;
+    return res.records[0].get('postId');
+  } finally {
+    await session.close();
+  }
+}
+
+export { getCommentPostId };

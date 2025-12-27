@@ -117,3 +117,18 @@ export async function getOAuthProfile(req, res, next) {
     }
 }
 
+export async function changePassword(req, res, next) {
+    try {
+        const user = req.user;
+        if (!user || !user.id) return res.status(401).json({ message: 'Không được xác thực' });
+
+        const { oldPassword, newPassword } = req.body;
+        if (!oldPassword || !newPassword) return res.status(400).json({ message: 'Thiếu mật khẩu cũ hoặc mật khẩu mới' });
+
+        await authService.changePassword({ userId: user.id, oldPassword, newPassword });
+        res.status(200).json({ message: 'Đổi mật khẩu thành công' });
+    } catch (err) {
+        next(err);
+    }
+}
+
