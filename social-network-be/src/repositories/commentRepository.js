@@ -6,7 +6,7 @@ async function createComment({
   postId,
   content,
   parentCommentId = null,
-  media = []
+  media = [],
 }) {
   const session = getSession();
   try {
@@ -34,7 +34,7 @@ async function createComment({
       postId,
       content,
       parentCommentId,
-      media
+      media,
     });
 
     const properties = res.records[0].get("c").properties;
