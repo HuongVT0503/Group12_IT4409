@@ -78,15 +78,17 @@ export default function SettingsPage() {
       // formData.display_name -> display_name
       //userRepo.updateProfile-> { display_name, bio, cover_url, avatar_url }
 
-      const payload = {
-        display_name: formData.display_name,
-        bio: formData.bio,
-        phone: formData.phone,
-        gender: formData.gender,
-        date_of_birth: formData.date_of_birth,
-      };
+      const cleanPayload = Object.fromEntries(
+        Object.entries({
+          display_name: formData.display_name,
+          bio: formData.bio,
+          phone: formData.phone,
+          gender: formData.gender,
+          date_of_birth: formData.date_of_birth,
+        }).filter(([, value]) => value !== "") 
+      );
 
-      const res = await api.put("/users/me", payload);
+      const res = await api.put("/users/me", cleanPayload);
 
       if (res.data && res.data.user) {
         updateUser(res.data.user);
