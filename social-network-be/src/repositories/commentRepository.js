@@ -55,6 +55,7 @@ async function getCommentsForPost(postId, limit = 50, userId = null) {
   try {
     const res = await session.run(
       `MATCH (u)-[:COMMENTED]->(c)-[:ON]->(p:Post {id:$postId})
+      WHERE u.isBanned = false
       OPTIONAL MATCH (c)-[:REPLY_TO]->(parent:Comment)
       OPTIONAL MATCH (likers:User)-[:REACTED]->(c)
       WITH c, u, parent.id AS parentId, count(likers) as likeCount
