@@ -6,12 +6,13 @@ async function createComment({
   postId,
   content,
   parentCommentId = null,
+  media = [],
 }) {
   const session = getSession();
   try {
     let query = `
        MATCH (u:User {id:$authorId}), (p:Post {id:$postId})
-       CREATE (c:Comment {id:$id, content:$content, created_at: datetime()})
+       CREATE (c:Comment {id:$id, content:$content, media:$media, created_at: datetime()})
        CREATE (u)-[:COMMENTED]->(c)
        CREATE (c)-[:ON]->(p)
     `;
@@ -33,6 +34,7 @@ async function createComment({
       postId,
       content,
       parentCommentId,
+      media,
     });
 
     const properties = res.records[0].get("c").properties;

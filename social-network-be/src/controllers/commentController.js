@@ -9,12 +9,13 @@ async function createComment(req, res, next) {
   try {
     const authorId = req.user.id;
     const postId = req.params.postId;
-    const { content, parent_comment_id } = req.body;
+    const { content, parent_comment_id, media } = req.body;
     const comment = await commentService.createComment({
       authorId,
       postId,
       content,
       parentCommentId: parent_comment_id,
+      media
     });
 
     //Lấy thông tin tác giả và emit notification cho tác giả nếu có cmt

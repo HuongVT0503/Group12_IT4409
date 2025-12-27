@@ -53,6 +53,7 @@ async function getUserConversations(userId) {
       WITH conv, participant, collect({
         id: msg.id,
         content: msg.content,
+        mediaUrl: msg.mediaUrl,
         created_at: msg.created_at,
         sender: { id: sender.id } 
       }) AS messages

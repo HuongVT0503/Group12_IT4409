@@ -69,9 +69,16 @@ export default function RightPanel() {
   const isImageUrl = (url) => {
     if (!url) return false;
     return (
-      url.match(/\.(jpeg|jpg|gif|png|webp)$/) != null ||
-      url.includes("/uploads/")
-    );
+      url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null );
+      //url.includes("/uploads/")
+    //);
+  };
+
+  const isVideoUrl = (url) => {
+  if (!url) return false;
+  return (
+    url.match(/\.(mp4|webm|ogg|mov)$/i) != null || url.includes("data:video")
+  );
   };
 
   useEffect(() => {
@@ -125,12 +132,21 @@ export default function RightPanel() {
     const msg = chat.lastMessage;
     //no message
     if (!msg) return "Start a conversation";
+    const contentToCheck = msg.mediaUrl || msg.content;
 
     //is img
-    const isImage = isImageUrl(msg.content);
+    const isImage = isImageUrl(contentToCheck);
+    const isVideo = isVideoUrl(contentToCheck);
 
     //did current user sent it
     const isMe = msg.sender?.id === user?.id;
+
+    if (isVideo) {
+      if (isMe) return "You sent a video";
+      return `${
+        chat.otherUser?.display_name?.split(" ")[0] || "User"
+      } sent a video`;
+    }
 
     if (isImage) {
       if (isMe) return "You sent a picture";

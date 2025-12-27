@@ -77,7 +77,7 @@ async function sendMessage(req, res, next) {
     const { receiverId, content, mediaUrl } = req.body;
     const senderId = req.user.id;
     
-    if (!receiverId || !content) {
+    if (!receiverId || (!content && !mediaUrl)) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields: receiverId, content",
