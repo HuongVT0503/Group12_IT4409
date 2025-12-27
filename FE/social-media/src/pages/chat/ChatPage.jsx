@@ -250,7 +250,7 @@ export default function ChatPage() {
     try {
       //loading staet?
       const uploaded = await uploadMedia(file);
-      await handleSend(uploaded.url);
+      await handleSend(null, uploaded.url);
     } catch (error) {
       console.error("Upload failed:", error);
     } finally {
@@ -262,19 +262,31 @@ export default function ChatPage() {
   const isImageUrl = (url) => {
     if (!url) return false;
     return (
-      url.match(/\.(jpeg|jpg|gif|png|webp)$/) != null ||
-      url.includes("/uploads/")
+      url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null);
+      //url.includes("/uploads/")
+    //);
+  };
+
+  const isVideoUrl = (url) => {
+    if (!url) return false;
+    return (
+      url.match(/\.(mp4|webm|ogg|mov)$/i) != null || url.includes("data:video")
     );
   };
 
   //
-  const handleSend = async (contentOverride = null) => {
+  const handleSend = async (contentOverride = null, mediaUrlOverride = null) => {
     const actualContent =
-      typeof contentOverride === "string" ? contentOverride : null;
+      typeof contentOverride === "string" ? contentOverride : inputText;
+    const actualMedia = mediaUrlOverride || null;
+    
     const textToSend = actualContent || inputText;
-    if (!textToSend?.trim() || !selectedChat) return;
+    const mediaToSend = mediaUrlOverride || null;
 
-    if (!actualContent) {
+    if ((!actualContent?.trim() && !actualMedia) || !selectedChat) return;
+    if (!textToSend?.trim() && !mediaToSend || !selectedChat) return;
+
+    if (!contentOverride) {
       setInputText("");
     } //clear immediately
 
@@ -282,11 +294,13 @@ export default function ChatPage() {
     const tempMsg = {
       id: Date.now(),
       content: textToSend,
+      mediaUrl: actualMedia,
       sender: { id: user.id },
       created_at: new Date().toISOString(),
       is_read: false,
     };
     setMessages((prev) => [...prev, tempMsg]);
+
 
     scrollToBottom();
 
@@ -306,7 +320,7 @@ export default function ChatPage() {
         return [updated, ...others];
       });
 
-      const res = await sendMessage(selectedChat.otherUser.id, textToSend);
+      const res = await sendMessage(selectedChat.otherUser.id, actualContent, actualMedia);
 
       //
       setMessages((prev) =>
@@ -352,19 +366,29 @@ export default function ChatPage() {
     const msg = chat.lastMessage;
     //if no message
     if (!msg) return "Start a conversation";
+    const contentToCheck = msg.mediaUrl || msg.content;
 
     //is img
-    const isImage = isImageUrl(msg.content);
+    const isImage = isImageUrl(contentToCheck);
+    const isVideo = isVideoUrl(contentToCheck);
 
     //did current user sent it
     const isMe = msg.sender?.id === user?.id;
 
+    if (isVideo) {
+      if (isMe) return "You sent a video";
+      return `${
+        chat.otherUser?.display_name?.split(" ")[0] || "User"
+      } sent a video`;
+    }
+    
     if (isImage) {
       if (isMe) return "You sent a picture";
       return `${
         chat.otherUser?.display_name?.split(" ")[0] || "User"
       } sent a picture`;
     }
+
 
     if (isMe) return `You: ${msg.content}`;
     return msg.content;
@@ -408,6 +432,7 @@ export default function ChatPage() {
     `https://ui-avatars.com/api/?name=${
       u?.display_name || "User"
     }&background=random`;
+
 
   return (
     <div className="flex h-[calc(100vh-140px)] lg:h-[calc(100vh-100px)] bg-white rounded-[var(--radius-box)] shadow-sm border border-gray-100 overflow-hidden mt-4">
@@ -611,6 +636,8 @@ export default function ChatPage() {
             {/* Messages Area */}
             <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4 bg-[#F8F9FA]">
               {messages.map((msg, index) => {
+                const displayMedia = msg.mediaUrl || msg.content;
+
                 const isMe = msg.sender?.id === user?.id;
                 //group logic: check if next msg is same sender to adjust border radius
                 const isNextSame =
@@ -635,17 +662,24 @@ export default function ChatPage() {
                             (isMe ? "rounded-br-sm" : "rounded-bl-sm") // Stack effect
                         )}
                       >
-                        {isImageUrl(msg.content) ? (
+                        {isImageUrl(displayMedia) ? (
                           <img
-                            src={msg.content}
+                            src={displayMedia}
                             alt="Attachment"
                             className="max-w-[200px] max-h-[200px] rounded-lg object-cover"
                             onError={(e) => {
                               e.target.style.display = "none";
                             }}
                           />
+                        ) : isVideoUrl(displayMedia) ? (
+                          <video
+                            src={displayMedia}
+                            controls
+                            preload="metadata"
+                            className="max-w-[250px] max-h-[250px] rounded-lg object-cover bg-black"
+                          />
                         ) : (
-                          <p>{msg.content}</p>
+                          <p>{msg.content ||""}</p>
                         )}
                       </div>
 
@@ -706,7 +740,7 @@ export default function ChatPage() {
                     type="file"
                     ref={fileInputRef}
                     className="hidden"
-                    accept="image/*"
+                    accept="image/*, video/*"
                     onChange={handleImageUpload}
                   />
 

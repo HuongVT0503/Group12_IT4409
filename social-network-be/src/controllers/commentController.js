@@ -11,19 +11,7 @@ async function createComment(req, res, next) {
   try {
     const authorId = req.user.id;
     const postId = req.params.postId;
-    const { content, parent_comment_id } = req.body;
-
-    // handle uploaded files (video/image) and save
-    let media = [];
-    if (req.files && req.files.length) {
-      const saved = [];
-      for (const f of req.files) {
-        const s = await saveFileFromBuffer({ buffer: f.buffer, originalname: f.originalname });
-        saved.push(s.url);
-      }
-      media = saved;
-    }
-
+    const { content, parent_comment_id, media } = req.body;
     const comment = await commentService.createComment({
       authorId,
       postId,
