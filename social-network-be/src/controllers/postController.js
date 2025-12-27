@@ -8,6 +8,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import * as notificationRepo from "../repositories/notificationRepository.js";
 import jwt from "jsonwebtoken";
+import { saveFileFromBuffer } from '../services/mediaService.js';
 
 const getUserIdFromRequest = (req) => {
     try {
@@ -25,13 +26,21 @@ const getUserIdFromRequest = (req) => {
 async function createPost(req, res, next) {
   try {
     const authorId = req.user.id; // Lấy từ JWT
-    const { content, media, privacy } = req.body;
-    const post = await postService.createPost({
-      authorId,
-      content,
-      media,
-      privacy,
-    });
+    const { content, media: mediaFromBody, privacy } = req.body;
+
+    let media = [];
+    if (req.files && req.files.length) {
+      const saved = [];
+      for (const f of req.files) {
+        const s = await saveFileFromBuffer({ buffer: f.buffer, originalname: f.originalname });
+        saved.push(s.url);
+      }
+      media = saved;
+    } else if (mediaFromBody) {
+      try { media = JSON.parse(mediaFromBody); } catch (e) { media = mediaFromBody; }
+    }
+
+    const post = await postService.createPost({ authorId, content, media, privacy });
 
     //Lấy danh sách follower
     const followers = await userService.getFollowers(authorId);
@@ -138,26 +147,7 @@ async function likePost(req, res, next) {
     const postId = req.params.id;
     const result = await postService.likePost(userId, postId);
 
-    // Like bài viết
     emitPostUpdate(postId, { likedBy: userId });
-
-    const postData = await postService.getPost(postId); //fetch post data
-
-    const liker = await userService.getProfile(userId);
-
-    //dont notify if liking own post
-    if (postData && postData.author && postData.author.id !== userId) {
-      emitNotification(postData.author.id, {
-        type: "like",
-        data: {
-          from: userId,
-          postId: postId,
-          text: "liked your post", //safety fallback
-          senderName: liker.display_name,
-          senderAvatar: liker.avatar_url,
-        },
-      });
-    }
 
     res.json(result);
   } catch (err) {

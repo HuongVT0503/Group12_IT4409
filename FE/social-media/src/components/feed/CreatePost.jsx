@@ -2,18 +2,25 @@ import { useState, useRef } from "react";
 import { createPost } from "../../services/postService";
 import { useAuth } from "../../context/AuthContext";
 import { uploadMedia } from "../../services/mediaService";
-import { Image, X } from "lucide-react";
+import { Image, X, Smile } from "lucide-react";
 import Avatar from "../common/Avatar";
 import { Button } from "@heroui/react";
+import EmojiPicker from "emoji-picker-react";
 
 export default function CreatePost({ onPostCreated }) {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const { user } = useAuth(); //JSON.parse(localStorage.getItem('user')) || {};
   const fileInputRef = useRef(null);
+
+  const onEmojiClick = (emojiData) => {
+    setContent((prev) => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
+  };
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -58,7 +65,7 @@ export default function CreatePost({ onPostCreated }) {
   };
 
   return (
-    <div className="flex gap-4 items-start bg-white/90 backdrop-blur-md rounded-2xl  p-5 mb-6  border border-white/40 shadow-[0_8px_32px_rgba(31,38,135,0.12)]">
+    <div className="flex gap-4 items-start bg-white/90 backdrop-blur-md rounded-2xl  p-5  border border-white/40 shadow-[0_8px_32px_rgba(31,38,135,0.12)]">
       <Avatar
         src={
           user?.avatar_url ||
@@ -68,7 +75,7 @@ export default function CreatePost({ onPostCreated }) {
         size={11}
       />
 
-      <div className="flex-1 flex flex-col gap-2">
+      <div className="flex-1 flex flex-col gap-2 relative">
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -97,13 +104,36 @@ export default function CreatePost({ onPostCreated }) {
         )}
 
         <div className="flex items-center justify-between pt-2 border-t border-gray-300">
-          <label
-            htmlFor="images"
-            className="text-primary-500 hover:bg-primary-100/60 rounded-full transition-all hover:scale-110"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Image size={25} />
-          </label>
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="images"
+              className="text-primary-500 hover:bg-primary-100/60 rounded-full transition-all hover:scale-110"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Image size={25} />
+            </label>
+            <button
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="text-gray-400 hover:text-yellow-500 rounded-full transition-colors"
+            >
+              <Smile size={25} />
+            </button>
+          </div>
+          {showEmojiPicker && (
+            <div className="absolute top-full left-0 mt-2 z-150">
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowEmojiPicker(false)}
+              />
+              <div className="relative z-50">
+                <EmojiPicker
+                  onEmojiClick={onEmojiClick}
+                  width={300}
+                  height={350}
+                />
+              </div>
+            </div>
+          )}
           <input
             type="file"
             name="image"

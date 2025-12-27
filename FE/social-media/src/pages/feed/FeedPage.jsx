@@ -128,10 +128,11 @@ export default function FeedPage() {
         <div className="w-full max-w-2xl pt-8 px-4 sm:px-6 bg-primary-300/20 ">
           {/* Create Post Input */}
 
-          <CreatePost onPostCreated={handlePostCreated} />
-
+          <div className="relative  mb-6">
+            <CreatePost onPostCreated={handlePostCreated} />
+          </div>
           {/* Feed List */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 relative">
             {posts.map((post) => (
               <PostCard key={post.id} post={post} onDelete={handlePostDelete} />
             ))}

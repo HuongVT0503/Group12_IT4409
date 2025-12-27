@@ -7,6 +7,7 @@ import {
   Share2,
   MoreVertical,
   Flag,
+  Smile,
 } from "lucide-react"; //share2
 //import Button from "../common/ButtonComponent";
 import {
@@ -21,11 +22,13 @@ import {
   deleteComment,
 } from "../../services/commentService";
 import { useAuth } from "../../context/AuthContext";
-import { useSocket } from "../../context/SocketContext";
+import { useSocketContext } from "../../context/SocketContext";
 import { Link, useNavigate } from "react-router-dom";
 import Avatar from "../common/Avatar";
 import CommentItem from "./CommentItem";
 import ReportModal from "../common/ReportModal";
+import EmojiPicker from "emoji-picker-react";
+import ShareModal from "../common/ShareModal";
 
 const safeFormatDate = (dateString) => {
   try {
@@ -40,7 +43,7 @@ const safeFormatDate = (dateString) => {
 export default function PostCard({ post, onDelete, highlightId }) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const socket = useSocket();
+  const { socket, isUserOnline } = useSocketContext();
 
   const [isSharing, setIsSharing] = useState(false);
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
@@ -55,7 +58,9 @@ export default function PostCard({ post, onDelete, highlightId }) {
 
   const [showMenu, setShowMenu] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
-  
+
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const commentTree = useMemo(() => {
     const map = {};
@@ -89,7 +94,7 @@ export default function PostCard({ post, onDelete, highlightId }) {
 
     const handleUpdate = (payload) => {
       if (payload.postId && payload.postId !== post.id) return;
-      
+
       if (payload.deleted) {
         if (onDelete) onDelete(post.id);
         return;
@@ -172,8 +177,7 @@ export default function PostCard({ post, onDelete, highlightId }) {
     if (highlightId && !showComments) {
       handleFetchComments();
     }
-  }, [highlightId]); 
-
+  }, [highlightId]);
 
   //scroll once cmt is loaded
   useEffect(() => {
@@ -182,7 +186,11 @@ export default function PostCard({ post, onDelete, highlightId }) {
         const element = document.getElementById(`comment-${highlightId}`);
         if (element) {
           element.scrollIntoView({ behavior: "smooth", block: "center" });
-          element.classList.add("bg-blue-50", "transition-colors", "duration-1000");
+          element.classList.add(
+            "bg-blue-50",
+            "transition-colors",
+            "duration-1000"
+          );
           setTimeout(() => element.classList.remove("bg-blue-50"), 2000);
         }
       }, 500);
@@ -305,12 +313,13 @@ export default function PostCard({ post, onDelete, highlightId }) {
     }
   };
 
-  const handleShare = async () => {
-    //caption
-    const caption = window.prompt("Say something about this post (optional):");
-    if (caption === null) return; //user cancel
+  const handleShareClick = () => {
+    setShowShareModal(true);
+  };
 
+  const handleShareSubmit = async (caption) => {
     setIsSharing(true);
+    setShowShareModal(false);
     try {
       await sharePost(post.id, caption);
       alert("Post shared successfully!");
@@ -321,6 +330,11 @@ export default function PostCard({ post, onDelete, highlightId }) {
     } finally {
       setIsSharing(false);
     }
+  };
+
+  const onEmojiClick = (emojiData) => {
+    setNewComment((prev) => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
   };
 
   ///
@@ -336,14 +350,20 @@ export default function PostCard({ post, onDelete, highlightId }) {
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <Link to={`/profile/${post.author.id}`} className="flex gap-3">
-          <Avatar
-            src={
-              post.author.avatar ||
-              `https://ui-avatars.com/api/?name=${post.author.name}`
-            }
-            alt={post.author.name}
-            size={11}
-          />
+          <div className="relative">
+            <Avatar
+              src={
+                post.author.avatar ||
+                `https://ui-avatars.com/api/?name=${post.author.name}`
+              }
+              alt={post.author.name}
+              size={11}
+            />
+            {isUserOnline(post.author.id) && (
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+            )}
+          </div>
+
           <div className="flex flex-col items-start justify-between">
             <h3 className="font-bold text-gray-900 leading-tight">
               {post.author.name}
@@ -467,7 +487,7 @@ export default function PostCard({ post, onDelete, highlightId }) {
         </button>
 
         <button
-          onClick={handleShare}
+          onClick={handleShareClick}
           disabled={isSharing}
           className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-primary-500 transition-all hover:scale-105 disabled:opacity-50"
         >
@@ -480,7 +500,7 @@ export default function PostCard({ post, onDelete, highlightId }) {
       {/* Comments Section  */}
       {showComments && (
         <div className="mt-4 pt-4 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-2">
-          <div className="flex gap-3 items-center mb-4">
+          <div className="flex gap-3 items-center mb-4 relative">
             <img
               src={
                 user?.avatar_url ||
@@ -494,9 +514,31 @@ export default function PostCard({ post, onDelete, highlightId }) {
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={handlePostComment}
               placeholder="Write a comment..."
-              className="w-full bg-gradient-to-r from-gray-50 to-primary-50/30 rounded-full py-2.5 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400/40 transition-all"
+              className="w-full bg-gradient-to-r from-gray-50 to-primary-50/30 rounded-full py-2.5 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400/40 transition-all pr-10"
             />
+            <button
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-500"
+            >
+              <Smile size={20} />
+            </button>
           </div>
+
+          {showEmojiPicker && (
+            <div className="absolute top-10 right-0 z-50">
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowEmojiPicker(false)}
+              />
+              <div className="relative z-50">
+                <EmojiPicker
+                  onEmojiClick={onEmojiClick}
+                  width={300}
+                  height={350}
+                />
+              </div>
+            </div>
+          )}
 
           {loadingComments ? (
             <p className="text-xs 2xl:text-sm text-center">Loading...</p>
@@ -521,6 +563,13 @@ export default function PostCard({ post, onDelete, highlightId }) {
         onClose={() => setIsReportOpen(false)}
         targetId={post.id}
         targetType="Post"
+      />
+
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        onShare={handleShareSubmit}
+        loading={isSharing}
       />
     </div>
   );

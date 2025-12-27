@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { useSocket } from "../../context/SocketContext";
+import { useSocketContext } from "../../context/SocketContext";
 import {
   getConversations,
   getMessages,
@@ -17,15 +17,18 @@ import {
   Image as ImageIcon,
   Check,
   CheckCheck,
+  Smile,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "../../utils/cn";
 import { uploadMedia } from "../../services/mediaService";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
+import EmojiPicker from "emoji-picker-react";
 
 export default function ChatPage() {
   const { user } = useAuth();
-  const socket = useSocket();
+  const { socket, isUserOnline, updateUnreadCount } = useSocketContext();
+  const location = useLocation();
 
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -43,6 +46,7 @@ export default function ChatPage() {
 
   const [friends, setFriends] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const { id: routeChatId } = useParams();
   const navigate = useNavigate();
@@ -157,6 +161,18 @@ export default function ChatPage() {
 
   //restore last active chat
   useEffect(() => {
+    if (location.state?.conversation) {
+      const passedConvo = location.state.conversation;
+      setConversations((prev) => {
+        if (prev.find((c) => c.id === passedConvo.id)) return prev;
+        return [passedConvo, ...prev];
+      });
+      handleSelectChat(passedConvo);
+
+      window.history.replaceState({}, document.title);
+      return;
+    }
+
     //convo are loaded
     if (conversations.length === 0) return;
 
@@ -168,7 +184,7 @@ export default function ChatPage() {
         handleSelectChat(conv);
       }
     }
-  }, [routeChatId, conversations]); //run when URL changes or convos load
+  }, [routeChatId, conversations, location.state]); //run when URL changes or convos load
 
   //select chat &fetch
   const handleSelectChat = async (conv) => {
@@ -186,6 +202,8 @@ export default function ChatPage() {
 
       //join Socket Room for Typing Indicators
       socket.emit("join_conversation", conv.id);
+
+      if (updateUnreadCount) updateUnreadCount();
     } catch (error) {
       console.error("Failed to fetch messages", error);
     }
@@ -381,6 +399,10 @@ export default function ChatPage() {
     return name.includes(lowerQuery) || username.includes(lowerQuery);
   });
 
+  const onEmojiClick = (emojiData) => {
+    setInputText((prev) => prev + emojiData.emoji);
+  };
+
   const getAvatar = (u) =>
     u?.avatar_url ||
     `https://ui-avatars.com/api/?name=${
@@ -431,7 +453,9 @@ export default function ChatPage() {
                     className="w-12 h-12 rounded-full object-cover border border-gray-100 group-hover:border-primary transition-colors"
                   />
 
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                  {isUserOnline(friend.id) && (
+                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                  )}
                 </div>
                 <span className="text-xs text-gray-600 font-medium truncate w-[64px] text-center">
                   {friend.display_name?.split(" ")[0]}
@@ -466,8 +490,10 @@ export default function ChatPage() {
                   className="w-12 h-12 rounded-full object-cover border border-gray-200"
                   alt={chat.otherUser?.display_name}
                 />
-                {/* Online Status: always online??*/}
-                <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
+                {/* Online Status*/}
+                {isUserOnline(chat.otherUser?.id) && (
+                  <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
+                )}
               </div>
 
               <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -553,12 +579,18 @@ export default function ChatPage() {
                     <h3 className="font-bold text-gray-900 leading-tight">
                       {selectedChat.otherUser?.display_name}
                     </h3>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                    {isUserOnline(selectedChat.otherUser?.id) ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span className="text-xs text-gray-500 font-medium">
+                          Online
+                        </span>
+                      </div>
+                    ) : (
                       <span className="text-xs text-gray-500 font-medium">
-                        Online
+                        Offline
                       </span>
-                    </div>
+                    )}
                   </div>
                 </Link>
               </div>
@@ -652,7 +684,22 @@ export default function ChatPage() {
             </div>
 
             {/* Input Area */}
-            <div className="p-4 bg-white border-t border-gray-100">
+            <div className="p-4 bg-white border-t border-gray-100 relative">
+              {showEmojiPicker && (
+                <div className="absolute bottom-20 left-4 z-50 shadow-xl">
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowEmojiPicker(false)}
+                  />
+                  <div className="relative z-50">
+                    <EmojiPicker
+                      onEmojiClick={onEmojiClick}
+                      width={300}
+                      height={350}
+                    />
+                  </div>
+                </div>
+              )}
               <div className="flex items-center gap-2 max-w-4xl mx-auto">
                 <label className="p-2.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-full transition-colors">
                   <input
@@ -670,6 +717,12 @@ export default function ChatPage() {
                     <ImageIcon size={22} />
                   </button>
                 </label>
+                <button
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="p-2.5 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 rounded-full transition-colors"
+                >
+                  <Smile size={22} />
+                </button>
 
                 <div className="flex-1 relative">
                   <input
