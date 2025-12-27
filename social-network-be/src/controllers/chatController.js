@@ -7,6 +7,7 @@ import {
 } from "../services/realtimeService.js";
 import {v4 as uuidv4} from "uuid";
 import * as notificationRepo from "../repositories/notificationRepository.js";
+import { saveFileFromBuffer } from '../services/mediaService.js';
 
 async function getConversations(req, res, next) {
   try {
@@ -74,7 +75,13 @@ async function getMessages(req, res, next) {
 
 async function sendMessage(req, res, next) {
   try {
-    const { receiverId, content, mediaUrl } = req.body;
+    const { receiverId, content } = req.body;
+    let mediaUrl = req.body.mediaUrl || null;
+    if (req.files && req.files.length) {
+      const f = req.files[0];
+      const s = await saveFileFromBuffer({ buffer: f.buffer, originalname: f.originalname });
+      mediaUrl = s.url;
+    }
     const senderId = req.user.id;
     
     if (!receiverId || (!content && !mediaUrl)) {

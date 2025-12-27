@@ -4,6 +4,7 @@ import * as postRepo from '../repositories/postRepository.js';
 import * as notificationRepo from '../repositories/notificationRepository.js';
 import * as commentRepo from '../repositories/commentRepository.js';
 import {v4 as uuidv4} from 'uuid';
+import { saveFileFromBuffer } from '../services/mediaService.js';
 
 async function createComment(req, res, next) {
   try {
