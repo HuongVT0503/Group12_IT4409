@@ -138,7 +138,13 @@ async function reactToComment(req, res, next) {
     if (result.author && result.author.id !== userId) {
       const notifId = uuidv4();
       const notifText = type === 'like' ? 'liked your comment' : `reacted to your comment`;
-      const notifData = { from: userId, commentId, text: notifText, reaction: type };
+      const notifData = {
+        from: userId,
+        postId: result.postId,
+        commentId,
+        text: notifText,
+        reaction: type,
+      };
       await notificationRepo.createNotification({ id: notifId, userId: result.author.id, type: 'reaction', data: JSON.stringify(notifData) });
       emitNotification(result.author.id, { id: notifId, type: 'reaction', created_at: new Date().toISOString(), read: false, data: notifData });
     }
