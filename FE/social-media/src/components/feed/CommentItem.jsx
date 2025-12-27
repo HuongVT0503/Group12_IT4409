@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { CornerDownRight, Smile, Image as ImageIcon, X, Heart,
@@ -27,6 +27,12 @@ export default function CommentItem({
   const [isLiked, setIsLiked] = useState(item.isLiked || false);
   const [likeCount, setLikeCount] = useState(item.comment.stats?.likes || 0);
 
+  //sync when parent 'item' changes
+  useEffect(() => {
+    setIsLiked(item.isLiked || false);
+    setLikeCount(item.comment.stats?.likes || 0);
+  }, [item]);
+
   const onEmojiClick = (emojiData) => {
     setReplyText((prev) => prev + emojiData.emoji);
     setShowEmojiPicker(false);
@@ -51,21 +57,21 @@ export default function CommentItem({
   };
 
   const handleLike = async () => {
-    const prevLiked = isLiked;
+    const previousState = isLiked;
     const prevCount = likeCount;
 
-    setIsLiked(!prevLiked);
-    setLikeCount(prevLiked ? prevCount - 1 : prevCount + 1);
+    setIsLiked(!previousState);
+    setLikeCount(previousState ? prevCount - 1 : prevCount + 1);
 
     try {
-      if (prevLiked) {
+      if (previousState) {
         await unlikeComment(item.comment.id);
       } else {
         await likeComment(item.comment.id);
       }
     } catch (error) {
       console.error("Failed to toggle comment like", error);
-      setIsLiked(prevLiked);
+      setIsLiked(previousState);
       setLikeCount(prevCount);
     }
   };
@@ -169,10 +175,10 @@ export default function CommentItem({
               }`}
             >
               <Heart size={12} className={isLiked ? "fill-current" : ""} />
-              {likeCount > 0 && <span>{likeCount}</span>}
-              Like
+          <span>{likeCount > 0 ? likeCount : "Like"}</span>
+              
             </button>
-            
+
             <button
               onClick={() => setIsReplying(!isReplying)}
               className="text-xs font-semibold text-gray-500 hover:text-primary transition-colors flex items-center gap-1"
