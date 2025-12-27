@@ -151,6 +151,13 @@ async function sendMessage(req, res, next) {
       conversationId: result.conversationId,
     });
   } catch (error) {
+    if (error.code === "USER_BANNED") {
+      return res.status(403).json({
+        success: false,
+        message: error.message,
+        code: "USER_BANNED"
+      });
+    }
     next(error);
   }
 }

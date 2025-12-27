@@ -12,6 +12,15 @@ async function getUserConversations(userId) {
 }
 
 async function sendMessage(senderId, receiverId, content, mediaUrl = null) {
+  const sender = await chatRepo.getUserById(senderId);
+  if (sender && sender.isBanned === true) {
+    throw { 
+      status: 403, 
+      message: "You have been banned and cannot send messages",
+      code: "USER_BANNED"
+    };
+  }
+
   let conversation = await chatRepo.findConversationByUsers(senderId, receiverId);
   
   if (!conversation) {
