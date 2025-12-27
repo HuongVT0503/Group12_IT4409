@@ -5,7 +5,20 @@ import * as notificationRepo from '../repositories/notificationRepository.js';
 import * as commentRepo from '../repositories/commentRepository.js';
 import {v4 as uuidv4} from 'uuid';
 import { saveFileFromBuffer } from '../services/mediaService.js';
+import jwt from 'jsonwebtoken';
+import { get } from 'node:http';
 
+const getUserIdFromRequest = (req) => {
+  try {
+    if (req.user) return req.user.id;
+    const token = req.headers['authorization']?.split(' ')[1];
+    if (!token) return null;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded.id;
+  } catch (e) {
+    return null;
+  }
+};
 
 async function createComment(req, res, next) {
   try {
@@ -87,7 +100,7 @@ async function createComment(req, res, next) {
 async function getComments(req, res, next) {
   try {
     const postId = req.params.postId;
-    const userId = req.user?.id || null;
+    const userId = getUserIdFromRequest(req);
     const data = await commentService.getComments(postId, userId, req.query.limit || 50);
     res.json({ data });
   } catch (err) { next(err); }
