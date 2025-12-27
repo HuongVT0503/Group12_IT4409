@@ -47,3 +47,11 @@ export const logoutUser = () => {
   localStorage.removeItem("user");
   window.location.href = '/login';
 };
+
+export const changePassword = async (oldPassword, newPassword) => {
+  const response = await api.post('/auth/change-password', {
+    oldPassword,
+    newPassword
+  });
+  return response.data;
+};
