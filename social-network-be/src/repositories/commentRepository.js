@@ -6,7 +6,7 @@ async function createComment({
   postId,
   content,
   parentCommentId = null,
-  media = []
+  media = [],
 }) {
   const session = getSession();
   try {
@@ -34,7 +34,7 @@ async function createComment({
       postId,
       content,
       parentCommentId,
-      media
+      media,
     });
 
     const properties = res.records[0].get("c").properties;
@@ -50,25 +50,37 @@ async function createComment({
   }
 }
 
-async function getCommentsForPost(postId, limit = 50) {
+async function getCommentsForPost(postId, limit = 50, userId = null) {
   const session = getSession();
   try {
     const res = await session.run(
-      `MATCH (u)-[:COMMENTED]->(c)-[:ON]->(p:Post {id:$postId})\
+      `MATCH (u)-[:COMMENTED]->(c)-[:ON]->(p:Post {id:$postId})
       OPTIONAL MATCH (c)-[:REPLY_TO]->(parent:Comment)
-      RETURN c, u, parent.id AS parentId
+      OPTIONAL MATCH (likers:User)-[:REACTED]->(c)
+      WITH c, u, parent.id AS parentId, count(likers) as likeCount
+      OPTIONAL MATCH (currentUser:User {id: $userId})-[:REACTED]->(c)
+      WITH c, u, parentId, likeCount, CASE WHEN currentUser IS NOT NULL THEN true ELSE false END as isLiked
+      RETURN c, u, parentId, likeCount, isLiked
       ORDER BY c.created_at ASC LIMIT $limit`,
-      { postId, limit: neo4j.int(limit) }
+      { postId, limit: neo4j.int(limit), userId }
     );
     return res.records.map((r) => {
       const comment = r.get("c").properties;
       const author = r.get("u").properties;
       const parentId = r.get("parentId");
+      const likeCount = r.get("likeCount").toNumber ? r.get("likeCount").toNumber() : r.get("likeCount");
+      const isLiked = r.get("isLiked");
 
       if (comment.created_at) {
         comment.created_at = new Date(comment.created_at).toISOString();
       }
-      return { comment, author, parentId };
+      
+      // Add stats object with likes count
+      comment.stats = {
+        likes: likeCount
+      };
+      
+      return { comment, author, parentId, isLiked };
     });
   } finally {
     await session.close();

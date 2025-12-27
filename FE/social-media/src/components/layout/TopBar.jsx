@@ -238,7 +238,8 @@ export default function TopBar() {
         n.type === "comment" ||
         n.type === "new_post" ||
         n.type === "share_post" ||
-        n.type === "reply") &&
+        n.type === "reply" ||
+        n.type === "reaction") &&
       postId
     ) {
       navigate(`/post/${postId}`, { state: { highlightId } });
@@ -268,6 +269,9 @@ export default function TopBar() {
 
       case "new_message":
         return `${senderName} sent you a message.`;
+
+      case "reaction":
+        return `${senderName} reacted to your comment.`;
 
       default:
         return n.data?.text || "New notification";

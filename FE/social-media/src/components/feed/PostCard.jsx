@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { formatDistanceToNow } from "date-fns"; //?date-fns
+import { formatDistanceToNow } from "date-fns";
 import {
   Heart,
   MessageSquare,
@@ -8,8 +8,9 @@ import {
   MoreVertical,
   Flag,
   Smile,
-} from "lucide-react"; //share2
-//import Button from "../common/ButtonComponent";
+  Image as ImageIcon,
+  X,
+} from "lucide-react";
 import {
   likePost,
   unlikePost,
@@ -29,6 +30,7 @@ import CommentItem from "./CommentItem";
 import ReportModal from "../common/ReportModal";
 import EmojiPicker from "emoji-picker-react";
 import ShareModal from "../common/ShareModal";
+import { uploadMedia } from "../../services/mediaService";
 
 const safeFormatDate = (dateString) => {
   try {
@@ -50,7 +52,6 @@ export default function PostCard({ post, onDelete, highlightId }) {
   const [showComments, setShowComments] = useState(false);
   const [likeCount, setLikeCount] = useState(post.stats?.likes || 0);
   const [commentCount, setCommentCount] = useState(post.stats?.comments || 0);
-
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
@@ -58,19 +59,42 @@ export default function PostCard({ post, onDelete, highlightId }) {
 
   const [showMenu, setShowMenu] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
-
   const [showShareModal, setShowShareModal] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  const [isUploading, setIsUploading] = useState(false);
+
+  const [commentFile, setCommentFile] = useState(null);
+  const [commentPreview, setCommentPreview] = useState(null);
+
+  const isVideoUrl = (url) => {
+    if (!url) return false;
+    return (
+      url.match(/\.(mp4|webm|ogg|mov)$/i) != null || url.includes("data:video")
+    );
+  };
+
+  const handleCommentFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCommentFile(file);
+      setCommentPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const clearCommentFile = () => {
+    setCommentFile(null);
+    setCommentPreview(null);
+  };
 
   const commentTree = useMemo(() => {
     const map = {};
     const roots = [];
 
-    //innit
     comments.forEach((c) => {
       map[c.comment.id] = { ...c, replies: [] };
     });
-    //link
+
     comments.forEach((c) => {
       if (c.parentId && map[c.parentId]) {
         map[c.parentId].replies.push(map[c.comment.id]);
@@ -82,14 +106,9 @@ export default function PostCard({ post, onDelete, highlightId }) {
     return roots;
   }, [comments]);
 
-  //initialize
-  useEffect(() => {}, [post]);
-
-  //listen for real-time update
   useEffect(() => {
     if (!socket || !post.id) return;
 
-    //JOIN post ROOM
     socket.emit("join_post", post.id);
 
     const handleUpdate = (payload) => {
@@ -116,11 +135,8 @@ export default function PostCard({ post, onDelete, highlightId }) {
         if (payload.newComment.author?.id === user?.id) {
           return;
         }
-        //be payload: { newComment: commentObj }
-        //commentCount;
         setCommentCount((prev) => prev + 1);
 
-        //be 'createComment' needs author info?
         if (showComments) {
           setComments((prev) => {
             if (prev.find((c) => c.comment.id === payload.newComment.id))
@@ -161,6 +177,40 @@ export default function PostCard({ post, onDelete, highlightId }) {
           );
         }
       }
+
+      if (payload.reactionChange) {
+        const { commentId, userId, reaction } = payload.reactionChange;
+        
+        setComments((prev) => 
+          prev.map((c) => {
+            if (c.comment.id === commentId) {
+              const isMe = userId === user?.id;
+              
+              let newCount = c.comment.stats?.likes || 0;
+              
+              if (reaction) {
+                 newCount++;
+              } else {
+                 newCount = Math.max(0, newCount - 1);
+              }
+
+              return {
+                ...c,
+                isLiked: isMe ? !!reaction : c.isLiked,
+                comment: {
+                  ...c.comment,
+                  stats: {
+                    ...c.comment.stats,
+                    likes: newCount
+                  }
+                }
+              };
+            }
+            return c;
+          })
+        );
+      }
+    
     };
 
     socket.on("post_update", handleUpdate);
@@ -210,7 +260,7 @@ export default function PostCard({ post, onDelete, highlightId }) {
         await likePost(post.id);
       }
     } catch (error) {
-      setIsLiked(previousState); //revert
+      setIsLiked(previousState);
       setLikeCount((prev) => (previousState ? prev + 1 : prev - 1));
       console.error("Like failed", error);
     }
@@ -230,7 +280,7 @@ export default function PostCard({ post, onDelete, highlightId }) {
       setLoadingComments(true);
       try {
         const res = await getComments(post.id);
-        setComments(res.data.data); // BE returns { data: [...] }
+        setComments(res.data.data);
       } catch (e) {
         console.error(e);
       }
@@ -240,9 +290,20 @@ export default function PostCard({ post, onDelete, highlightId }) {
   };
 
   const handlePostComment = async (e) => {
-    if (e.key === "Enter" && newComment.trim()) {
+    if (
+      e.key === "Enter" &&
+      (newComment.trim() || commentFile) &&
+      !isUploading
+    ) {
       try {
-        const res = await createComment(post.id, newComment);
+        let mediaUrl = null;
+        if (commentFile) {
+          setIsUploading(true);
+          const uploaded = await uploadMedia(commentFile);
+          mediaUrl = uploaded.url;
+          setIsUploading(false);
+        }
+        const res = await createComment(post.id, newComment, null, mediaUrl);
         setComments((prev) => {
           if (prev.some((c) => c.comment.id === res.data.comment.id))
             return prev;
@@ -253,16 +314,18 @@ export default function PostCard({ post, onDelete, highlightId }) {
           ];
         });
         setNewComment("");
+        clearCommentFile();
         setCommentCount((prev) => prev + 1);
       } catch (err) {
         console.error(err);
+        setIsUploading(false);
       }
     }
   };
 
-  const handleReplySubmit = async (parentId, content) => {
+  const handleReplySubmit = async (parentId, content, mediaUrl) => {
     try {
-      const res = await createComment(post.id, content, parentId);
+      const res = await createComment(post.id, content, parentId, mediaUrl);
 
       setComments((prev) => {
         if (prev.some((c) => c.comment.id === res.data.comment.id)) return prev;
@@ -298,7 +361,6 @@ export default function PostCard({ post, onDelete, highlightId }) {
     const previousComments = [...comments];
     const previousCount = commentCount;
 
-    //
     setComments((prev) => prev.filter((c) => !idsToRemove.has(c.comment.id)));
     setCommentCount((prev) => Math.max(0, prev - idsToRemove.size));
 
@@ -347,7 +409,6 @@ export default function PostCard({ post, onDelete, highlightId }) {
         showMenu ? "relative z-20" : ""
       }`}
     >
-      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <Link to={`/profile/${post.author.id}`} className="flex gap-3">
           <div className="relative">
@@ -389,7 +450,6 @@ export default function PostCard({ post, onDelete, highlightId }) {
               <MoreVertical size={20} />
             </button>
 
-            {/* Dropdown Menu */}
             {showMenu && (
               <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-100 z-10 overflow-hidden">
                 <button
@@ -407,41 +467,57 @@ export default function PostCard({ post, onDelete, highlightId }) {
         )}
       </div>
 
-      {/* Content */}
       <div className="mb-3 2xl:mb-5">
         <p className="text-gray-800 text-[15px] 2xl:text-lg leading-relaxed whitespace-pre-line">
           {post.content}
         </p>
       </div>
 
-      {/* Media */}
       {post.image && !post.sharePost && (
         <div className="mb-4 rounded-xl overflow-hidden border border-gray-200/60 shadow-sm">
-          <img
-            src={post.image}
-            alt="Post content"
-            className="w-full h-auto object-cover max-h-[500px] 2xl:max-h-[700px]"
-          />
+          {isVideoUrl(post.image) ? (
+            <video
+              src={post.image}
+              controls
+              className="w-full h-auto object-cover max-h-[500px]"
+            />
+          ) : (
+            <img
+              src={post.image}
+              alt="Post content"
+              className="w-full h-auto object-cover max-h-[500px]"
+            />
+          )}
         </div>
       )}
 
-      {/*Shared Post / if isrepost */}
       {post.sharedPost && (
         <div
           className="mb-4 border border-primary-300/50 rounded-xl overflow-hidden cursor-pointer bg-gradient-to-br from-primary-50/30 to-transparent hover:from-primary-50/50 transition-all shadow-sm"
-          onClick={() => navigate(`/post/${post.sharedPost.id}`)} //og post link
+          onClick={() => navigate(`/post/${post.sharedPost.id}`)}
         >
-          {/* Sharedpost media */}
           {post.sharedPost.image && (
             <div className="h-48 w-full overflow-hidden bg-gray-100 border-b border-neutral-300">
-              <img
-                src={post.sharedPost.image}
-                alt="Shared post content"
-                className="w-full h-full object-cover"
-              />
+              {isVideoUrl(post.sharedPost.image) ? (
+                <video
+                  src={post.sharedPost.image}
+                  controls
+                  preload="metadata"
+                  className="w-full h-full object-cover"
+                  onClick={(e) => {
+                    //e.preventDefault();
+                    e.target.paused ? e.target.play() : e.target.pause();
+                  }}
+                />
+              ) : (
+                <img
+                  src={post.sharedPost.image}
+                  alt="Shared post content"
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
           )}
-          {/* Sharedpost in4 */}
           <div className="p-3">
             <div className="flex items-center gap-2 mb-2">
               <img
@@ -466,7 +542,6 @@ export default function PostCard({ post, onDelete, highlightId }) {
         </div>
       )}
 
-      {/* Actions */}
       <div className="flex items-center gap-6 border-t border-gray-200/60 pt-4 mt-3">
         <button
           onClick={toggleLike}
@@ -497,9 +572,33 @@ export default function PostCard({ post, onDelete, highlightId }) {
           </span>
         </button>
       </div>
-      {/* Comments Section  */}
+
       {showComments && (
         <div className="mt-4 pt-4 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-2">
+          {commentPreview && (
+            <div className="relative mb-2 ml-12 w-24 h-24 group">
+              {commentFile?.type?.startsWith("video/") ? (
+                <video
+                  src={commentPreview}
+                  className="w-full h-full object-cover rounded-lg border border-gray-200"
+                  autoPlay
+                  muted
+                  loop
+                />
+              ) : (
+                <img
+                  src={commentPreview}
+                  className="w-full h-full object-cover rounded-lg border border-gray-200"
+                />
+              )}
+              <button
+                onClick={clearCommentFile}
+                className="absolute -top-2 -right-2 bg-gray-900 text-white rounded-full p-1 hover:bg-black transition-colors"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          )}
           <div className="flex gap-3 items-center mb-4 relative">
             <img
               src={
@@ -508,20 +607,35 @@ export default function PostCard({ post, onDelete, highlightId }) {
               }
               className="w-9 h-9 rounded-full ring-2 ring-primary-400/20"
             />
-            <input
-              type="text"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              onKeyDown={handlePostComment}
-              placeholder="Write a comment..."
-              className="w-full bg-gradient-to-r from-gray-50 to-primary-50/30 rounded-full py-2.5 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400/40 transition-all pr-10"
-            />
-            <button
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-500"
-            >
-              <Smile size={20} />
-            </button>
+
+            <div className="relative w-full">
+              <input
+                type="text"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                onKeyDown={handlePostComment}
+                placeholder="Write a comment..."
+                disabled={isUploading}
+                className="w-full bg-gradient-to-r from-gray-50 to-primary-50/30 rounded-full py-2.5 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400/40 transition-all pr-20"
+              />
+
+              <label className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary cursor-pointer p-1">
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*,video/*"
+                  onChange={handleCommentFileSelect}
+                />
+                <ImageIcon size={18} />
+              </label>
+
+              <button
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-500"
+              >
+                <Smile size={20} />
+              </button>
+            </div>
           </div>
 
           {showEmojiPicker && (

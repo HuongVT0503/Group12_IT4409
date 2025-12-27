@@ -2,7 +2,12 @@ import { useState, useRef } from "react";
 import { createPost } from "../../services/postService";
 import { useAuth } from "../../context/AuthContext";
 import { uploadMedia } from "../../services/mediaService";
-import { Image, X, Smile } from "lucide-react";
+import { 
+  Image, 
+  X, 
+  Smile,
+  //Video 
+} from "lucide-react";
 import Avatar from "../common/Avatar";
 import { Button } from "@heroui/react";
 import EmojiPicker from "emoji-picker-react";
@@ -89,11 +94,20 @@ export default function CreatePost({ onPostCreated }) {
         {/*img */}
         {previewUrl && (
           <div className="relative w-full mt-2 ">
-            <img
-              src={previewUrl}
-              alt="Preview"
-              className="w-full max-h-60 object-cover rounded-xl border border-gray-200/60 shadow-md"
-            />
+
+            {selectedFile?.type?.startsWith('video/') ? (
+                <video 
+                  src={previewUrl} 
+                  controls 
+                  className="w-full max-h-60 object-cover rounded-xl border border-gray-200/60 shadow-md" 
+                />
+            ) : (
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="w-full max-h-60 object-cover rounded-xl border border-gray-200/60 shadow-md"
+                />
+            )}
             <button
               onClick={clearFile}
               className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
@@ -110,7 +124,8 @@ export default function CreatePost({ onPostCreated }) {
               className="text-primary-500 hover:bg-primary-100/60 rounded-full transition-all hover:scale-110"
               onClick={() => fileInputRef.current?.click()}
             >
-              <Image size={25} />
+              <div className="flex gap-2">
+              <Image size={25} /></div>
             </label>
             <button
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
@@ -138,7 +153,7 @@ export default function CreatePost({ onPostCreated }) {
             type="file"
             name="image"
             id="image"
-            accept="image/*"
+            accept="image/*,video/*"
             hidden
             onChange={handleFileSelect}
             ref={fileInputRef}

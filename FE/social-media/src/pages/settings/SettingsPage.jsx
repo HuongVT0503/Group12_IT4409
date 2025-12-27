@@ -7,14 +7,24 @@ import {
   AlertCircle,
   CheckCircle,
   ArrowLeft,
+  Lock,
 } from "lucide-react";
 //import { set } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { changePassword } from "../../services/authService";
 
 export default function SettingsPage() {
   const { user, logout, updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+
+  const [pwdLoading, setPwdLoading] = useState(false);
+  const [pwdMessage, setPwdMessage] = useState({ type: "", text: "" });
+  const [pwdData, setPwdData] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
 
   const navigate = useNavigate();
 
@@ -78,15 +88,17 @@ export default function SettingsPage() {
       // formData.display_name -> display_name
       //userRepo.updateProfile-> { display_name, bio, cover_url, avatar_url }
 
-      const payload = {
-        display_name: formData.display_name,
-        bio: formData.bio,
-        phone: formData.phone,
-        gender: formData.gender,
-        date_of_birth: formData.date_of_birth,
-      };
+      const cleanPayload = Object.fromEntries(
+        Object.entries({
+          display_name: formData.display_name,
+          bio: formData.bio,
+          phone: formData.phone,
+          gender: formData.gender,
+          date_of_birth: formData.date_of_birth,
+        }).filter(([, value]) => value !== "") 
+      );
 
-      const res = await api.put("/users/me", payload);
+      const res = await api.put("/users/me", cleanPayload);
 
       if (res.data && res.data.user) {
         updateUser(res.data.user);
@@ -103,6 +115,37 @@ export default function SettingsPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePwdChange = (e) => {
+    setPwdData({ ...pwdData, [e.target.name]: e.target.value });
+  };
+
+  const handlePwdSubmit = async (e) => {
+    e.preventDefault();
+    setPwdMessage({ type: "", text: "" });
+
+    if (pwdData.newPassword !== pwdData.confirmPassword) {
+      setPwdMessage({ type: "error", text: "New passwords do not match." });
+      return;
+    }
+
+    if (pwdData.newPassword.length < 6) {
+      setPwdMessage({ type: "error", text: "Password must be at least 6 characters." });
+      return;
+    }
+
+    setPwdLoading(true);
+    try {
+      await changePassword(pwdData.oldPassword, pwdData.newPassword);
+      setPwdMessage({ type: "success", text: "Password changed successfully!" });
+      setPwdData({ oldPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (error) {
+      const msg = error.response?.data?.message || "Failed to change password.";
+      setPwdMessage({ type: "error", text: msg });
+    } finally {
+      setPwdLoading(false);
     }
   };
 
@@ -242,6 +285,98 @@ export default function SettingsPage() {
             >
               <Save size={18} />
               {loading ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-6 border-b border-gray-100">
+          <h2 className="text-lg font-semibold text-gray-800">Security</h2>
+          <p className="text-gray-500 text-sm mt-1">
+            Manage your password and account security.
+          </p>
+        </div>
+
+        {pwdMessage.text && (
+            <div className={`mx-6 mt-6 p-4 rounded-lg flex items-center gap-2 ${
+              pwdMessage.type === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+            }`}>
+              {pwdMessage.type === "success" ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+              {pwdMessage.text}
+            </div>
+        )}
+
+        <form onSubmit={handlePwdSubmit} className="p-6 space-y-6">
+          {/* Current Password */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Current Password
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Lock size={18} className="text-gray-400" />
+              </div>
+              <input
+                type="password"
+                name="oldPassword"
+                value={pwdData.oldPassword}
+                onChange={handlePwdChange}
+                required
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter current password"
+              />
+            </div>
+          </div>
+
+          {/* New Password */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              New Password
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Lock size={18} className="text-gray-400" />
+              </div>
+              <input
+                type="password"
+                name="newPassword"
+                value={pwdData.newPassword}
+                onChange={handlePwdChange}
+                required
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter new password"
+              />
+            </div>
+          </div>
+
+          {/* Confirm Password */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Confirm New Password
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Lock size={18} className="text-gray-400" />
+              </div>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={pwdData.confirmPassword}
+                onChange={handlePwdChange}
+                required
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Confirm new password"
+              />
+            </div>
+          </div>
+
+          <div className="pt-2 flex justify-end">
+            <button
+              type="submit"
+              disabled={pwdLoading}
+              className="flex items-center gap-2 px-6 py-2 bg-gray-900 hover:bg-black text-white rounded-lg transition-colors font-medium disabled:opacity-50"
+            >
+              {pwdLoading ? "Updating..." : "Update Password"}
             </button>
           </div>
         </form>

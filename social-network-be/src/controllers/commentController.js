@@ -5,25 +5,26 @@ import * as notificationRepo from '../repositories/notificationRepository.js';
 import * as commentRepo from '../repositories/commentRepository.js';
 import {v4 as uuidv4} from 'uuid';
 import { saveFileFromBuffer } from '../services/mediaService.js';
+import jwt from 'jsonwebtoken';
+import { get } from 'node:http';
 
+const getUserIdFromRequest = (req) => {
+  try {
+    if (req.user) return req.user.id;
+    const token = req.headers['authorization']?.split(' ')[1];
+    if (!token) return null;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded.id;
+  } catch (e) {
+    return null;
+  }
+};
 
 async function createComment(req, res, next) {
   try {
     const authorId = req.user.id;
     const postId = req.params.postId;
-    const { content, parent_comment_id } = req.body;
-
-    // handle uploaded files (video/image) and save
-    let media = [];
-    if (req.files && req.files.length) {
-      const saved = [];
-      for (const f of req.files) {
-        const s = await saveFileFromBuffer({ buffer: f.buffer, originalname: f.originalname });
-        saved.push(s.url);
-      }
-      media = saved;
-    }
-
+    const { content, parent_comment_id, media } = req.body;
     const comment = await commentService.createComment({
       authorId,
       postId,
@@ -99,7 +100,8 @@ async function createComment(req, res, next) {
 async function getComments(req, res, next) {
   try {
     const postId = req.params.postId;
-    const data = await commentService.getComments(postId, req.query.limit || 50);
+    const userId = getUserIdFromRequest(req);
+    const data = await commentService.getComments(postId, userId, req.query.limit || 50);
     res.json({ data });
   } catch (err) { next(err); }
 }
@@ -135,7 +137,14 @@ async function reactToComment(req, res, next) {
     // notify comment author
     if (result.author && result.author.id !== userId) {
       const notifId = uuidv4();
-      const notifData = { from: userId, commentId, text: 'reacted to your comment', reaction: type };
+      const notifText = type === 'like' ? 'liked your comment' : `reacted to your comment`;
+      const notifData = {
+        from: userId,
+        postId: result.postId,
+        commentId,
+        text: notifText,
+        reaction: type,
+      };
       await notificationRepo.createNotification({ id: notifId, userId: result.author.id, type: 'reaction', data: JSON.stringify(notifData) });
       emitNotification(result.author.id, { id: notifId, type: 'reaction', created_at: new Date().toISOString(), read: false, data: notifData });
     }
