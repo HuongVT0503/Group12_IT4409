@@ -10,8 +10,13 @@ import {
   CardBody,
   //Divider,
 } from "@heroui/react";
+import { useSocketContext } from "../../context/SocketContext";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function SideBar() {
+  const { unreadCount } = useSocketContext();
+  const { theme } = useTheme();
+
   const navItems = [
     { icon: Home, label: "Feed", path: "/", key: "feed" },
     { icon: User, label: "Profile", path: "/profile", key: "profile" },
@@ -25,9 +30,18 @@ export default function SideBar() {
   ];
 
   return (
-    <div className="flex flex-col items-center h-full py-4 px-3 gap-5 bg-white border-r border-neutral-300">
+    <div
+      style={{
+        backgroundColor: "var(--sidebar-bg)",
+        borderRightColor: "var(--sidebar-border)",
+      }}
+      className="flex flex-col items-center h-full py-4 px-3 gap-5 border-r"
+    >
       {/* Nav Menu */}
-      <Card className="border-none backdrop-blur-sm w-full">
+      <Card
+        style={{ backgroundColor: "var(--sidebar-card-bg)" }}
+        className="border-none backdrop-blur-sm w-full"
+      >
         <CardBody className="p-2">
           <Listbox
             aria-label="Navigation menu"
@@ -42,15 +56,29 @@ export default function SideBar() {
                 startContent={
                   <div className="flex items-center justify-center w-10 h-10 rounded-lg transition-colors">
                     <item.icon size={24} strokeWidth={2.5} />
+                    {item.key === "chat" && unreadCount > 0 && (
+                      <span
+                        style={{
+                          backgroundColor: "var(--sidebar-badge-bg)",
+                          color: "var(--sidebar-badge-text)",
+                          borderColor: "var(--sidebar-badge-ring)",
+                        }}
+                        className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ring-2"
+                      >
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
                   </div>
                 }
+                style={{
+                  color: "var(--sidebar-text)",
+                }}
                 className="
                   text-lg font-medium py-3 px-3 rounded-xl mb-1
-                  data-[hover=true]:bg-[rgba(99,102,241,0.08)] data-[hover=true]:text-primary data-[hover=true]:scale-[1.02]
-                  data-[active=true]:bg-gradient-to-r data-[active=true]:from-primary data-[active=true]:via-white data-[active=true]:to-[rgba(34,211,238,0.12)]
-                  data-[active=true]:text-primary data-[active=true]:font-semibold
-                  data-[active=true]:shadow-[0_10px_30px_rgba(67,56,202,0.16)]
                   transition-all duration-200
+                  hover:[background:var(--sidebar-hover-bg)] hover:[color:var(--sidebar-hover-text)] hover:scale-[1.02]
+                  [&.active]:[background:var(--sidebar-active-bg)] [&.active]:[color:var(--sidebar-active-text)] [&.active]:font-semibold
+                  [&.active]:shadow-[var(--sidebar-active-shadow)]
                 "
               >
                 {item.label}
@@ -67,11 +95,14 @@ export default function SideBar() {
         as={Link}
         to="/create"
         size="lg"
+        style={{
+          background: "var(--sidebar-button-bg)",
+          color: "var(--sidebar-badge-text)",
+          boxShadow: `0 0px 10px var(--sidebar-button-shadow)`,
+        }}
         className="
-          w-full px-2 h-13  font-bold text-base text-white
-          bg-gradient-to-r from-primary-500 to-[#22d3ee]
-          shadow-lg shadow-primary/25 rounded-lg ring-1 ring-primary/30
-          hover:shadow-xl hover:shadow-primary/35
+          w-full px-2 h-13 font-bold text-base
+          rounded-lg ring-1 ring-[var(--sidebar-button-ring)]
           hover:scale-[1.02] hover:-translate-y-[1px]
           transition-all duration-200
         "

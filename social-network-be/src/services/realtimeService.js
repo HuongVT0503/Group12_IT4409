@@ -18,7 +18,7 @@ export function emitNewPost(post, followers = []) {
 
 export function emitPostUpdate(postId, payload) {
     const postRoomId = `post_${postId}`;
-    io.to(postRoomId).emit('post_update', payload);
+    io.to(postRoomId).emit('post_update', {...payload,postId});
 }
 
 export function emitCommentUpdate(postId, payload) {
@@ -41,7 +41,12 @@ export function emitNotificationRead(userId, notificationId) {
 
 export function emitMessage(userId, payload) {
     const conversationRoomId = `conversation_${payload.conversationId}`;
+
     io.to(conversationRoomId).emit('new_message', payload);
+
+    if (userId) {
+        io.to(userId).emit('new_message', payload);//emit to recipients personal room for sidebar
+    }
 }
 
 export function emitMessageRead(conversationId, messageId) {

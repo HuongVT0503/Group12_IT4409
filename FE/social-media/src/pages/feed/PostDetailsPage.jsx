@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import PostCard from "../../components/feed/PostCard";
 import { getPost } from "../../services/postService";
 import { ArrowLeft } from "lucide-react";
@@ -7,6 +7,8 @@ import { ArrowLeft } from "lucide-react";
 export default function PostDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const highlightId = location.state?.highlightId;
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -85,7 +87,7 @@ export default function PostDetailsPage() {
           </div>
         )}
 
-        {post && <PostCard post={post} />}
+        {post && <PostCard post={post} highlightId={highlightId} />}
       </div>
     </div>
   );

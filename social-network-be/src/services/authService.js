@@ -93,3 +93,17 @@ export async function logout({ refreshToken }) {
   const hash = sha256(refreshToken);
   await tokenRepo.revokeRefreshToken(hash);
 }
+
+export async function changePassword({ userId, oldPassword, newPassword }) {
+  const user = await userRepo.findById(userId);
+  if (!user) throw { status: 404, message: 'User not found' };
+
+  if (!user.password_hash) throw { status: 400, message: 'This account does not have a password set' };
+
+  const ok = await bcrypt.compare(oldPassword, user.password_hash || '');
+  if (!ok) throw { status: 401, message: 'Old password is incorrect' };
+
+  const newHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  const updated = await userRepo.updateProfile(userId, { password_hash: newHash });
+  return updated;
+}

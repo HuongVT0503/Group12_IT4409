@@ -32,21 +32,27 @@ async function follow(req, res, next) {
     const followeeId = req.params.id;
     await userService.follow(followerId, followeeId);
 
+    const notifId = uuidv4();
+    const notifData = {
+      from: followerId,
+      text: "started following you",
+    };
+
     //save to db
     await notificationRepo.createNotification({
-      id: uuidv4(),
+      id: notifId,
       userId: followeeId,
       type: "follow",
-      data: JSON.stringify({
-        from: followerId,
-        text: "started following you",
-      }),
+      data: JSON.stringify(notifData),
     });
 
     // Emit realtime
     emitNotification(followeeId, {
+      id: notifId,
       type: "follow",
-      from: followerId,
+      created_at: new Date().toISOString(),
+      read: false,
+      data: notifData,
     });
 
     emitFollowUpdate(followeeId, { newFollower: followerId });
