@@ -66,7 +66,8 @@ async function getUserConversations(userId) {
           id: participant.id,
           username: participant.username,
           display_name: participant.display_name,
-          avatar_url: participant.avatar_url
+          avatar_url: participant.avatar_url,
+          isBanned: participant.isBanned
         },
         lastMessage: lastMessage,
         updated_at: CASE WHEN lastMessage IS NOT NULL THEN lastMessage.created_at ELSE conv.created_at END

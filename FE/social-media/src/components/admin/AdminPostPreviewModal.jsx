@@ -1,5 +1,3 @@
-// FE/social-media/src/components/admin/AdminPostPreviewModal.jsx
-
 import { useEffect, useState } from "react";
 import { X, Image as ImageIcon } from "lucide-react";
 import api from "../../services/api";
@@ -47,7 +45,7 @@ export default function AdminPostPreviewModal({ isOpen, onClose, postId }) {
             avatar: actualAuthor.avatar_url || actualAuthor.avatar
         },
         stats: data.stats || actualPost.stats || { likes: 0, comments: 0, shares: 0 },
-        isLiked: false, // Read-only view
+        isLiked: false, // ReadOnly view
         
         sharedPost: sharedObj ? {
             id: sharedObj.id,
@@ -78,7 +76,7 @@ export default function AdminPostPreviewModal({ isOpen, onClose, postId }) {
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50">
