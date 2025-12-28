@@ -304,6 +304,25 @@ async function findConversationByUsers(userId1, userId2) {
   }
 }
 
+async function getUserById(userId) {
+  const session = getSession();
+  try {
+    const query = `
+      MATCH (u:User {id: $userId})
+      RETURN u
+    `;
+    const result = await session.run(query, { userId });
+    if (result.records.length === 0) return null;
+    const user = result.records[0].get("u").properties;
+    if (user.isBanned !== undefined && typeof user.isBanned === 'object') {
+      user.isBanned = Boolean(user.isBanned);
+    }
+    return user;
+  } finally {
+    await session.close();
+  }
+}
+
 export {
   getOrCreateConversation,
   getUserConversations,
@@ -315,4 +334,5 @@ export {
   getUnreadMessageCount,
   findConversationById,
   findConversationByUsers,
+  getUserById,
 };
