@@ -55,6 +55,7 @@ async function getUserConversations(userId) {
         content: msg.content,
         mediaUrl: msg.mediaUrl,
         created_at: msg.created_at,
+        is_read: msg.is_read,
         sender: { id: sender.id } 
       }) AS messages
       WITH conv, participant, messages[0] AS lastMessage
@@ -66,7 +67,8 @@ async function getUserConversations(userId) {
           id: participant.id,
           username: participant.username,
           display_name: participant.display_name,
-          avatar_url: participant.avatar_url
+          avatar_url: participant.avatar_url,
+          isBanned: participant.isBanned
         },
         lastMessage: lastMessage,
         updated_at: CASE WHEN lastMessage IS NOT NULL THEN lastMessage.created_at ELSE conv.created_at END

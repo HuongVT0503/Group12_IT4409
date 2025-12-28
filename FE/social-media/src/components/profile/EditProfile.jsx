@@ -90,14 +90,32 @@ export default function EditProfileModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-200 flex items-center p-4 justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl  shadow-xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div
+      style={{ backgroundColor: "var(--modal-overlay)" }}
+      className="fixed inset-0 z-200 flex items-center p-4 justify-center backdrop-blur-sm animate-in fade-in duration-200"
+    >
+      <div
+        style={{ backgroundColor: "var(--modal-bg)" }}
+        className="rounded-2xl shadow-xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-neutral-300">
-          <h2 className="text-xl font-bold text-gray-900">Edit Profile</h2>
+        <div
+          style={{
+            backgroundColor: "var(--modal-header-bg)",
+            borderColor: "var(--modal-border)",
+          }}
+          className="flex items-center justify-between p-4 border-b"
+        >
+          <h2
+            style={{ color: "var(--modal-text)" }}
+            className="text-xl font-bold"
+          >
+            Edit Profile
+          </h2>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
+            style={{ color: "var(--modal-text-secondary)" }}
+            className="p-2 hover:[background:var(--modal-hover-bg)] rounded-full transition-colors"
           >
             <X size={24} />
           </button>
@@ -136,7 +154,10 @@ export default function EditProfileModal({
                 />
               </div>
 
-              <p className="text-xs text-gray-400 mt-1">
+              <p
+                style={{ color: "var(--modal-text-secondary)" }}
+                className="text-xs mt-1"
+              >
                 Click on avatar to change.
               </p>
             </div>
@@ -162,11 +183,18 @@ export default function EditProfileModal({
 
             <div className="w-full">
               <div className="flex justify-between items-center mb-1">
-                <label className="text-sm font-semibold text-gray-700">
+                <label
+                  style={{ color: "var(--modal-text)" }}
+                  className="text-sm font-semibold"
+                >
                   Edit Cover Photo
                 </label>
                 <div
-                  className={`relative w-full h-40 bg-gray-50 rounded-xl overflow-hidden cursor-pointer border-2 border-dashed border-gray-200 hover:border-primary/50 transition-all group ${
+                  style={{
+                    backgroundColor: "var(--modal-upload-bg)",
+                    borderColor: "var(--modal-upload-border)",
+                  }}
+                  className={`relative w-full h-40 rounded-xl overflow-hidden cursor-pointer border-2 border-dashed hover:[border-color:var(--modal-upload-hover-border)] transition-all group ${
                     uploading ? "opacity-50 pointer-events-none" : ""
                   }`}
                   onClick={() => coverInputRef.current?.click()}
@@ -184,7 +212,10 @@ export default function EditProfileModal({
                       </div>
                     </>
                   ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
+                    <div
+                      style={{ color: "var(--modal-text-secondary)" }}
+                      className="flex flex-col items-center justify-center h-full gap-2"
+                    >
                       <ImageIcon size={24} />
                       <span className="text-xs font-medium">
                         Click to upload cover photo
@@ -206,7 +237,13 @@ export default function EditProfileModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
+        <div
+          style={{
+            backgroundColor: "var(--modal-footer-bg)",
+            borderColor: "var(--modal-border)",
+          }}
+          className="p-4 border-t flex justify-end gap-3"
+        >
           <Button
             variant="ghost"
             onClick={onClose}

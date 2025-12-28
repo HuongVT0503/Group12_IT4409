@@ -153,7 +153,7 @@ export default function SettingsPage() {
     <div className="max-w-2xl mx-auto py-8 px-4">
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-gray-500 hover:text-primary mb-6 font-medium transition-colors"
+        className="flex items-center gap-2 text-gray-500 hover:text-primary mb-6 font-medium transition-colors cursor-pointer"
       >
         <ArrowLeft size={20} /> Back
       </button>

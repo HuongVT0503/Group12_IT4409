@@ -28,16 +28,32 @@ const Button = forwardRef(
 
     const variants = {
       primary:
-        "bg-gradient-primary text-white shadow-sm hover:brightness-110 border border-neutral-300",
+        "text-white shadow-sm hover:brightness-110 border border-neutral-300",
       outline:
-        "bg-white text-primary border border-neutral-300 hover:bg-gray-50",
-      ghost: "bg-neutral-300 text-primary hover:bg-neutral-400",
+        "border border-neutral-300 hover:[background:var(--button-outline-hover-bg)]",
+      ghost: "hover:[background:var(--button-ghost-hover-bg)]",
     };
 
     const sizes = {
       sm: "h-10 px-4 text-sm font-medium",
       md: "h-12 px-6 text-base lg:text-lg lg:h-14",
       lg: "h-14 lg:h-16 px-8 text-xl lg:text-2xl w-full",
+    };
+
+    const variantStyles = {
+      primary: {
+        background: "var(--button-primary-bg)",
+        color: "var(--button-primary-text)",
+      },
+      outline: {
+        background: "var(--button-outline-bg)",
+        borderColor: "var(--button-outline-border)",
+        color: "var(--button-outline-text)",
+      },
+      ghost: {
+        background: "var(--button-ghost-bg)",
+        color: "var(--button-ghost-text)",
+      },
     };
 
     // const classes = cx(
@@ -52,6 +68,7 @@ const Button = forwardRef(
     return (
       <Comp
         ref={ref}
+        style={variantStyles[variant]}
         className={cn(base, variants[variant], sizes[size], className)}
         disabled={loading || props.disabled}
         aria-busy={loading}

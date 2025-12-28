@@ -14,13 +14,13 @@ export const loginUser = async (credentials) => {
   const response = await api.post('/auth/login', payload);
 
   //be returns {user, accessToken, refreshToken, }
-  if (response.data.accessToken) {
-    localStorage.setItem('token', response.data.accessToken);
-    if (response.data.refreshToken) {
-        localStorage.setItem('refreshToken', response.data.refreshToken);
-    }
-    localStorage.setItem('user', JSON.stringify(response.data.user));
-  }
+  // if (response.data.accessToken) {
+  //   localStorage.setItem('token', response.data.accessToken);
+  //   if (response.data.refreshToken) {
+  //       localStorage.setItem('refreshToken', response.data.refreshToken);
+  //   }
+  //   localStorage.setItem('user', JSON.stringify(response.data.user));
+  // }
   return response.data;
 };
 

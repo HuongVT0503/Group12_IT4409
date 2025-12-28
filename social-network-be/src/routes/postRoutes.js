@@ -16,5 +16,6 @@ router.post("/:id/like", verifyToken, ctrl.likePost);
 router.delete("/:id/like", verifyToken, ctrl.unlikePost);
 router.get("/:id/likes", ctrl.countLikes);
 router.get("/user/:userId", ctrl.getUserPosts); // Lấy bài viết của người dùng
+router.put("/:id", verifyToken, ctrl.editPost);
 
 export default router;
