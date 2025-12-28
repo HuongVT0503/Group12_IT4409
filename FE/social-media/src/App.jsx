@@ -6,7 +6,7 @@ import Feed from "./pages/feed/FeedPage";
 import ChatPage from "./pages/chat/ChatPage";
 import CreatePostPage from "./pages/feed/CreatePostPage";
 import ConnectionsPage from "./pages/connections/ConnectionPage";
-import SettingsPage from './pages/settings/SettingsPage';
+import SettingsPage from "./pages/settings/SettingsPage";
 import PostDetailsPage from "./pages/feed/PostDetailsPage";
 
 import {
@@ -15,20 +15,19 @@ import {
   Route,
   Navigate,
   useNavigate,
-  useLocation
+  useLocation,
 } from "react-router-dom";
 
 import MainLayout from "./components/layout/MainLayout";
 import ProfilePage from "./pages/profile/ProfilePage";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminLayout from "./components/admin/AdminLayout";
+import UserManagement from "./pages/admin/UserManagement";
+import PostManagement from "./pages/admin/PostManagement";
+import BannedPage from "./pages/auth/BannedPage";
+
 
 import { useAuth } from "./context/AuthContext";
-
-// const Placeholder = ({ title }) => (
-//   <div className="p-8 text-center">
-//     <h1 className="text-2xl font-bold text-gray-400">{title}</h1>
-//     <p className="text-gray-500">This page is under construction.</p>
-//   </div>
-// );
 
 function AppRouter() {
   //toplvl component
@@ -39,7 +38,12 @@ function AppRouter() {
   //const isAuthenticated = false;
   const navigate = useNavigate();
 
-  if (loading) return <div>Loading...</div>;
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
 
   //const [view, setView] = useState("login"); //default view
 
@@ -50,9 +54,9 @@ function AppRouter() {
         path="/login"
         element={
           !user ? (
-            <Login onSwitch={() => window.location.href = '/signup'} />
+            <Login onSwitch={() => (window.location.href = "/signup")} />
           ) : (
-            <Navigate to="/" replace />
+            <Navigate to={user.role === "admin" ? "/admin" : "/"} replace />
           )
         }
       />
@@ -61,26 +65,40 @@ function AppRouter() {
         element={
           !user ? (
             <Signup
-              onSwitch={() => window.location.href = '/login'}
-              onSuccess={(data) => navigate("/login", { 
-                state: { 
-                  email: data.user?.email, 
-                  message: "Account created successfully! Please log in." 
-                } 
-              })}
+              onSwitch={() => (window.location.href = "/login")}
+              onSuccess={(data) =>
+                navigate("/login", {
+                  state: {
+                    email: data.user?.email,
+                    message: "Account created successfully! Please log in.",
+                  },
+                })
+              }
             />
           ) : (
-            <Navigate to="/" replace />
+            <Navigate to={user.role === "admin" ? "/admin" : "/"} replace />
           )
         }
       />
+
+      <Route path="/banned" element={<BannedPage />} />
 
       
 
       {/* PROTECTED ROUTES */}
       <Route
         path="/"
-        element={user ? <MainLayout /> : <Navigate to="/login" state={{ from: location }} replace />}
+        element={
+          user ? (
+            user.role !== "admin" ? (
+              <MainLayout />
+            ) : (
+              <Navigate to="/admin" replace />
+            )
+          ) : (
+            <Navigate to="/login" state={{ from: location }} replace />
+          )
+        }
       >
         <Route index element={<Feed />} />
 
@@ -88,7 +106,7 @@ function AppRouter() {
         <Route path="profile/:id" element={<ProfilePage />} />
 
         <Route path="post/:id" element={<PostDetailsPage />} />
-        
+
         <Route path="chat" element={<ChatPage />} />
         <Route path="chat/:id" element={<ChatPage />} />
         <Route path="connections" element={<ConnectionsPage />} />
@@ -96,18 +114,39 @@ function AppRouter() {
         <Route path="settings" element={<SettingsPage />} />
       </Route>
 
-      
+      {/* ADMIN ROUTES */}
+      <Route
+        path="/admin"
+        element={
+          user ? (
+            user.role === "admin" ? (
+              <AdminLayout />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="users" element={<UserManagement />} />
+        <Route path="posts" element={<PostManagement />} />
+      </Route>
 
       {/* 404 CATCH ALL */}
-      <Route path="*" element={<Navigate to={user ? "/" : "/login"} replace />} />
+      <Route
+        path="*"
+        element={
+          user ? (
+            <Navigate to={user.role === "admin" ? "/admin" : "/"} replace />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
     </Routes>
-
-    // <main className="w-full min-h-screen">
-    //   {view === "login"
-    //     ? <Login onSwitch={() => setView("signup")} />
-    //     : <Signup onSwitch={() => setView("login")} onBack={() => setView("login")} />
-    //   }
-    // </main>
   );
 }
 

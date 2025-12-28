@@ -11,7 +11,8 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { useNavigate, useLocation } from "react-router-dom";
 //import { set } from "date-fns";
 
-export default function Login({ onSwitch, onForgot }) { //onSuccess?
+export default function Login({ onSwitch, onForgot }) {
+  //onSuccess?
   const [form, setForm] = useState({ identifier: "", password: "" });
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -27,7 +28,7 @@ export default function Login({ onSwitch, onForgot }) { //onSuccess?
   //check for passed state on mount
   useEffect(() => {
     if (location.state?.email) {
-      setForm(prev => ({ ...prev, identifier: location.state.email }));
+      setForm((prev) => ({ ...prev, identifier: location.state.email }));
     }
     if (location.state?.message) {
       setSuccessMsg(location.state.message);
@@ -35,7 +36,6 @@ export default function Login({ onSwitch, onForgot }) { //onSuccess?
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
-  
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -49,37 +49,31 @@ export default function Login({ onSwitch, onForgot }) { //onSuccess?
     setLoading(true);
 
     try {
-      // const res = await fetch("/api/auth/login", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ ...form, remember }),
-      // }); ////
-      const data = await loginUser({ identifier: form.identifier, password: form.password });
+      const data = await loginUser({
+        identifier: form.identifier,
+        password: form.password,
+      });
 
       login(data.user, data.accessToken);
-      navigate(from, { replace: true }); //redirect to intended page
-
-      //const data = await res.json();
-      // if (!res.ok)
-      //   throw new Error(data?.error || data?.message || "Login failed.");
-
-      // localStorage.setItem("token", data.token);
-      // if (typeof onSuccess === "function") onSuccess(data);
+      if (data.user.role === "admin") {
+        navigate("/admin", { replace: true });
+      } else {
+        navigate(from, { replace: true }); //redirect to intended page
+      }
     } catch (e2) {
-      setErr(e2.message||"Login failed");
+      const msg = e2?.error?.message || e2?.message;
+      if (msg === 'Your account has been locked') {
+          navigate("/banned");
+          return;
+      }
+      setErr(msg);
     } finally {
       setLoading(false);
     }
-  
-  
-  
   }
-
-
 
   return (
     <div className="min-h-dvh w-full flex flex-col items-center p-4 lg:p-12 lg:flex-row lg:justify-center lg:items-center bg-bg-main ">
-      
       {/* Mobile Header */}
       <div className="mb-6 flex items-center gap-2 lg:hidden">
         <img src={logo} alt="Logo" className="h-10 w-10 object-contain" />
@@ -92,15 +86,20 @@ export default function Login({ onSwitch, onForgot }) { //onSuccess?
           <img src={logo} alt="Logo" className="h-16 w-16" />
           <span className="font-bold text-5xl text-primary">SocioICT</span>
         </div>
-        <h2 className="text-8xl font-extrabold text-black leading-tight mb-4">Welcome back</h2>
+        <h2 className="text-8xl font-extrabold text-black leading-tight mb-4">
+          Welcome back
+        </h2>
         <p className="text-3xl text-gray-600 leading-relaxed">
-          Log in to reconnect with friends, classmates, and communities in your faculty.
+          Log in to reconnect with friends, classmates, and communities in your
+          faculty.
         </p>
       </div>
 
       {/* Login Card */}
       <div className="w-full max-w-md lg:max-w-[540px] bg-bg-card rounded-box shadow-xl p-6 lg:p-10 lg:mt-10">
-        <h1 className="text-4xl lg:text-5xl font-bold text-center mb-8 text-black">Log In</h1>
+        <h1 className="text-4xl lg:text-5xl font-bold text-center mb-8 text-black">
+          Log In
+        </h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           {successMsg && (
@@ -118,7 +117,6 @@ export default function Login({ onSwitch, onForgot }) { //onSuccess?
             onChange={(e) => setForm({ ...form, identifier: e.target.value })}
             required
             size="lg"
-            
           />
           <InputField
             label="Password"
@@ -133,58 +131,91 @@ export default function Login({ onSwitch, onForgot }) { //onSuccess?
 
           <div className="flex items-center justify-between mt-1">
             <label className="flex items-center gap-3 cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={remember} 
+              <input
+                type="checkbox"
+                checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
                 className="w-5 h-5 lg:w-6 lg:h-6 accent-primary"
-                
               />
-              <span className="text-base lg:text-lg text-gray-600">Remember me</span>
+              <span className="text-base lg:text-lg text-gray-600">
+                Remember me
+              </span>
             </label>
-            <button type="button" onClick={onForgot} className="text-base lg:text-lg font-semibold text-blue-600 hover:underline">
+            <button
+              type="button"
+              onClick={onForgot}
+              className="text-base lg:text-lg font-semibold text-blue-600 hover:underline"
+            >
               Forgot Password?
             </button>
           </div>
 
-          {err && <div className="bg-red-50 text-red-600 border border-red-200 rounded-lg p-3 text-sm">{err}</div>}
+          {err && (
+            <div className="bg-red-50 text-red-600 border border-red-200 rounded-lg p-3 text-sm">
+              {err}
+            </div>
+          )}
 
           <Button type="submit" size="lg" loading={loading} className="mt-2">
             Log In
           </Button>
 
           <div className="relative py-2">
-            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-gray-300" /></div>
-            <div className="relative flex justify-center text-sm"><span className="bg-white px-4 text-gray-500">Or</span></div>
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-white px-4 text-gray-500">Or</span>
+            </div>
           </div>
 
           <div className="flex flex-col gap-3">
             <Button variant="outline" size="md" type="button" className="gap-3">
-              <div className="h-7 w-7 bg-center bg-no-repeat bg-contain" style={{ backgroundImage: "url('https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg')" }} />
+              <div
+                className="h-7 w-7 bg-center bg-no-repeat bg-contain"
+                style={{
+                  backgroundImage:
+                    "url('https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg')",
+                }}
+              />
               Continue with Google
             </Button>
             <Button variant="outline" size="md" type="button" className="gap-3">
-              <div className="h-7 w-7 bg-center bg-no-repeat bg-contain" style={{ backgroundImage: "url('https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg')" }} />
+              <div
+                className="h-7 w-7 bg-center bg-no-repeat bg-contain"
+                style={{
+                  backgroundImage:
+                    "url('https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg')",
+                }}
+              />
               Continue with Facebook
             </Button>
           </div>
 
           {/* Desktop Signup Button */}
           <div className="hidden lg:block mt-6 pt-6 border-t border-gray-300">
-             <Button variant="primary" size="lg" type="button" onClick={onSwitch}>Create A New Account</Button>
+            <Button
+              variant="primary"
+              size="lg"
+              type="button"
+              onClick={onSwitch}
+            >
+              Create A New Account
+            </Button>
           </div>
         </form>
 
         {/* Mobile Bottom Link */}
         <div className="mt-6 text-center lg:hidden">
           <span className="text-gray-600 text-sm">Don’t have an account? </span>
-          <button onClick={onSwitch} className="text-blue-600 font-semibold text-sm hover:underline">Sign Up</button>
+          <button
+            onClick={onSwitch}
+            className="text-blue-600 font-semibold text-sm hover:underline"
+          >
+            Sign Up
+          </button>
         </div>
       </div>
     </div>
   );
 }
-
-
-
-

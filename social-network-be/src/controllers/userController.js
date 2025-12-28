@@ -1,5 +1,6 @@
 import * as userService from '../services/userService.js';
 import { emitNotification, emitFollowUpdate } from '../services/realtimeService.js';
+import { validationResult } from 'express-validator';
 import { v4 as uuidv4 } from 'uuid';
 import * as notificationRepo from '../repositories/notificationRepository.js';
 
@@ -13,6 +14,12 @@ async function getProfile(req, res, next) {
 
 async function updateProfile(req, res, next) {
   try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ message: 'Validation error', errors: errors.array() });
+    }
+
     const userId = req.user.id;
     const updated = await userService.updateProfile(userId, req.body);
     res.json({ user: updated });
@@ -91,7 +98,8 @@ async function submitReport(req, res, next) {
     try {
         const reporterId = req.user.id || req.user.userId;
         const success = await userService.createUserReport(reporterId, req.body);
-        if (success) { res.status(201).json({ message: "Your report has been submitted" })}
+        if (success) { res.status(201).json({ message: "Your report has been submitted" });}
+        else { res.status(404).json({ message: "Your report has not been submitted" });}
     } catch (err) { next(err); }
 }
 

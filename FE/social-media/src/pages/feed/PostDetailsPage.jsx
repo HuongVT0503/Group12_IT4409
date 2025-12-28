@@ -11,7 +11,6 @@ export default function PostDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-
   useEffect(() => {
     const fetchPost = async () => {
       try {
@@ -20,40 +19,41 @@ export default function PostDetailsPage() {
         //format similar to FeedPage
 
         const sharedObj = raw.sharedPost;
-        
+
         const formatted = {
-            id: raw.post.id,
-            content: raw.post.content,
-            timestamp: raw.post.created_at,
-            image: raw.post.media?.[0] || null,
-            author: {
-                id: raw.author.id,
-                name: raw.author.display_name || raw.author.username,
-                handle: raw.author.username,
-                avatar: raw.author.avatar_url,
-            },
-            stats: {
-                likes: raw.stats.likes || 0,
-                comments: raw.stats.comments || 0,
-                shares: raw.stats.shares || 0
-            },
-            //map shared post
-      sharedPost: sharedObj
-        ? {
-            id: sharedObj.id,
-            content: sharedObj.content,
-            image:
-              sharedObj.media && sharedObj.media.length > 0
-                ? sharedObj.media[0]
-                : null,
-            timestamp: sharedObj.created_at,
-            author: {
-              id: sharedObj.author.id,
-              name: sharedObj.author.display_name || sharedObj.author.username,
-              avatar: sharedObj.author.avatar_url,
-            },
-          }
-        : null,
+          id: raw.post.id,
+          content: raw.post.content,
+          timestamp: raw.post.created_at,
+          image: raw.post.media?.[0] || null,
+          author: {
+            id: raw.author.id,
+            name: raw.author.display_name || raw.author.username,
+            handle: raw.author.username,
+            avatar: raw.author.avatar_url,
+          },
+          stats: {
+            likes: raw.stats.likes || 0,
+            comments: raw.stats.comments || 0,
+            shares: raw.stats.shares || 0,
+          },
+          //map shared post
+          sharedPost: sharedObj
+            ? {
+                id: sharedObj.id,
+                content: sharedObj.content,
+                image:
+                  sharedObj.media && sharedObj.media.length > 0
+                    ? sharedObj.media[0]
+                    : null,
+                timestamp: sharedObj.created_at,
+                author: {
+                  id: sharedObj.author.id,
+                  name:
+                    sharedObj.author.display_name || sharedObj.author.username,
+                  avatar: sharedObj.author.avatar_url,
+                },
+              }
+            : null,
         };
         setPost(formatted);
       } catch (err) {
@@ -68,23 +68,25 @@ export default function PostDetailsPage() {
   }, [id]);
 
   return (
-    <div className="max-w-xl mx-auto pt-6 px-4 pb-20">
-      <button 
-        onClick={() => navigate(-1)} 
-        className="flex items-center gap-2 text-gray-500 hover:text-primary mb-4 font-medium transition-colors"
-      >
-        <ArrowLeft size={20} /> Back
-      </button>
+    <div className="w-full min-h-screen bg-gradient-feedpage">
+      <div className="max-w-2xl h-screen mx-auto pt-6 px-4 pb-20">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-gray-500 hover:text-primary mb-4 font-medium transition-colors cursor-pointer"
+        >
+          <ArrowLeft size={20} /> Back
+        </button>
 
-      {loading && <div className="text-center py-10">Loading post...</div>}
-      
-      {error && (
-        <div className="text-center py-10 bg-red-50 text-red-600 rounded-xl">
+        {loading && <div className="text-center py-10">Loading post...</div>}
+
+        {error && (
+          <div className="text-center py-10 bg-red-50 text-red-600 rounded-xl">
             {error}
-        </div>
-      )}
+          </div>
+        )}
 
-      {post && <PostCard post={post} />}
+        {post && <PostCard post={post} />}
+      </div>
     </div>
   );
 }
