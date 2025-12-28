@@ -1,13 +1,19 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { CornerDownRight, Smile, Image as ImageIcon, X, Heart,
-  //PlayCircle 
-  } from "lucide-react"; // Added PlayCircle
+import {
+  CornerDownRight,
+  Smile,
+  Image as ImageIcon,
+  X,
+  Heart,
+  //PlayCircle
+} from "lucide-react"; // Added PlayCircle
 import { useSocketContext } from "../../context/SocketContext";
 import EmojiPicker from "emoji-picker-react";
 import { uploadMedia } from "../../services/mediaService";
 import { likeComment, unlikeComment } from "../../services/commentService";
+import Avatar from "../common/Avatar";
 
 export default function CommentItem({
   item,
@@ -107,19 +113,24 @@ export default function CommentItem({
     <div
       id={`comment-${item.comment.id}`}
       className={`flex flex-col ${
-        depth > 0 ? (depth < 4 ? "ml-8 mt-2" : "mt-2 border-l-2 pl-2") : "mt-4"
+        depth > 0
+          ? depth < 4
+            ? "ml-3 md:ml-8 mt-4"
+            : "mt-2 border-l-2 pl-2"
+          : "mt-4"
       }`}
+      style={{ borderColor: "var(--comment-reply-border)" }}
     >
       <div className="flex gap-3">
         {/* Avatar */}
         <Link to={`/profile/${item.author.id || item.author.userId}`}>
           <div className="relative inline-block">
-            <img
+            <Avatar
               src={
                 item.author.avatar_url ||
                 `https://ui-avatars.com/api/?name=${item.author.display_name}`
               }
-              className="w-8 h-8 rounded-full object-cover"
+              size={8}
               alt="avatar"
             />
             {isUserOnline(item.author.id || item.author.userId) && (
@@ -129,37 +140,47 @@ export default function CommentItem({
         </Link>
 
         {/* Content Box */}
-        <div className="flex-1 group">
-          <div className="bg-gray-50 rounded-2xl rounded-tl-none px-4 py-2 inline-block max-w-full">
-            <div className="flex justify-between items-baseline gap-4">
+        <div className="flex-1 group min-w-0">
+          <div
+            className="rounded-2xl rounded-tl-none px-3 pt-1 pb-2 inline-block max-w-full"
+            style={{ backgroundColor: "var(--comment-bg)" }}
+          >
+            <div className="flex justify-between items-baseline gap-2">
               <Link
                 to={`/profile/${item.author.id || item.author.userId}`}
                 className="font-bold text-sm hover:underline"
+                style={{ color: "var(--comment-author)" }}
               >
                 {item.author.display_name}
               </Link>
-              <span className="text-xs text-gray-400">
-                {safeDate(item.comment.created_at)}
+              <span
+                className="text-xs"
+                style={{ color: "var(--comment-text-secondary)" }}
+              >
+                • {safeDate(item.comment.created_at)}
               </span>
             </div>
-            <p className="text-sm text-gray-800 mt-1 whitespace-pre-wrap">
+            <p
+              className="text-sm mt-1 whitespace-pre-wrap break-words"
+              style={{ color: "var(--comment-text)" }}
+            >
               {item.comment.content}
             </p>
-            
+
             {/* render media */}
             {item.comment.media && item.comment.media.length > 0 && (
               <div className="mt-2">
                 {isVideoUrl(item.comment.media[0]) ? (
-                  <video 
-                    src={item.comment.media[0]} 
-                    controls 
+                  <video
+                    src={item.comment.media[0]}
+                    controls
                     className="max-h-60 rounded-lg border border-gray-200"
                   />
                 ) : (
-                  <img 
-                    src={item.comment.media[0]} 
-                    alt="comment media" 
-                    className="max-h-40 rounded-lg object-cover" 
+                  <img
+                    src={item.comment.media[0]}
+                    alt="comment media"
+                    className="max-h-40 rounded-lg object-cover"
                   />
                 )}
               </div>
@@ -170,18 +191,21 @@ export default function CommentItem({
           <div className="flex items-center gap-4 mt-1 ml-1">
             <button
               onClick={handleLike}
-              className={`text-xs font-semibold transition-colors flex items-center gap-1 ${
-                isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500"
-              }`}
+              className={`text-xs font-semibold transition-colors flex items-center gap-1 hover:text-[var(--comment-like-active)] cursor-pointer`}
+              style={{
+                color: isLiked
+                  ? "var(--comment-like-active)"
+                  : "var(--comment-action-text)",
+              }}
             >
               <Heart size={12} className={isLiked ? "fill-current" : ""} />
-          <span>{likeCount > 0 ? likeCount : "Like"}</span>
-              
+              <span>{likeCount > 0 ? likeCount : "Like"}</span>
             </button>
 
             <button
               onClick={() => setIsReplying(!isReplying)}
-              className="text-xs font-semibold text-gray-500 hover:text-primary transition-colors flex items-center gap-1"
+              className="text-xs font-semibold transition-colors flex items-center gap-1 hover:text-[var(--comment-action-hover)] cursor-pointer"
+              style={{ color: "var(--comment-action-text)" }}
             >
               Reply
             </button>
@@ -189,7 +213,8 @@ export default function CommentItem({
             {canDelete && (
               <button
                 onClick={() => onDelete(item.comment.id)}
-                className="text-xs font-semibold text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1"
+                className="text-xs font-semibold transition-colors flex items-center gap-1 hover:text-[var(--comment-like-active)]"
+                style={{ color: "var(--comment-action-text)" }}
               >
                 Delete
               </button>
@@ -203,21 +228,25 @@ export default function CommentItem({
         <div className="flex flex-col gap-2 mt-2 ml-10 relative items-start">
           {replyPreview && (
             <div className="relative group">
-               {replyFile?.type?.startsWith('video/') ? (
-                 <video 
-                   src={replyPreview} 
-                   className="h-24 w-auto object-cover rounded-md border border-gray-200"
-                 />
-               ) : (
-                 <img 
-                   src={replyPreview} 
-                   alt="Preview" 
-                   className="h-20 w-20 object-cover rounded-md" 
-                 />
-               )}
+              {replyFile?.type?.startsWith("video/") ? (
+                <video
+                  src={replyPreview}
+                  className="h-24 w-auto object-cover rounded-md border border-gray-200"
+                />
+              ) : (
+                <img
+                  src={replyPreview}
+                  alt="Preview"
+                  className="h-20 w-20 object-cover rounded-md"
+                />
+              )}
               <button
                 onClick={clearFile}
-                className="absolute -top-2 -right-2 bg-gray-200 rounded-full p-0.5 hover:bg-gray-300 z-10"
+                className="absolute -top-2 -right-2 rounded-full p-0.5 z-10 hover:opacity-80"
+                style={{
+                  backgroundColor: "var(--comment-input-bg)",
+                  color: "var(--comment-text)",
+                }}
               >
                 <X size={12} />
               </button>
@@ -225,7 +254,10 @@ export default function CommentItem({
           )}
 
           <div className="flex gap-2 w-full relative">
-            <CornerDownRight size={16} className="text-gray-300" />
+            <CornerDownRight
+              size={16}
+              style={{ color: "var(--comment-text-secondary)" }}
+            />
             <div className="relative flex-1">
               <input
                 autoFocus
@@ -233,10 +265,19 @@ export default function CommentItem({
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleReply()}
-                placeholder={`Reply to ${item.author.display_name.split(" ")[0]}...`}
-                className="flex-1 bg-gray-100 rounded-full py-1.5 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 w-full pr-16"
+                placeholder={`Reply to ${
+                  item.author.display_name.split(" ")[0]
+                }...`}
+                className="w-full rounded-full py-1.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--post-icon-primary)]/40 transition-all pr-20 placeholder:text-[var(--post-text-secondary)]"
+                style={{
+                  backgroundColor: "var(--post-input-bg)",
+                  color: "var(--post-text)",
+                }}
               />
-              <label className="absolute right-8 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-primary">
+              <label
+                className="absolute right-8 top-1/2 -translate-y-1/2 cursor-pointer hover:text-[var(--comment-action-hover)]"
+                style={{ color: "var(--post-icon-primary)" }}
+              >
                 <input
                   type="file"
                   hidden
@@ -247,7 +288,8 @@ export default function CommentItem({
               </label>
               <button
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-500"
+                className="absolute right-2 top-1/2 -translate-y-1/2 hover:text-[var(--post-icon-smile)]"
+                style={{ color: "var(--post-icon-smile)" }}
               >
                 <Smile size={16} />
               </button>
@@ -255,12 +297,12 @@ export default function CommentItem({
           </div>
 
           {showEmojiPicker && (
-            <div className="absolute top-10 left-0 z-50">
+            <div className="absolute bottom-full right-0 mb-2 z-[100]">
               <div
-                className="fixed inset-0 z-40"
+                className="fixed inset-0 z-[90]"
                 onClick={() => setShowEmojiPicker(false)}
               />
-              <div className="relative z-50">
+              <div className="relative z-[100]">
                 <EmojiPicker
                   onEmojiClick={onEmojiClick}
                   width={280}
@@ -274,7 +316,10 @@ export default function CommentItem({
 
       {/* Render Replies Recursively */}
       {item.replies && item.replies.length > 0 && (
-        <div className="border-l-2 border-gray-100 ml-3.5">
+        <div
+          className="border-l-2 ml-3.5"
+          style={{ borderColor: "var(--comment-reply-border)" }}
+        >
           {item.replies.map((reply) => (
             <CommentItem
               key={reply.comment.id}

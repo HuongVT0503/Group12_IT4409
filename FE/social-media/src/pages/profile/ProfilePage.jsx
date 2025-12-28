@@ -418,7 +418,7 @@ export default function ProfilePage() {
                       backgroundColor: "var(--profile-online-indicator)",
                       borderColor: "var(--profile-card-bg)",
                     }}
-                    className="absolute bottom-2 right-2 w-5 h-5 border-4 rounded-full"
+                    className="absolute bottom-2 right-2 w-5 h-5 border-3 rounded-full"
                   ></span>
                 )}
               </div>

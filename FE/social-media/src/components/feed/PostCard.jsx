@@ -417,7 +417,7 @@ export default function PostCard({
         boxShadow: `0 8px 32px var(--post-card-shadow)`,
       }}
       className={`w-full backdrop-blur-md rounded-2xl border p-5 transition-all duration-300 hover:shadow-[0_12px_40px_var(--post-card-hover-shadow)] hover:-translate-y-0.5 ${
-        showMenu ? "relative z-20" : "relative z-0"
+        showMenu ? "relative z-20" : "relative z-0 hover:z-10 focus-within:z-10"
       }`}
     >
       <div className="flex justify-between items-center mb-4">
@@ -639,19 +639,20 @@ export default function PostCard({
               )}
               <button
                 onClick={clearCommentFile}
-                className="absolute -top-2 -right-2 bg-gray-900 text-white rounded-full p-1 hover:bg-black transition-colors"
+                className="absolute -top-2 -right-2 bg-gray-900 text-white rounded-full p-1 hover:bg-black transition-colors cursor-pointer"
               >
                 <X size={12} />
               </button>
             </div>
           )}
           <div className="flex gap-3 items-center mb-4 relative">
-            <img
+            <Avatar
               src={
                 user?.avatar_url ||
                 `https://ui-avatars.com/api/?name=${user?.display_name}`
               }
-              className="w-9 h-9 rounded-full ring-2 ring-primary-400/20"
+              alt={user?.display_name}
+              size={9}
             />
 
             <div className="relative w-full">
@@ -670,7 +671,7 @@ export default function PostCard({
               />
 
               <label
-                style={{ color: "var(--post-icon-secondary)" }}
+                style={{ color: "var(--post-icon-primary)" }}
                 className="absolute right-10 top-1/2 -translate-y-1/2 hover:[color:var(--post-icon-primary)] cursor-pointer p-1"
               >
                 <input
@@ -679,13 +680,13 @@ export default function PostCard({
                   accept="image/*,video/*"
                   onChange={handleCommentFileSelect}
                 />
-                <ImageIcon size={18} />
+                <ImageIcon size={20} />
               </label>
 
               <button
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                style={{ color: "var(--post-icon-secondary)" }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 hover:text-yellow-500"
+                style={{ color: "var(--post-icon-smile)" }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 hover:text-yellow-500 cursor-pointer"
               >
                 <Smile size={20} />
               </button>
