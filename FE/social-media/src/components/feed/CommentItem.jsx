@@ -7,6 +7,7 @@ import {
   Image as ImageIcon,
   X,
   Heart,
+  //Check
   //PlayCircle
 } from "lucide-react"; // Added PlayCircle
 import { useSocketContext } from "../../context/SocketContext";
@@ -26,6 +27,7 @@ export default function CommentItem({
   const [isReplying, setIsReplying] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showEditEmojiPicker, setShowEditEmojiPicker] = useState(false);
   const { isUserOnline } = useSocketContext();
   const [replyFile, setReplyFile] = useState(null);
   const [replyPreview, setReplyPreview] = useState(null);
@@ -47,6 +49,10 @@ export default function CommentItem({
     setShowEmojiPicker(false);
   };
 
+  const onEditEmojiClick = (emojiData) => {
+    setEditContent((prev) => prev + emojiData.emoji);
+    setShowEditEmojiPicker(false);
+  };
   const handleEditSubmit = async () => {
     if (!editContent.trim()) return;
     try {
@@ -181,8 +187,35 @@ export default function CommentItem({
                    className="w-full text-sm p-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
                    rows={2}
                  />
+
+                 <div className="relative">
+        <button 
+          onClick={() => setShowEditEmojiPicker(!showEditEmojiPicker)}
+          className="text-gray-500 hover:text-yellow-600"
+          title="Add emoji"
+        >
+          <Smile size={18} />
+        </button>
+
+        {showEditEmojiPicker && (
+          <div className="absolute top-8 left-0 z-50">
+             <div 
+               className="fixed inset-0 z-40" 
+               onClick={() => setShowEditEmojiPicker(false)}
+             />
+             <div className="relative z-50">
+               <EmojiPicker 
+                 onEmojiClick={onEditEmojiClick}
+                 width={280}
+                 height={300}
+               />
+             </div>
+          </div>
+        )}
+      </div>
+
                  <div className="flex gap-2 justify-end">
-                    <button onClick={() => setIsEditing(false)} className="text-xs text-red-500 font-medium">Cancel</button>
+                    <button onClick={() => {setIsEditing(false); setEditContent(item.comment.content);setShowEditEmojiPicker(false);}} className="text-xs text-red-500 font-medium">Cancel</button>
                     <button onClick={handleEditSubmit} className="text-xs text-green-600 font-medium">Save</button>
                  </div>
               </div>

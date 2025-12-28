@@ -71,6 +71,7 @@ export default function PostCard({
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showEditEmojiPicker, setShowEditEmojiPicker] = useState(false);
 
   const [isUploading, setIsUploading] = useState(false);
 
@@ -130,7 +131,14 @@ export default function PostCard({
       if (payload.postId && payload.postId !== post.id) return;
 
       if (payload.updatedPost) {
-        setEditContent(payload.updatedPost.content);
+        const newContent = payload.updatedPost.post
+          ? payload.updatedPost.post.content
+          : payload.updatedPost.content;
+
+        setEditContent(newContent);
+
+        post.content = newContent;
+        post.updated_at = new Date().toISOString();
       }
 
       if (payload.updatedComment) {
@@ -437,6 +445,11 @@ export default function PostCard({
     setShowEmojiPicker(false);
   };
 
+  const onEditEmojiClick = (emojiData) => {
+    setEditContent((prev) => prev + emojiData.emoji);
+    setShowEditEmojiPicker(false);
+  };
+
   const handleSaveEdit = async () => {
     if (!editContent.trim() || editContent === post.content) {
       setIsEditing(false);
@@ -446,6 +459,7 @@ export default function PostCard({
       await editPost(post.id, editContent);
       setIsEditing(false);
       post.content = editContent;
+      post.updated_at = new Date().toISOString();
     } catch (error) {
       console.error("Failed to edit post", error);
       alert("Failed to update post");
@@ -500,26 +514,36 @@ export default function PostCard({
               className="text-sm"
             >
               @{post.author.handle} • {safeFormatDate(post.timestamp)}
+              {post.updated_at && post.updated_at !== post.timestamp && (
+                <span
+                  className="text-[10px] text-gray-400 italic"
+                  title={`Edited: ${new Date(
+                    post.updated_at
+                  ).toLocaleString()}`}
+                >
+                  (edited)
+                </span>
+              )}
             </p>
           </div>
         </Link>
         {isAuthor ? (
           <div className="flex gap-1">
-    <button
-      onClick={() => setIsEditing(true)}
-      style={{ color: "var(--post-icon-secondary)" }}
-      className="hover:text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-all"
-      title="Edit Post"
-    >
-      <Edit2 size={20} />
-    </button>
-          <button
-            onClick={handleDelete}
-            style={{ color: "var(--post-icon-secondary)" }}
-            className="hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all"
-          >
-            <Trash2 size={20} />
-          </button>
+            <button
+              onClick={() => setIsEditing(true)}
+              style={{ color: "var(--post-icon-secondary)" }}
+              className="hover:text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-all"
+              title="Edit Post"
+            >
+              <Edit2 size={20} />
+            </button>
+            <button
+              onClick={handleDelete}
+              style={{ color: "var(--post-icon-secondary)" }}
+              className="hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all"
+            >
+              <Trash2 size={20} />
+            </button>
           </div>
         ) : (
           <div className="relative">
@@ -573,11 +597,42 @@ export default function PostCard({
               className="w-full p-2 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
               rows={3}
             />
+
+            <div className="flex justify-between items-center">
+              {/* Emoji Button */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowEditEmojiPicker(!showEditEmojiPicker)}
+                  className="p-2 text-gray-500 hover:bg-yellow-50 hover:text-yellow-600 rounded-full transition-colors"
+                  title="Add Emoji"
+                >
+                  <Smile size={20} />
+                </button>
+
+                {/* Emoji Picker Popup */}
+                {showEditEmojiPicker && (
+                  <div className="absolute top-10 left-0 z-50">
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setShowEditEmojiPicker(false)} 
+                    />
+                    <div className="relative z-50 shadow-xl rounded-xl">
+                      <EmojiPicker 
+                        onEmojiClick={onEditEmojiClick} 
+                        width={300} 
+                        height={350}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => {
                   setIsEditing(false);
                   setEditContent(post.content);
+                  setShowEditEmojiPicker(false);
                 }}
                 className="p-1 text-red-500 hover:bg-red-50 rounded"
               >
@@ -589,6 +644,7 @@ export default function PostCard({
               >
                 <Check size={20} />
               </button>
+            </div>
             </div>
           </div>
         ) : (
