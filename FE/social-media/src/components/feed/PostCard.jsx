@@ -42,7 +42,7 @@ const safeFormatDate = (dateString) => {
   }
 };
 
-export default function PostCard({ post, onDelete, highlightId }) {
+export default function PostCard({ post, onDelete, highlightId, readOnly=false }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { socket, isUserOnline } = useSocketContext();
@@ -410,7 +410,7 @@ export default function PostCard({ post, onDelete, highlightId }) {
       }`}
     >
       <div className="flex justify-between items-center mb-4">
-        <Link to={`/profile/${post.author.id}`} className="flex gap-3">
+        <Link to={`/profile/${post.author.id}`} className={`flex gap-3 ${readOnly ? 'pointer-events-none' : ''}`}>
           <div className="relative">
             <Avatar
               src={
@@ -434,36 +434,38 @@ export default function PostCard({ post, onDelete, highlightId }) {
             </p>
           </div>
         </Link>
-        {isAuthor ? (
-          <button
-            onClick={handleDelete}
-            className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all"
-          >
-            <Trash2 size={20} />
-          </button>
-        ) : (
-          <div className="relative">
+        {!readOnly && (
+            isAuthor ? (
             <button
-              onClick={() => setShowMenu(!showMenu)}
-              className="text-gray-400 hover:bg-gray-100 p-2 rounded-lg transition-all"
+                onClick={handleDelete}
+                className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all"
             >
-              <MoreVertical size={20} />
+                <Trash2 size={20} />
             </button>
-
-            {showMenu && (
-              <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-100 z-10 overflow-hidden">
+            ) : (
+            <div className="relative">
                 <button
-                  onClick={() => {
-                    setShowMenu(false);
-                    setIsReportOpen(true);
-                  }}
-                  className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                onClick={() => setShowMenu(!showMenu)}
+                className="text-gray-400 hover:bg-gray-100 p-2 rounded-lg transition-all"
                 >
-                  <Flag size={16} /> Report
+                <MoreVertical size={20} />
                 </button>
-              </div>
-            )}
-          </div>
+
+                {showMenu && (
+                <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-100 z-10 overflow-hidden">
+                    <button
+                    onClick={() => {
+                        setShowMenu(false);
+                        setIsReportOpen(true);
+                    }}
+                    className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                    >
+                    <Flag size={16} /> Report
+                    </button>
+                </div>
+                )}
+            </div>
+            )
         )}
       </div>
 
@@ -493,8 +495,8 @@ export default function PostCard({ post, onDelete, highlightId }) {
 
       {post.sharedPost && (
         <div
-          className="mb-4 border border-primary-300/50 rounded-xl overflow-hidden cursor-pointer bg-gradient-to-br from-primary-50/30 to-transparent hover:from-primary-50/50 transition-all shadow-sm"
-          onClick={() => navigate(`/post/${post.sharedPost.id}`)}
+          className={`mb-4 border border-primary-300/50 rounded-xl overflow-hidden cursor-pointer bg-gradient-to-br from-primary-50/30 to-transparent hover:from-primary-50/50 transition-all shadow-sm ${readOnly ? 'pointer-events-none' : ''}`}
+          onClick={() => !readOnly && navigate(`/post/${post.sharedPost.id}`)}
         >
           {post.sharedPost.image && (
             <div className="h-48 w-full overflow-hidden bg-gray-100 border-b border-neutral-300">
@@ -543,37 +545,57 @@ export default function PostCard({ post, onDelete, highlightId }) {
       )}
 
       <div className="flex items-center gap-6 border-t border-gray-200/60 pt-4 mt-3">
-        <button
-          onClick={toggleLike}
-          className={`flex items-center gap-2 text-sm font-semibold transition-all hover:scale-105 ${
-            isLiked ? "text-[#ff6b9d]" : "text-gray-600 hover:text-primary-500"
-          }`}
-        >
-          <Heart size={21} className={isLiked ? "fill-current" : ""} />
-          <span>{likeCount > 0 ? likeCount : "Like"}</span>
-        </button>
+        {readOnly ? (
+            <>
+                <div className="flex items-center gap-2 text-sm font-semibold text-gray-600">
+                    <Heart size={21} />
+                    <span>{likeCount} Likes</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm font-semibold text-gray-600">
+                    <MessageSquare size={21} />
+                    <span>{commentCount} Comments</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm font-semibold text-gray-600">
+                    <Share2 size={21} />
+                    <span>{shareCount} Shares</span>
+                </div>
+            </>
+        ) : (
+            <>
+                <button
+                onClick={toggleLike}
+                className={`flex items-center gap-2 text-sm font-semibold transition-all hover:scale-105 ${
+                    isLiked ? "text-[#ff6b9d]" : "text-gray-600 hover:text-primary-500"
+                }`}
+                >
+                <Heart size={21} className={isLiked ? "fill-current" : ""} />
+                <span>{likeCount > 0 ? likeCount : "Like"}</span>
+                </button>
 
-        <button
-          onClick={handleFetchComments}
-          className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-primary-500 transition-all hover:scale-105"
-        >
-          <MessageSquare size={21} />
-          <span>{commentCount > 0 ? commentCount : "Comment"}</span>
-        </button>
+                <button
+                onClick={handleFetchComments}
+                className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-primary-500 transition-all hover:scale-105"
+                >
+                <MessageSquare size={21} />
+                <span>{commentCount > 0 ? commentCount : "Comment"}</span>
+                </button>
 
-        <button
-          onClick={handleShareClick}
-          disabled={isSharing}
-          className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-primary-500 transition-all hover:scale-105 disabled:opacity-50"
-        >
-          <Share2 size={21} />
-          <span>
-            {isSharing ? "Sharing..." : shareCount > 0 ? shareCount : "Share"}
-          </span>
-        </button>
+                <button
+                onClick={handleShareClick}
+                disabled={isSharing}
+                className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-primary-500 transition-all hover:scale-105 disabled:opacity-50"
+                >
+                <Share2 size={21} />
+                <span>
+                    {isSharing 
+                    ? "Sharing..." : shareCount > 0 ? shareCount : "Share"}
+                </span>
+                </button>
+            </>
+        )}
       </div>
 
-      {showComments && (
+      {!readOnly && showComments && (
         <div className="mt-4 pt-4 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-2">
           {commentPreview && (
             <div className="relative mb-2 ml-12 w-24 h-24 group">

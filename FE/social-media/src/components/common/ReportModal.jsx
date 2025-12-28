@@ -30,7 +30,7 @@ export default function ReportModal({ isOpen, onClose, targetId, targetType }) {
   };
 
   return createPortal (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in z-50">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
           <h3 className="font-bold text-red-600 flex items-center gap-2">
