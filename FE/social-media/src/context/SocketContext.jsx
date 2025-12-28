@@ -27,8 +27,8 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       updateUnreadCount();
-
-      const token = localStorage.getItem("token");
+      
+      const token = sessionStorage.getItem("token") || localStorage.getItem("token");
       //Connect to root
       const newSocket = io("http://localhost:4000", {
         auth: { token },
