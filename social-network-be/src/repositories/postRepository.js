@@ -183,6 +183,29 @@ async function countLikes(postId) {
   }
 }
 
+async function editPost(postId, userId, newContent) {
+  const session = getSession();
+  try {
+    const query = `
+      MATCH (u:User {id: $userId})-[:AUTHORED]->(p:Post {id: $postId})
+      SET p.content = $newContent,
+          p.updated_at = datetime() // Đồng nhất với created_at
+      RETURN p, u
+    `;
+    const res = await session.run(query, { postId, userId, newContent });
+
+    if (res.records.length === 0) return null;
+    const post = res.records[0].get("p").properties;
+    const author = res.records[0].get("u").properties;
+    if (post.created_at) post.created_at = new Date(post.created_at).toISOString();
+    if (post.updated_at) post.updated_at = new Date(post.updated_at).toISOString();
+
+    return { post, author };
+  } finally {
+    await session.close();
+  }
+}
+
 export {
   createPost,
   getPostById,
@@ -192,4 +215,5 @@ export {
   likePost,
   unlikePost,
   countLikes,
+  editPost,
 };

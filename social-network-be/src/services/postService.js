@@ -83,6 +83,14 @@ async function sharePost(userId, originalPostId, content = "") {
   return await postRepo.getPostById(id);
 }
 
+async function editPost(postId, userId, newContent) {
+  const result = await postRepo.editPost(postId, userId, newContent);
+  if (!result) {
+    throw { status: 403, message: "No editing rights" };
+  }
+  return result;
+}
+
 export {
   createPost,
   getPost,
@@ -93,4 +101,5 @@ export {
   unlikePost,
   countLikes,
   sharePost,
+  editPost,
 };

@@ -11,12 +11,25 @@ export async function createComment({ authorId, postId, content, parentCommentId
     content,
     parentCommentId
   });
-
-  // TODO: notify author using notificationRepo
-
   return comment;
+}
+
+export async function getCommentById(id) {
+  return await commentRepo.getCommentById(id);
 }
 
 export async function getComments(postId, limit = 50) {
   return await commentRepo.getCommentsForPost(postId, limit);
+}
+
+export async function deleteComment(commentId, userId) {
+    return await commentRepo.deleteComment(commentId, userId);
+}
+
+export async function editComment(commentId, userId, newContent) {
+  const result = await commentRepo.editComment(commentId, userId, newContent);
+  if (!result) {
+    throw { status: 403, message: "No editing rights" };
+  }
+  return result;
 }

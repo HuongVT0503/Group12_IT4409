@@ -262,6 +262,21 @@ async function sharePost(req, res, next) {
   }
 }
 
+async function editPost(req, res, next) {
+    try {
+        const postId = req.params.id;
+        const userId = req.user.id;
+        const { content } = req.body;
+
+        const result = await postService.editPost(postId, userId, content);
+        emitPostUpdate(postId, { updatedPost: result });
+
+        res.json({ message: "Post updated successfully", post: result });
+    } catch (err) {
+        next(err);
+    }
+}
+
 export {
   createPost,
   getPost,
@@ -272,4 +287,5 @@ export {
   unlikePost,
   countLikes,
   sharePost,
+    editPost,
 };
