@@ -225,7 +225,9 @@ export default function CommentItem({
 
       {/* Reply Input */}
       {isReplying && (
-        <div className="flex flex-col gap-2 mt-2 ml-10 relative items-start">
+        <div className={`flex flex-col gap-2 mt-2 ml-10 relative items-start ${
+      showEmojiPicker ? "z-[100]" : "z-1"
+    }`}>
           {replyPreview && (
             <div className="relative group">
               {replyFile?.type?.startsWith("video/") ? (

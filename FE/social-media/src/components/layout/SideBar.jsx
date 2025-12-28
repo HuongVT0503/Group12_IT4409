@@ -11,11 +11,11 @@ import {
   //Divider,
 } from "@heroui/react";
 import { useSocketContext } from "../../context/SocketContext";
-import { useTheme } from "../../context/ThemeContext";
+//import { useTheme } from "../../context/ThemeContext";
 
 export default function SideBar() {
   const { unreadCount } = useSocketContext();
-  const { theme } = useTheme();
+  //const { theme } = useTheme();
 
   const navItems = [
     { icon: Home, label: "Feed", path: "/", key: "feed" },

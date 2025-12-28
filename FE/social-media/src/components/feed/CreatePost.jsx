@@ -11,7 +11,7 @@ import {
 import Avatar from "../common/Avatar";
 import { Button } from "@heroui/react";
 import EmojiPicker from "emoji-picker-react";
-import { useTheme } from "../../context/ThemeContext";
+//import { useTheme } from "../../context/ThemeContext";
 
 export default function CreatePost({ onPostCreated }) {
   const [content, setContent] = useState("");
@@ -21,7 +21,7 @@ export default function CreatePost({ onPostCreated }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const { user } = useAuth(); //JSON.parse(localStorage.getItem('user')) || {};
-  const { theme } = useTheme();
+  //const { theme } = useTheme();
   const fileInputRef = useRef(null);
 
   const onEmojiClick = (emojiData) => {

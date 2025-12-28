@@ -54,7 +54,7 @@ export default function Login({ onSwitch, onForgot }) {
         password: form.password,
       });
 
-      login(data.user, data.accessToken);
+      login(data.user, data.accessToken, remember);
       if (data.user.role === "admin") {
         navigate("/admin", { replace: true });
       } else {

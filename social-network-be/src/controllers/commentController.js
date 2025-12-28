@@ -2,11 +2,9 @@ import * as commentService from '../services/commentService.js';
 import { emitNotification, emitPostUpdate } from '../services/realtimeService.js';
 import * as postRepo from '../repositories/postRepository.js';
 import * as notificationRepo from '../repositories/notificationRepository.js';
-import * as commentRepo from '../repositories/commentRepository.js';
-import {v4 as uuidv4} from 'uuid';
 import { saveFileFromBuffer } from '../services/mediaService.js';
+import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
-import { get } from 'node:http';
 
 const getUserIdFromRequest = (req) => {
   try {
@@ -24,75 +22,57 @@ async function createComment(req, res, next) {
   try {
     const authorId = req.user.id;
     const postId = req.params.postId;
-    const { content, parent_comment_id, media } = req.body;
+    const { content, parent_comment_id } = req.body;
+    
+    let mediaUrls = [];
+    
+    if (req.files && req.files.length > 0) {
+      const uploadPromises = req.files.map(file => saveFileFromBuffer(file));
+      mediaUrls = await Promise.all(uploadPromises);
+    } 
+    else if (req.body.media) {
+      mediaUrls = Array.isArray(req.body.media) ? req.body.media : [req.body.media];
+    }
+    
     const comment = await commentService.createComment({
-      authorId,
-      postId,
-      content,
+      authorId, postId, content,
       parentCommentId: parent_comment_id,
-      media
+      media: mediaUrls 
     });
 
-    //Lấy thông tin tác giả và emit notification cho tác giả nếu có cmt
-    const postData = await postRepo.getPostById(postId);
-    if (postData?.author && postData.author.id !== authorId) {
-      const notifId = uuidv4();
-      const notifData = {
-        from: authorId,
-        postId: postId,
-        text: "commented on your post",
-      };
-      
-      //save to db
-      await notificationRepo.createNotification({
-        id: notifId,
-        userId: postData.author.id,
-        type: "comment",
-        data: JSON.stringify(notifData),
-      });
+    let recipientId = null;
+    let notificationText = "";
+    let type = "comment";
 
-      emitNotification(postData.author.id, {
-        id: notifId,
-        type: "comment",
-        created_at: new Date().toISOString(),
-        read: false,
-        data: notifData,
+    if (parent_comment_id) {
+      const parentComment = await commentService.getCommentById(parent_comment_id);
+      if (parentComment && parentComment.author.id !== authorId) {
+        recipientId = parentComment.author.id;
+        notificationText = "replied to your comment";
+        type = "reply";
+      }
+    } else {
+      const postData = await postRepo.getPostById(postId);
+      if (postData?.author && postData.author.id !== authorId) {
+        recipientId = postData.author.id;
+        notificationText = "commented on your post";
+        type = "comment";
+      }
+    }
+
+    if (recipientId) {
+      const notifId = uuidv4();
+      const notifData = { from: authorId, postId, text: notificationText, commentId: comment.id };
+      await notificationRepo.createNotification({
+        id: notifId, userId: recipientId, type, data: JSON.stringify(notifData),
+      });
+      emitNotification(recipientId, {
+        id: notifId, type, postId, comment, from: authorId,
+        text: notificationText, created_at: new Date().toISOString(), read: false, data: notifData
       });
     }
 
-    //emit notif to author of PARENT COMMENT
-    if (parent_comment_id) {
-      const parentAuthor = await commentRepo.getCommentAuthor(parent_comment_id);
-
-      if (parentAuthor && parentAuthor.id !== authorId) { 
-        const notifId = uuidv4();
-        const notifData = {
-          from: authorId,
-          postId: postId,
-          text: "replied to your comment", 
-          commentId: comment.id, //of the reply
-          parentCommentId: parent_comment_id
-        };
-
-        //save to db
-        await notificationRepo.createNotification({
-          id: notifId,
-          userId: parentAuthor.id,
-          type: "reply", 
-          data: JSON.stringify(notifData),
-        });
-
-        emitNotification(parentAuthor.id, {
-          id: notifId,
-          type: "reply",
-          created_at: new Date().toISOString(),
-          read: false,
-          data: notifData,
-        });
-      }}
-    // Emit update realtime cho post
     emitPostUpdate(postId, { newComment: comment });
-
     res.status(201).json({ comment });
   } catch (err) { next(err); }
 }
@@ -106,54 +86,43 @@ async function getComments(req, res, next) {
   } catch (err) { next(err); }
 }
 
-
 async function deleteComment(req, res, next) {
-    try {
-        const commentId = req.params.commentId;
-        const userId = req.user.id;
-        
-        const postId = await commentService.deleteComment(commentId, userId);
-        
-        if (!postId) {
-            return res.status(403).json({ message: "Cannot delete comment (not found or unauthorized)" });
-        }
+  try {
+    const commentId = req.params.commentId;
+    const userId = req.user.id;
+    const postId = await commentService.deleteComment(commentId, userId);
+    if (!postId) return res.status(403).json({ message: "Unauthorized or not found" });
+    emitPostUpdate(postId, { deletedCommentId: commentId });
+    res.status(200).json({ message: "Comment deleted" });
+  } catch (err) { next(err); }
+}
 
-        emitPostUpdate(postId, { deletedCommentId: commentId });
-        
-        res.status(200).json({ message: "Comment deleted" });
-    } catch (err) {
-        next(err);
+async function editComment(req, res, next) {
+  try {
+    const commentId = req.params.commentId;
+    const userId = req.user.id;
+    const { content } = req.body;
+    const result = await commentService.editComment(commentId, userId, content);
+    if (result && result.postId) {
+      emitPostUpdate(result.postId, { updatedComment: result });
     }
+    res.json({ message: "Comment updated successfully", comment: result });
+  } catch (err) { next(err); }
 }
 
 async function reactToComment(req, res, next) {
   try {
     const userId = req.user.id;
     const commentId = req.params.commentId;
-    const { type } = req.body; // e.g. 'like','love', 'haha'
-
+    const { type } = req.body;
     const result = await commentService.reactToComment({ commentId, userId, reactionType: type });
-
-    // notify comment author
     if (result.author && result.author.id !== userId) {
       const notifId = uuidv4();
-      const notifText = type === 'like' ? 'liked your comment' : `reacted to your comment`;
-      const notifData = {
-        from: userId,
-        postId: result.postId,
-        commentId,
-        text: notifText,
-        reaction: type,
-      };
+      const notifData = { from: userId, postId: result.postId, commentId, text: `reacted ${type}`, reaction: type };
       await notificationRepo.createNotification({ id: notifId, userId: result.author.id, type: 'reaction', data: JSON.stringify(notifData) });
       emitNotification(result.author.id, { id: notifId, type: 'reaction', created_at: new Date().toISOString(), read: false, data: notifData });
     }
-
-    // emit realtime update to post room
-    if (result.postId) {
-      emitPostUpdate(result.postId, { reactionChange: { commentId, userId, reaction: type } });
-    }
-
+    if (result.postId) emitPostUpdate(result.postId, { reactionChange: { commentId, userId, reaction: type } });
     res.status(200).json({ reaction: result.reaction });
   } catch (err) { next(err); }
 }
@@ -162,15 +131,10 @@ async function removeReaction(req, res, next) {
   try {
     const userId = req.user.id;
     const commentId = req.params.commentId;
-
     const result = await commentService.removeReaction({ commentId, userId });
-
-    if (result.postId) {
-      emitPostUpdate(result.postId, { reactionChange: { commentId, userId, reaction: null } });
-    }
-
+    if (result.postId) emitPostUpdate(result.postId, { reactionChange: { commentId, userId, reaction: null } });
     res.status(200).json({ success: true });
   } catch (err) { next(err); }
 }
 
-export { createComment, getComments, deleteComment, reactToComment, removeReaction };
+export { createComment, getComments, deleteComment, editComment, reactToComment, removeReaction };
