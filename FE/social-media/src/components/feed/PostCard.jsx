@@ -74,6 +74,8 @@ export default function PostCard({
   const [commentFile, setCommentFile] = useState(null);
   const [commentPreview, setCommentPreview] = useState(null);
 
+  const isInteracting = showMenu || showEmojiPicker || showComments;
+
   const isVideoUrl = (url) => {
     if (!url) return false;
     return (
@@ -417,7 +419,7 @@ export default function PostCard({
         boxShadow: `0 8px 32px var(--post-card-shadow)`,
       }}
       className={`w-full backdrop-blur-md rounded-2xl border p-5 transition-all duration-300 hover:shadow-[0_12px_40px_var(--post-card-hover-shadow)] hover:-translate-y-0.5 ${
-        showMenu ? "relative z-20" : "relative z-0"
+        isInteracting ? "relative z-20" : "relative z-0"
       }`}
     >
       <div className="flex justify-between items-center mb-4">
