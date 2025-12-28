@@ -16,8 +16,13 @@ export default function Avatar({
     <img
       src={src}
       alt={alt}
-      style={{ width: computedPx, height: computedPx }}
-      className={`rounded-full bg-gray-200 object-cover ring-2 ring-primary-400/30 ${className}`}
+      style={{
+        width: computedPx,
+        height: computedPx,
+        backgroundColor: "var(--avatar-bg)",
+        "--tw-ring-color": "var(--avatar-ring)",
+      }}
+      className={`rounded-full object-cover ring-2 ${className}`}
     />
   );
 }

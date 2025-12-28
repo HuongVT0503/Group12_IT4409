@@ -9,11 +9,13 @@ import { getFollowing } from "../../services/userService";
 import { formatDistanceToNow } from "date-fns";
 import { MessageCircle, UserPlus, Users } from "lucide-react";
 import { useSocketContext } from "../../context/SocketContext";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function RightPanel() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { socket, isUserOnline } = useSocketContext();
+  const { theme } = useTheme();
 
   const [conversations, setConversations] = useState([]);
   const [contacts, setContacts] = useState([]);
@@ -161,14 +163,25 @@ export default function RightPanel() {
   return (
     <div className="flex flex-col gap-6 h-full py-2 2xl:py-6 w-full">
       {/*Contacts / Following */}
-      <div className="bg-white rounded-[var(--radius-box)] shadow-sm p-5 border border-gray-100">
+      <div
+        style={{
+          backgroundColor: "var(--panel-bg)",
+          borderColor: "var(--panel-border)",
+        }}
+        className="rounded-[var(--radius-box)] shadow-sm p-5 border"
+      >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-            <Users size={16} className="text-primary" /> Contacts
+          <h3
+            style={{ color: "var(--panel-text)" }}
+            className="font-bold text-sm flex items-center gap-2"
+          >
+            <Users size={16} style={{ color: "var(--panel-icon-color)" }} />{" "}
+            Contacts
           </h3>
           <Link
             to="/connections"
-            className="text-xs text-primary font-semibold hover:underline"
+            style={{ color: "var(--panel-link-color)" }}
+            className="text-xs font-semibold hover:underline"
           >
             See all
           </Link>
@@ -189,23 +202,36 @@ export default function RightPanel() {
               <Link
                 key={contact.id}
                 to={`/profile/${contact.id}`}
-                className="flex items-center gap-3 group p-1 -mx-1 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-3 group p-1 -mx-1 rounded-lg hover:[background:var(--panel-hover-bg)] transition-colors"
               >
                 <div className="relative">
                   <img
                     src={getAvatar(contact)}
                     alt={contact.display_name}
-                    className="w-9 h-9 rounded-full object-cover border border-gray-100 group-hover:border-primary/50 transition-colors"
+                    style={{ borderColor: "var(--panel-border)" }}
+                    className="w-9 h-9 rounded-full object-cover border group-hover:border-[var(--panel-link-color)]/50 transition-colors"
                   />
                   {isUserOnline(contact.id) && (
-                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+                    <span
+                      style={{
+                        backgroundColor: "var(--post-online-indicator)",
+                        borderColor: "var(--panel-bg)",
+                      }}
+                      className="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 rounded-full"
+                    ></span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-primary transition-colors">
+                  <p
+                    style={{ color: "var(--panel-text)" }}
+                    className="text-sm font-semibold truncate group-hover:[color:var(--panel-link-color)] transition-colors"
+                  >
                     {contact.display_name}
                   </p>
-                  <p className="text-xs text-gray-400 truncate">
+                  <p
+                    style={{ color: "var(--panel-text-secondary)" }}
+                    className="text-xs truncate"
+                  >
                     @{contact.username}
                   </p>
                 </div>
@@ -214,10 +240,19 @@ export default function RightPanel() {
           </div>
         ) : (
           <div className="text-center py-4">
-            <p className="text-xs text-gray-400 mb-3">No contacts yet.</p>
+            <p
+              style={{ color: "var(--panel-empty-text)" }}
+              className="text-xs mb-3"
+            >
+              No contacts yet.
+            </p>
             <Link
               to="/connections"
-              className="text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-lg hover:bg-primary/20 transition-colors inline-flex items-center gap-1 font-medium"
+              style={{
+                backgroundColor: "var(--panel-badge-bg)",
+                color: "var(--panel-badge-text)",
+              }}
+              className="text-xs px-3 py-1.5 rounded-lg hover:opacity-80 transition-colors inline-flex items-center gap-1 font-medium"
             >
               <UserPlus size={14} /> Find People
             </Link>
@@ -226,14 +261,28 @@ export default function RightPanel() {
       </div>
 
       {/*recent msg */}
-      <div className="bg-white rounded-[var(--radius-box)] shadow-sm p-5 border border-gray-100">
+      <div
+        style={{
+          backgroundColor: "var(--panel-bg)",
+          borderColor: "var(--panel-border)",
+        }}
+        className="rounded-[var(--radius-box)] shadow-sm p-5 border"
+      >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-            <MessageCircle size={16} className="text-primary" /> Messages
+          <h3
+            style={{ color: "var(--panel-text)" }}
+            className="font-bold text-sm flex items-center gap-2"
+          >
+            <MessageCircle
+              size={16}
+              style={{ color: "var(--panel-icon-color)" }}
+            />{" "}
+            Messages
           </h3>
           <Link
             to="/chat"
-            className="text-xs text-primary font-semibold hover:underline"
+            style={{ color: "var(--panel-link-color)" }}
+            className="text-xs font-semibold hover:underline"
           >
             Open Chat
           </Link>
@@ -300,13 +349,25 @@ export default function RightPanel() {
           </div>
         ) : (
           <div className="text-center py-6">
-            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-2 text-gray-400">
+            <div
+              style={{
+                backgroundColor: "var(--panel-empty-bg)",
+                color: "var(--panel-text-secondary)",
+              }}
+              className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2"
+            >
               <MessageCircle size={20} />
             </div>
-            <p className="text-xs text-gray-500">No recent conversations.</p>
+            <p
+              style={{ color: "var(--panel-text-secondary)" }}
+              className="text-xs"
+            >
+              No recent conversations.
+            </p>
             <Link
               to="/chat"
-              className="block mt-2 text-xs text-primary hover:underline font-medium"
+              style={{ color: "var(--panel-link-color)" }}
+              className="block mt-2 text-xs hover:underline font-medium"
             >
               Start chatting
             </Link>
