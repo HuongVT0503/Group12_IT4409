@@ -1,7 +1,16 @@
 //mobile header //llogo, search, notification, profile
 
 import logo from "../../assets/img/logo/logo.png";
-import { Search, Bell, LogOut, User, Settings, X,  Sun, Moon} from "lucide-react";
+import {
+  Search,
+  Bell,
+  LogOut,
+  User,
+  Settings,
+  X,
+  Sun,
+  Moon,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -14,7 +23,6 @@ import { formatDistanceToNow } from "date-fns";
 import { getProfile } from "../../services/userService";
 import { searchUsers } from "../../services/userService";
 import { useTheme } from "../../context/ThemeContext";
-
 
 //import { Avatar, Badge, Button } from "@heroui/react";
 
@@ -138,8 +146,8 @@ export default function TopBar() {
         id: payload.id || Date.now(), //temp id until refreshed
         type: payload.type,
         read: false,
-        created_at: payload.created_at||new Date().toISOString(),
-        data: payload.data||payload, // direct payload
+        created_at: payload.created_at || new Date().toISOString(),
+        data: payload.data || payload, // direct payload
       };
 
       setNotis((prev) => [newNoti, ...prev]);
@@ -231,9 +239,8 @@ export default function TopBar() {
 
     const fromId = n.data?.from || n.data?.userId;
     const postId = n.data?.postId;
-    const highlightId = n.data?.parentCommentId||n.data?.commentId;
+    const highlightId = n.data?.parentCommentId || n.data?.commentId;
     const conversationId = n.data?.conversationId;
-    
 
     if (n.type === "follow" && fromId) {
       navigate(`/profile/${fromId}`);
@@ -245,8 +252,7 @@ export default function TopBar() {
         n.type === "new_post" ||
         n.type === "share_post" ||
         n.type === "reply" ||
-        n.type === "reaction"
-      ) &&
+        n.type === "reaction") &&
       postId
     ) {
       navigate(`/post/${postId}`, { state: { highlightId } });
@@ -270,11 +276,11 @@ export default function TopBar() {
         return `${senderName} posted a new update.`;
       case "share_post":
         return `${senderName} ${n.data?.text || "shared a post"}.`;
-      
+
       case "reply":
         return `${senderName} replied to your comment.`;
 
-      case "new_message": 
+      case "new_message":
         return `${senderName} sent you a message.`;
 
       case "reaction":
@@ -286,7 +292,14 @@ export default function TopBar() {
   };
 
   return (
-    <header className="fixed top-0 left-0 z-100 w-full bg-white dark:bg-[#1f2937] border-b border-neutral-300 dark:border-neutral-700 flex items-center justify-between px-4 h-16 lg:h-20 lg:px-10 shadow-sm transition-colors duration-300">
+    <header
+      style={{
+        backgroundColor: "var(--topbar-bg)",
+        borderBottomColor: "var(--topbar-border)",
+        color: "var(--topbar-text)",
+      }}
+      className="fixed top-0 left-0 z-100 w-full border-b flex items-center justify-between px-4 h-16 lg:h-20 lg:px-10 shadow-sm transition-colors duration-300"
+    >
       {/* Logo Area */}
       <div className="flex items-center gap-3">
         <img
@@ -294,7 +307,10 @@ export default function TopBar() {
           alt="SocioICT Logo"
           className="h-6 w-6 lg:h-8 lg:w-8 object-contain"
         />
-        <span className="text-2xl lg:text-2xl font-extrabold text-purple-600 hidden sm:block">
+        <span
+          style={{ color: "var(--topbar-logo-text)" }}
+          className="text-2xl lg:text-2xl font-extrabold hidden sm:block"
+        >
           Social Media
         </span>
       </div>
@@ -303,7 +319,8 @@ export default function TopBar() {
       <div className=" md:flex flex-1 max-w-lg mx-8 relative" ref={searchRef}>
         <div className="relative w-full">
           <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            style={{ color: "var(--topbar-icon)" }}
+            className="absolute left-3 top-1/2 -translate-y-1/2"
             size={22}
           />
           <input
@@ -314,13 +331,18 @@ export default function TopBar() {
             onFocus={() => {
               if (searchResults.length > 0) setShowSearchDropdown(true);
             }}
-            className="w-full bg-gray-200 rounded-full py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all"
+            style={{
+              backgroundColor: "var(--topbar-search-bg)",
+              color: "var(--topbar-search-text)",
+            }}
+            className="w-full rounded-full py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all placeholder:text-[var(--topbar-search-placeholder)]"
           />
           {/* Clear x btn (show when typing) */}
           {searchQuery && (
             <button
               onClick={handleClearSearch}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              style={{ color: "var(--topbar-icon)" }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 hover:opacity-80"
             >
               <X size={18} />
             </button>
@@ -329,9 +351,18 @@ export default function TopBar() {
 
         {/* SEARCH RESULTS DROPDOWN */}
         {showSearchDropdown && (
-          <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+          <div
+            style={{
+              backgroundColor: "var(--topbar-dropdown-bg)",
+              borderColor: "var(--topbar-dropdown-border)",
+            }}
+            className="absolute top-full left-0 w-full mt-2 rounded-xl shadow-xl border overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200"
+          >
             {isSearching ? (
-              <div className="p-4 text-center text-sm text-gray-500">
+              <div
+                style={{ color: "var(--topbar-text-secondary)" }}
+                className="p-4 text-center text-sm"
+              >
                 Searching...
               </div>
             ) : searchResults.length > 0 ? (
@@ -340,8 +371,11 @@ export default function TopBar() {
                   <Link
                     key={user.id}
                     to={`/profile/${user.id}`}
-                    onClick={handleClearSearch} //close search on click
-                    className="flex items-center gap-3 p-3 hover:bg-gray-100 transition-colors border-b border-gray-50 last:border-none"
+                    onClick={handleClearSearch}
+                    style={{
+                      borderBottomColor: "var(--topbar-dropdown-border)",
+                    }}
+                    className="flex items-center gap-3 p-3 transition-colors border-b last:border-none hover:[background:var(--topbar-dropdown-hover)]"
                   >
                     <img
                       src={
@@ -349,19 +383,31 @@ export default function TopBar() {
                         `https://ui-avatars.com/api/?name=${user.display_name}`
                       }
                       alt={user.display_name}
-                      className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                      style={{ borderColor: "var(--topbar-dropdown-border)" }}
+                      className="w-10 h-10 rounded-full object-cover border"
                     />
                     <div>
-                      <p className="text-sm font-bold text-gray-900">
+                      <p
+                        style={{ color: "var(--topbar-text)" }}
+                        className="text-sm font-bold"
+                      >
                         {user.display_name}
                       </p>
-                      <p className="text-xs text-gray-500">@{user.username}</p>
+                      <p
+                        style={{ color: "var(--topbar-text-secondary)" }}
+                        className="text-xs"
+                      >
+                        @{user.username}
+                      </p>
                     </div>
                   </Link>
                 ))}
               </div>
             ) : (
-              <div className="p-4 text-center text-sm text-gray-500">
+              <div
+                style={{ color: "var(--topbar-text-secondary)" }}
+                className="p-4 text-center text-sm"
+              >
                 No users found for {searchQuery}
               </div>
             )}
@@ -374,7 +420,8 @@ export default function TopBar() {
         {/* THEME */}
         <button
           onClick={toggleTheme}
-          className="p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 rounded-full transition-colors"
+          style={{ color: "var(--topbar-icon)" }}
+          className="p-2 rounded-full transition-colors hover:[background:var(--topbar-hover-bg)]"
           title="Toggle Theme"
         >
           {theme === "dark" ? <Sun size={24} /> : <Moon size={24} />}
@@ -383,33 +430,61 @@ export default function TopBar() {
         <div className="relative" ref={notiRef}>
           <button
             onClick={() => setShowNoti(!showNoti)}
-            className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
+            style={{ color: "var(--topbar-icon)" }}
+            className="relative p-2 rounded-full transition-colors hover:[background:var(--topbar-hover-bg)]"
           >
             <Bell size={24} />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+              <span
+                style={{ borderColor: "var(--topbar-bg)" }}
+                className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2"
+              ></span>
             )}
           </button>
 
           {showNoti && (
-            <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-              <div className="p-4 border-b border-gray-200 font-bold text-gray-900">
+            <div
+              style={{
+                backgroundColor: "var(--topbar-dropdown-bg)",
+                borderColor: "var(--topbar-dropdown-border)",
+              }}
+              className="absolute right-0 top-full mt-2 w-80 rounded-xl shadow-xl border overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            >
+              <div
+                style={{
+                  borderBottomColor: "var(--topbar-dropdown-border)",
+                  color: "var(--topbar-text)",
+                }}
+                className="p-4 border-b font-bold"
+              >
                 <span>Notifications</span>
                 {unreadCount > 0 && (
-                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                  <span
+                    style={{
+                      backgroundColor: "var(--topbar-badge-bg)",
+                      color: "var(--topbar-badge-text)",
+                    }}
+                    className="text-xs px-2 py-1 rounded-full ml-2"
+                  >
                     {unreadCount} new
                   </span>
                 )}
               </div>
               <div className="max-h-[300px] overflow-y-auto">
                 {loading && (
-                  <div className="p-4 text-center text-sm text-gray-500">
+                  <div
+                    style={{ color: "var(--topbar-text-secondary)" }}
+                    className="p-4 text-center text-sm"
+                  >
                     Loading...
                   </div>
                 )}
 
                 {!loading && notis.length === 0 && (
-                  <div className="p-4 text-center text-sm text-gray-500">
+                  <div
+                    style={{ color: "var(--topbar-text-secondary)" }}
+                    className="p-4 text-center text-sm"
+                  >
                     No notifications yet.
                   </div>
                 )}
@@ -418,28 +493,43 @@ export default function TopBar() {
                   <div
                     key={n.id}
                     onClick={() => handleNotificationClick(n)}
-                    className={`p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 ${
-                      !n.read ? "bg-blue-50/50" : ""
-                    }`}
+                    style={{
+                      borderBottomColor: "var(--topbar-dropdown-border)",
+                      backgroundColor: !n.read
+                        ? "var(--topbar-unread-bg)"
+                        : "transparent",
+                    }}
+                    className="p-3 cursor-pointer border-b hover:[background:var(--topbar-dropdown-hover)]"
                   >
-                    <p className="text-sm text-gray-800">
+                    <p
+                      style={{ color: "var(--topbar-text)" }}
+                      className="text-sm"
+                    >
                       {renderNotificationText(n)}
                     </p>
-                    <span className="text-xs text-gray-400 mt-1 block">
+                    <span
+                      style={{ color: "var(--topbar-text-secondary)" }}
+                      className="text-xs mt-1 block"
+                    >
                       {getRelativeTime(n.created_at)}
                     </span>
                   </div>
                 ))}
               </div>
               {unreadCount > 0 && (
-              <div className="p-2 text-center border-t border-gray-100">
-                <button
-                  onClick={handleMarkAllAsRead}
-                  className="text-xs text-primary font-semibold hover:underline"
+                <div
+                  style={{ borderTopColor: "var(--topbar-dropdown-border)" }}
+                  className="p-2 text-center border-t"
                 >
-                  Mark all as read
-                </button>
-              </div>)}
+                  <button
+                    onClick={handleMarkAllAsRead}
+                    style={{ color: "var(--topbar-badge-text)" }}
+                    className="text-xs font-semibold hover:underline"
+                  >
+                    Mark all as read
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -447,7 +537,7 @@ export default function TopBar() {
         <div className="relative" ref={userMenuRef}>
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-1.5 rounded-full pr-4 transition-colors border border-transparent hover:border-gray-200"
+            className="flex items-center gap-3 cursor-pointer p-1.5 rounded-full pr-4 transition-colors border border-transparent hover:[background:var(--topbar-hover-bg)] hover:[border-color:var(--topbar-dropdown-border)]"
           >
             <img
               src={
@@ -457,22 +547,41 @@ export default function TopBar() {
                 }`
               }
               alt="User"
-              className="w-8 h-8 lg:w-10 lg:h-10 rounded-full object-cover border border-gray-200"
+              style={{ borderColor: "var(--topbar-dropdown-border)" }}
+              className="w-8 h-8 lg:w-10 lg:h-10 rounded-full object-cover border"
             />
-            <span className="font-bold text-gray-700 hidden lg:block max-w-[100px] truncate">
+            <span
+              style={{ color: "var(--topbar-text)" }}
+              className="font-bold hidden lg:block max-w-[100px] truncate"
+            >
               {user?.display_name?.split(" ")[0]}
             </span>
           </button>
 
           {/* The Dropdown Menu */}
           {showUserMenu && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200 py-2">
+            <div
+              style={{
+                backgroundColor: "var(--topbar-dropdown-bg)",
+                borderColor: "var(--topbar-dropdown-border)",
+              }}
+              className="absolute right-0 top-full mt-2 w-56 rounded-xl shadow-xl border overflow-hidden animate-in fade-in zoom-in-95 duration-200 py-2"
+            >
               {/* Profile Header in Menu */}
-              <div className="px-4 py-3 border-b border-gray-100 mb-2">
-                <p className="text-sm font-bold text-gray-900 truncate">
+              <div
+                style={{ borderBottomColor: "var(--topbar-dropdown-border)" }}
+                className="px-4 py-3 border-b mb-2"
+              >
+                <p
+                  style={{ color: "var(--topbar-text)" }}
+                  className="text-sm font-bold truncate"
+                >
                   {user?.display_name}
                 </p>
-                <p className="text-xs text-gray-500 truncate">
+                <p
+                  style={{ color: "var(--topbar-text-secondary)" }}
+                  className="text-xs truncate"
+                >
                   @{user?.username || "user"}
                 </p>
               </div>
@@ -481,7 +590,8 @@ export default function TopBar() {
               <Link
                 to="/profile"
                 onClick={() => setShowUserMenu(false)}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                style={{ color: "var(--topbar-text)" }}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:[background:var(--topbar-dropdown-hover)] hover:[color:var(--topbar-badge-text)]"
               >
                 <User size={18} />
                 Profile
@@ -490,13 +600,17 @@ export default function TopBar() {
               <Link
                 to="/settings"
                 onClick={() => setShowUserMenu(false)}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                style={{ color: "var(--topbar-text)" }}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:[background:var(--topbar-dropdown-hover)] hover:[color:var(--topbar-badge-text)]"
               >
                 <Settings size={18} />
                 Settings
               </Link>
 
-              <div className="h-px bg-gray-100 my-2"></div>
+              <div
+                style={{ backgroundColor: "var(--topbar-dropdown-border)" }}
+                className="h-px my-2"
+              ></div>
               {/* Logout Button */}
               <button
                 onClick={handleLogout}

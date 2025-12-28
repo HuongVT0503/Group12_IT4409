@@ -479,12 +479,12 @@ export default function ChatPage() {
       {/* LEFT: Conversation List */}
       <div
         className={cn(
-          "w-full md:w-[350px] border-r border-gray-100 flex flex-col bg-white",
+          "w-full md:w-[350px] h-full border-r border-neutral-300 flex flex-col bg-white",
           !isMobileListVisible && "hidden md:flex" //hide on mobile if chat open
         )}
       >
         {/* Search Header */}
-        <div className="p-4 border-b border-gray-100">
+        <div className="p-4 border-b border-neutral-300 ">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Messages</h2>
           <div className="relative">
             <Search

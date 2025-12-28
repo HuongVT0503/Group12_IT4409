@@ -26,6 +26,7 @@ import CreatePost from "../../components/feed/CreatePost";
 import Avatar from "../../components/common/Avatar";
 import ReportModal from "../../components/common/ReportModal";
 import { useSocketContext } from "../../context/SocketContext";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function ProfilePage() {
   const { id } = useParams(); //id from url
@@ -45,6 +46,7 @@ export default function ProfilePage() {
   const [showMenu, setShowMenu] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
   const { isUserOnline } = useSocketContext();
+  const { theme } = useTheme();
 
   const [isLgScreen, setIsLgScreen] = useState(
     typeof window !== "undefined" ? window.innerWidth >= 1024 : false
@@ -121,7 +123,7 @@ export default function ProfilePage() {
           const sharedObj = item.sharedPost;
           return {
             id: item.post.id,
-            isLiked: item.isLiked||false,
+            isLiked: item.isLiked || false,
             content: item.post.content,
             timestamp: item.post.created_at,
             image: item.post.media?.[0] || null,
@@ -294,20 +296,46 @@ export default function ProfilePage() {
 
   if (loading)
     return (
-      <div className="p-8 text-center animate-pulse">Loading profile...</div>
+      <div
+        style={{ color: "var(--profile-text-secondary)" }}
+        className="p-8 text-center animate-pulse"
+      >
+        Loading profile...
+      </div>
     );
 
   if (isBanned) {
     return (
-      <div className="w-full min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="text-center max-w-md bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-          <div className="w-20 h-20 bg-gray-100 text-gray-500 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div
+        style={{ backgroundColor: "var(--profile-bg)" }}
+        className="w-full min-h-screen flex items-center justify-center p-4"
+      >
+        <div
+          style={{
+            backgroundColor: "var(--profile-card-bg)",
+            borderColor: "var(--profile-border)",
+          }}
+          className="text-center max-w-md p-8 rounded-2xl shadow-sm border"
+        >
+          <div
+            style={{
+              backgroundColor: "var(--profile-empty-bg)",
+              color: "var(--profile-text-secondary)",
+            }}
+            className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
+          >
             <ShieldAlert size={40} />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2
+            style={{ color: "var(--profile-text-primary)" }}
+            className="text-2xl font-bold mb-2"
+          >
             Account Suspended
           </h2>
-          <p className="text-gray-500 mb-6">
+          <p
+            style={{ color: "var(--profile-text-secondary)" }}
+            className="mb-6"
+          >
             This account has been suspended for violating our Community
             Guidelines.
           </p>
@@ -325,19 +353,41 @@ export default function ProfilePage() {
 
   if (error)
     return (
-      <div className="p-8 text-center text-red-600 font-semibold">{error}</div>
+      <div
+        style={{ color: "var(--feed-error-text)" }}
+        className="p-8 text-center font-semibold"
+      >
+        {error}
+      </div>
     );
 
-  if (!profile) return <div className="p-8 text-center">User not found</div>;
+  if (!profile)
+    return (
+      <div
+        style={{ color: "var(--profile-text-secondary)" }}
+        className="p-8 text-center"
+      >
+        User not found
+      </div>
+    );
 
   const isOwnProfile = profile.id === user?.id;
 
   return (
-    <div className="w-full min-h-screen flex justify-center bg-bg/20">
-      <div className="w-full max-w-3xl  flex flex-col items-center px-4 sm:px-6 relative">
-        <div className="w-full shadow-sm  mb-4 bg-white rounded-lg mt-4">
+    <div
+      style={{ backgroundColor: "var(--profile-bg)" }}
+      className="w-full min-h-screen flex justify-center"
+    >
+      <div className="w-full max-w-3xl flex flex-col items-center px-4 sm:px-6 relative">
+        <div
+          style={{
+            backgroundColor: "var(--profile-card-bg)",
+            boxShadow: `0 1px 2px var(--profile-card-shadow)`,
+          }}
+          className="w-full mb-4 rounded-lg mt-4"
+        >
           <div
-            className="h-48 lg:h-64 bg-cover bg-center w-full relative overflow-hidden rounded-t-lg "
+            className="h-48 lg:h-64 bg-cover bg-center w-full relative overflow-hidden rounded-t-lg"
             style={{
               backgroundImage: `url(${
                 profile.cover_url ||
@@ -345,7 +395,7 @@ export default function ProfilePage() {
                   profile.display_name +
                   "&background=random&size=800"
               })`,
-              backgroundColor: "#a0a0a0",
+              backgroundColor: "var(--profile-cover-fallback)",
             }}
           ></div>
 
@@ -364,14 +414,23 @@ export default function ProfilePage() {
                 {isUserOnline(profile.id) && (
                   <span
                     title="Online"
-                    className="absolute bottom-2 right-2 w-5 h-5 bg-green-500 border-4 border-white rounded-full"
+                    style={{
+                      backgroundColor: "var(--profile-online-indicator)",
+                      borderColor: "var(--profile-card-bg)",
+                    }}
+                    className="absolute bottom-2 right-2 w-5 h-5 border-4 rounded-full"
                   ></span>
                 )}
               </div>
               {isOwnProfile ? (
                 <button
                   onClick={() => setIsEditModalOpen(true)}
-                  className=" px-4 py-2 bg-white hover:bg-primary-300 border border-gray-200  rounded-lg font-bold text-sm transition-colors shadow-sm text-gray-700 cursor-pointer"
+                  style={{
+                    backgroundColor: "var(--profile-button-bg)",
+                    borderColor: "var(--profile-button-border)",
+                    color: "var(--profile-button-text)",
+                  }}
+                  className="px-4 py-2 hover:[background:var(--profile-button-hover)] border rounded-lg font-bold text-sm transition-colors shadow-sm cursor-pointer"
                 >
                   Edit Profile
                 </button>
@@ -381,7 +440,11 @@ export default function ProfilePage() {
                     onClick={handleMessage}
                     loading={messageLoading}
                     variant="outline"
-                    className="rounded-lg px-4 py-2 text-sm border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-primary"
+                    style={{
+                      borderColor: "var(--profile-button-border)",
+                      color: "var(--profile-button-text)",
+                    }}
+                    className="rounded-lg px-4 py-2 text-sm hover:[background:var(--profile-button-hover)] hover:[color:var(--panel-link-color)]"
                   >
                     <MessageCircle size={18} className="mr-2" />
                     Message
@@ -412,13 +475,24 @@ export default function ProfilePage() {
                   <div className="relative">
                     <button
                       onClick={() => setShowMenu(!showMenu)}
-                      className="p-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 text-gray-700"
+                      style={{
+                        backgroundColor: "var(--profile-button-bg)",
+                        borderColor: "var(--profile-button-border)",
+                        color: "var(--profile-button-text)",
+                      }}
+                      className="p-2 border rounded-lg shadow-sm hover:[background:var(--profile-button-hover)]"
                     >
                       <MoreHorizontal size={20} />
                     </button>
 
                     {showMenu && (
-                      <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden">
+                      <div
+                        style={{
+                          backgroundColor: "var(--profile-menu-bg)",
+                          borderColor: "var(--profile-menu-border)",
+                        }}
+                        className="absolute right-0 top-full mt-2 w-40 rounded-xl shadow-xl border z-20 overflow-hidden"
+                      >
                         <button
                           onClick={() => {
                             setShowMenu(false);
@@ -437,42 +511,74 @@ export default function ProfilePage() {
 
             <div className="mx-1">
               <div className="flex flex-col items-start justify-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1
+                  style={{ color: "var(--profile-text-primary)" }}
+                  className="text-2xl font-bold"
+                >
                   {profile.display_name}
                 </h1>
-                <p className="text-gray-500 font-medium">@{profile.username}</p>
+                <p
+                  style={{ color: "var(--profile-text-secondary)" }}
+                  className="font-medium"
+                >
+                  @{profile.username}
+                </p>
               </div>
 
               <div className="flex flex-col gap-4">
                 {profile.bio && (
-                  <p className="text-gray-700 leading-relaxed">{profile.bio}</p>
+                  <p
+                    style={{ color: "var(--profile-text-secondary)" }}
+                    className="leading-relaxed"
+                  >
+                    {profile.bio}
+                  </p>
                 )}
 
-                <div className="flex flex-wrap gap-4 text-sm text-gray-700 mb-6">
+                <div className="flex flex-wrap gap-4 text-sm mb-6">
                   {profile.gender && (
-                    <span className="flex items-center gap-1 bg-primary-300/30 px-3 py-1 rounded-full border border-primary-300">
+                    <span
+                      style={{
+                        backgroundColor: "var(--profile-badge-bg)",
+                        borderColor: "var(--profile-badge-border)",
+                        color: "var(--profile-badge-text)",
+                      }}
+                      className="flex items-center gap-1 px-3 py-1 rounded-full border"
+                    >
                       Gender:
-                      <span className="font-medium text-gray-700 capitalize">
+                      <span className="font-medium capitalize">
                         {profile.gender}
                       </span>
                     </span>
                   )}
 
                   {profile.date_of_birth && (
-                    <span className="flex items-center gap-1 bg-primary-300/30 px-3 py-1 rounded-full border border-primary-300">
+                    <span
+                      style={{
+                        backgroundColor: "var(--profile-badge-bg)",
+                        borderColor: "var(--profile-badge-border)",
+                        color: "var(--profile-badge-text)",
+                      }}
+                      className="flex items-center gap-1 px-3 py-1 rounded-full border"
+                    >
                       Age:
-                      <span className="font-medium text-gray-700">
+                      <span className="font-medium">
                         {calculateAge(profile.date_of_birth)}
                       </span>
                     </span>
                   )}
 
                   {isOwnProfile && profile.phone && (
-                    <span className="flex items-center gap-1 bg-primary-300/30 px-3 py-1 rounded-full border border-primary-300">
+                    <span
+                      style={{
+                        backgroundColor: "var(--profile-badge-bg)",
+                        borderColor: "var(--profile-badge-border)",
+                        color: "var(--profile-badge-text)",
+                      }}
+                      className="flex items-center gap-1 px-3 py-1 rounded-full border"
+                    >
                       Phone:
-                      <span className="font-medium text-gray-700">
-                        {profile.phone}
-                      </span>
+                      <span className="font-medium">{profile.phone}</span>
                     </span>
                   )}
                 </div>
@@ -480,37 +586,67 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="flex gap-10 border-t border-neutral-300 py-4 lg:px-8 px-4">
+          <div
+            style={{ borderTopColor: "var(--profile-border)" }}
+            className="flex gap-10 border-t py-4 lg:px-8 px-4"
+          >
             <div className="text-center cursor-pointer hover:opacity-75">
-              <span className="font-bold block text-lg text-black">
+              <span
+                style={{ color: "var(--profile-stats-text)" }}
+                className="font-bold block text-lg"
+              >
                 {profile.stats?.posts || 0}
               </span>
-              <span className="text-gray-500 text-sm">Posts</span>
+              <span
+                style={{ color: "var(--profile-text-secondary)" }}
+                className="text-sm"
+              >
+                Posts
+              </span>
             </div>
             <Link
               to="/connections"
               state={{ targetId: profile.id, initialTab: "followers" }}
               className="text-center cursor-pointer hover:opacity-75"
             >
-              <span className="font-bold block text-lg text-black">
+              <span
+                style={{ color: "var(--profile-stats-text)" }}
+                className="font-bold block text-lg"
+              >
                 {profile.stats?.followers || 0}
               </span>
-              <span className="text-gray-500 text-sm">Followers</span>
+              <span
+                style={{ color: "var(--profile-text-secondary)" }}
+                className="text-sm"
+              >
+                Followers
+              </span>
             </Link>
             <Link
               to="/connections"
               state={{ targetId: profile.id, initialTab: "following" }}
               className="text-center cursor-pointer hover:opacity-75"
             >
-              <span className="font-bold block text-lg text-black">
+              <span
+                style={{ color: "var(--profile-stats-text)" }}
+                className="font-bold block text-lg"
+              >
                 {profile.stats?.following || 0}
               </span>
-              <span className="text-gray-500 text-sm">Following</span>
+              <span
+                style={{ color: "var(--profile-text-secondary)" }}
+                className="text-sm"
+              >
+                Following
+              </span>
             </Link>
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 w-full bg-primary-300/20 rounded-lg p-2 sm:p-4">
+        <div
+          style={{ backgroundColor: "var(--profile-posts-bg)" }}
+          className="flex flex-col gap-4 w-full rounded-lg p-2 sm:p-4"
+        >
           {isOwnProfile && <CreatePost onPostCreated={handlePostCreated} />}
 
           {posts.length > 0 ? (
@@ -518,7 +654,14 @@ export default function ProfilePage() {
               <PostCard key={post.id} post={post} onDelete={handlePostDelete} />
             ))
           ) : (
-            <div className="text-center text-gray-400 py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+            <div
+              style={{
+                backgroundColor: "var(--profile-empty-bg)",
+                borderColor: "var(--profile-empty-border)",
+                color: "var(--profile-text-muted)",
+              }}
+              className="text-center py-10 rounded-xl border border-dashed"
+            >
               No posts yet.
             </div>
           )}
