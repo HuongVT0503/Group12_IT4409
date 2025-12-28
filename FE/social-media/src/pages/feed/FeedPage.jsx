@@ -5,14 +5,14 @@ import CreatePost from "../../components/feed/CreatePost.jsx";
 import { getFeed } from "../../services/postService";
 import { useSocket } from "../../context/SocketContext";
 import RightPanel from "../../components/layout/RightPanel.jsx";
-import { useTheme } from "../../context/ThemeContext";
+//import { useTheme } from "../../context/ThemeContext";
 
 export default function FeedPage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const socket = useSocket();
-  const { theme } = useTheme();
+  //const { theme } = useTheme();
 
   //helper to format raw BE data to fe
   //postRepository.js: { post: {...}, author: {...} }

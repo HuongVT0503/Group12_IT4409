@@ -26,7 +26,7 @@ import CreatePost from "../../components/feed/CreatePost";
 import Avatar from "../../components/common/Avatar";
 import ReportModal from "../../components/common/ReportModal";
 import { useSocketContext } from "../../context/SocketContext";
-import { useTheme } from "../../context/ThemeContext";
+//import { useTheme } from "../../context/ThemeContext";
 
 export default function ProfilePage() {
   const { id } = useParams(); //id from url
@@ -46,7 +46,7 @@ export default function ProfilePage() {
   const [showMenu, setShowMenu] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
   const { isUserOnline } = useSocketContext();
-  const { theme } = useTheme();
+  //const { theme } = useTheme();
 
   const [isLgScreen, setIsLgScreen] = useState(
     typeof window !== "undefined" ? window.innerWidth >= 1024 : false

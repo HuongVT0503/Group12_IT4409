@@ -308,7 +308,11 @@ export default function RightPanel() {
                 <div
                   key={chat.id}
                   onClick={() => navigate(`/chat/${chat.id}`)}
-                  className="flex items-center gap-3 cursor-pointer hover:[background:var(--panel-hover-bg)] p-2 rounded-xl -mx-2 transition-colors group"
+                  className={`flex items-center gap-3 cursor-pointer hover:[background:var(--panel-hover-bg)] p-2 rounded-xl -mx-2 transition-colors group ${
+                    isUnread
+                      ? "bg-purple-50 hover:bg-purple-100" // Purple if unread
+                      : "hover:bg-gray-50" 
+                  }`}
                 >
                   <div className="relative">
                     <img

@@ -31,7 +31,7 @@ import ReportModal from "../common/ReportModal";
 import EmojiPicker from "emoji-picker-react";
 import ShareModal from "../common/ShareModal";
 import { uploadMedia } from "../../services/mediaService";
-import { useTheme } from "../../context/ThemeContext";
+//import { useTheme } from "../../context/ThemeContext";
 
 const safeFormatDate = (dateString) => {
   try {
@@ -52,7 +52,7 @@ export default function PostCard({
   const { user } = useAuth();
   const navigate = useNavigate();
   const { socket, isUserOnline } = useSocketContext();
-  const { theme } = useTheme();
+  //const { theme } = useTheme();
 
   const [isSharing, setIsSharing] = useState(false);
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
