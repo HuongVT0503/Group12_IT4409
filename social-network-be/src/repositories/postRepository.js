@@ -86,6 +86,11 @@ async function getPostById(id, currentUserId=null) {
       { id, currentUserId }
     );
     if (!res.records.length) return null;
+    const record = res.records[0];
+    const author = record.get("u").properties;
+    if (author.isBanned === true && author.id !== currentUserId) {
+      return null;
+    }
 
     return mapPostResult(res.records[0]);
   } finally {
@@ -114,7 +119,7 @@ async function getRecentPublicPosts(limit = 20, currentUserId=null) {
   try {
     const res = await session.run(
       `MATCH (u)-[:AUTHORED]->(p:Post)
-       WHERE p.privacy='public'
+       WHERE p.privacy='public' AND u.isBanned = false
        OPTIONAL MATCH (:User)-[l:LIKED]->(p)
        OPTIONAL MATCH (c:Comment)-[:ON]->(p)
        OPTIONAL MATCH (s:Post)-[:SHARES]->(p)
@@ -136,6 +141,7 @@ async function getPostsByAuthor(authorId, limit = 20, currentUserId=null) {
   try {
     const res = await session.run(
       `MATCH (u:User {id:$authorId})-[:AUTHORED]->(p:Post)
+      WHERE u.isBanned = false OR u.id = $currentUserId
       OPTIONAL MATCH (:User)-[l:LIKED]->(p)
       OPTIONAL MATCH (c:Comment)-[:ON]->(p)
       OPTIONAL MATCH (s:Post)-[:SHARES]->(p)
