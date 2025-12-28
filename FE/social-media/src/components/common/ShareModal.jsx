@@ -24,7 +24,7 @@ export default function ShareModal({ isOpen, onClose, onShare, loading }) {
 
   return createPortal(
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 z-50 animate-in fade-in">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl flex flex-col max-h-[90vh]">
         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
           <h3 className="font-bold text-gray-900">Share Post</h3>
           <button onClick={onClose} className="p-1 hover:bg-gray-200 rounded-full transition-colors">
@@ -32,7 +32,7 @@ export default function ShareModal({ isOpen, onClose, onShare, loading }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-6 overflow-visible">
           <div className="relative mb-6">
             <TextAreaField
               label="Caption (Optional)"
@@ -52,7 +52,7 @@ export default function ShareModal({ isOpen, onClose, onShare, loading }) {
             
             {/* Emoji picker popover */}
             {showPicker && (
-              <div className="absolute right-0 bottom-full mb-2 z-10 shadow-xl">
+              <div className="absolute right-0 bottom-full mb-2 z-50 shadow-xl">
                  <div className="fixed inset-0 z-0" onClick={() => setShowPicker(false)}/> {/* Backdrop */}
                  <div className="relative z-10">
                     <EmojiPicker onEmojiClick={handleEmojiClick} width={300} height={350} />

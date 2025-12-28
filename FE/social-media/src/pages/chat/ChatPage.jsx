@@ -38,7 +38,6 @@ export default function ChatPage() {
   const messagesEndRef = useRef(null);
 
   const typingTimeoutRef = useRef(null);
-
   const [isMobileListVisible, setIsMobileListVisible] = useState(true);
 
   const fileInputRef = useRef(null);
@@ -148,6 +147,7 @@ export default function ChatPage() {
     socket.on("user_typing", (data) =>
       handleTyping({ ...data, isTyping: true })
     );
+
     return () => {
       socket.off("new_message", handleNewMessage);
       socket.off("user_typing");
@@ -157,7 +157,8 @@ export default function ChatPage() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]); //auto-scroll
+  }, [messages]);
+  //auto-scroll
 
   //restore last active chat
   useEffect(() => {
@@ -184,7 +185,8 @@ export default function ChatPage() {
         handleSelectChat(conv);
       }
     }
-  }, [routeChatId, conversations, location.state]); //run when URL changes or convos load
+  }, [routeChatId, conversations, location.state]);
+  //run when URL changes or convos load
 
   //select chat &fetch
   const handleSelectChat = async (conv) => {
@@ -199,7 +201,6 @@ export default function ChatPage() {
       setMessages(res.data.messages || []);
 
       scrollToBottom();
-
       //join Socket Room for Typing Indicators
       socket.emit("join_conversation", conv.id);
 
@@ -212,11 +213,11 @@ export default function ChatPage() {
   const handleStartChatWithFriend = async (friend) => {
     try {
       //
-      const res = await getOrCreateConversation(friend.id); //raw convo
+      const res = await getOrCreateConversation(friend.id);
+      //raw convo
 
       if (res.data.success && res.data.conversation) {
         const rawConversation = res.data.conversation;
-
         if (!rawConversation.id) {
           console.error(
             "Backend returned conversation without ID:",
@@ -228,14 +229,13 @@ export default function ChatPage() {
         const conversation = {
           ...rawConversation,
           otherUser: friend, //attach friend obj as otherUser
+          isBanned: friend.isBanned || friend.is_banned,
         };
-
         //update convo list if neww
         setConversations((prev) => {
           if (prev.find((c) => c.id === conversation.id)) return prev;
           return [conversation, ...prev];
         });
-
         handleSelectChat(conversation);
       }
     } catch (error) {
@@ -299,6 +299,7 @@ export default function ChatPage() {
       created_at: new Date().toISOString(),
       is_read: false,
     };
+
     setMessages((prev) => [...prev, tempMsg]);
 
 
@@ -332,17 +333,36 @@ export default function ChatPage() {
       console.error("Failed to send", err);
       //remove temp msg
       setMessages((prev) => prev.filter((m) => m.id !== tempMsg.id));
+      
+      if (err.response?.data?.code === "USER_BANNED") {
+         //trigger ui stwitch
+         setSelectedChat((prev) => ({
+            ...prev,
+            otherUser: { ...prev.otherUser, isBanned: true }
+         }));
+
+         setConversations((prev) => 
+            prev.map(c => 
+               c.id === selectedChat.id 
+               ? { ...c, otherUser: { ...c.otherUser, isBanned: true } }
+               : c
+            )
+         );
+      }
+
+      
+      if (err.response?.data?.message) {
+        alert(err.response.data.message);
+      }
     }
   };
 
   const handleInputChange = (e) => {
     setInputText(e.target.value);
-
     if (socket && selectedChat) {
       socket.emit("typing", selectedChat.id);
       //clear existing timeout
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-
       //new timeout to stop typing after 2s inactive
       typingTimeoutRef.current = setTimeout(() => {
         socket.emit("stop_typing", selectedChat.id);
@@ -367,7 +387,6 @@ export default function ChatPage() {
     //if no message
     if (!msg) return "Start a conversation";
     const contentToCheck = msg.mediaUrl || msg.content;
-
     //is img
     const isImage = isImageUrl(contentToCheck);
     const isVideo = isVideoUrl(contentToCheck);
@@ -718,6 +737,15 @@ export default function ChatPage() {
             </div>
 
             {/* Input Area */}
+            {(selectedChat.otherUser?.isBanned || selectedChat.otherUser?.is_banned)? (
+              <div className="p-6 bg-gray-50 border-t border-gray-200 flex flex-col items-center justify-center text-center">
+                <div className="bg-red-100 text-red-500 p-3 rounded-full mb-2">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                </div>
+                <p className="text-gray-700 font-semibold">User Banned</p>
+                <p className="text-sm text-gray-500 mt-1">You cannot chat with this user because their account has been suspended.</p>
+              </div>
+            ) : (
             <div className="p-4 bg-white border-t border-gray-100 relative">
               {showEmojiPicker && (
                 <div className="absolute bottom-20 left-4 z-50 shadow-xl">
@@ -785,6 +813,7 @@ export default function ChatPage() {
                 </div>
               </div>
             </div>
+            )}
           </>
         ) : (
           // Empty State

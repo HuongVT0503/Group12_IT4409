@@ -43,7 +43,12 @@ const safeFormatDate = (dateString) => {
   }
 };
 
-export default function PostCard({ post, onDelete, highlightId }) {
+export default function PostCard({
+  post,
+  onDelete,
+  highlightId,
+  readOnly = false,
+}) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { socket, isUserOnline } = useSocketContext();
@@ -416,7 +421,10 @@ export default function PostCard({ post, onDelete, highlightId }) {
       }`}
     >
       <div className="flex justify-between items-center mb-4">
-        <Link to={`/profile/${post.author.id}`} className="flex gap-3">
+        <Link
+          to={`/profile/${post.author.id}`}
+          className={`flex gap-3 ${readOnly ? "pointer-events-none" : ""}`}
+        >
           <div className="relative">
             <Avatar
               src={
@@ -611,7 +619,7 @@ export default function PostCard({ post, onDelete, highlightId }) {
         </button>
       </div>
 
-      {showComments && (
+      {!readOnly && showComments && (
         <div className="mt-4 pt-4 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-2">
           {commentPreview && (
             <div className="relative mb-2 ml-12 w-24 h-24 group">
