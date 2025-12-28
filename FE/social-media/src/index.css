@@ -55,7 +55,7 @@
   /*default/light*/
 
   /* Base (Light) */
-  --color-bg-main: #fff;
+  --color-main: #fff;
   --color-text-main: #111827; /* gray-900 */
   --color-text-secondary: #6b7280; /* gray-600 */
   --color-border: #e5e7eb; /* gray-200 */
@@ -103,61 +103,327 @@
   --color-surface-dim: #dcd9e0;
   --color-surface: #fcf8ff;
   --color-surface-bright: #fcf8ff;
+
+  /* TopBar specific */
+  --topbar-bg: #ffffff;
+  --topbar-border: #e5e7eb;
+  --topbar-text: #1f2937;
+  --topbar-text-secondary: #6b7280;
+  --topbar-icon: #4b5563;
+  --topbar-hover-bg: #f3f4f6;
+  --topbar-search-bg: #f3f4f6;
+  --topbar-search-text: #111827;
+  --topbar-search-placeholder: #6b7280;
+  --topbar-dropdown-bg: #ffffff;
+  --topbar-dropdown-border: #e5e7eb;
+  --topbar-dropdown-hover: #f9fafb;
+  --topbar-badge-bg: #ede9fe;
+  --topbar-badge-text: #7c3aed;
+  --topbar-unread-bg: #eff6ff;
+  --topbar-logo-text: #7c3aed;
+
+  /* Sidebar specific */
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e5e7eb;
+  --sidebar-text: #1f2937;
+  --sidebar-text-secondary: #6b7280;
+  --sidebar-icon: #4b5563;
+  --sidebar-hover-bg: rgba(99, 102, 241, 0.08);
+  --sidebar-hover-text: #6366f1;
+  --sidebar-active-bg: #c7d2fe;
+  --sidebar-active-text: #6366f1;
+  --sidebar-active-shadow: rgba(67, 56, 202, 0.16);
+  --sidebar-card-bg: #ffffff;
+  --sidebar-button-bg: linear-gradient(to right, #6366f1, #22d3ee);
+  --sidebar-button-shadow: rgba(99, 102, 241, 0.25);
+  --sidebar-button-ring: rgba(99, 102, 241, 0.3);
+  --sidebar-badge-bg: #ef4444;
+  --sidebar-badge-text: #ffffff;
+  --sidebar-badge-ring: #ffffff;
+
+  /* FeedPage specific */
+  --feed-bg: linear-gradient(
+    135deg,
+    #f0f9ff 0%,
+    #e0f2fe 25%,
+    #f3e8ff 75%,
+    #fce7f3 100%
+  );
+  --feed-content-bg: rgba(199, 210, 254, 0.2);
+  --feed-text: #1f2937;
+  --feed-text-secondary: #6b7280;
+  --feed-loading-text: #6b7280;
+  --feed-error-text: #ef4444;
+  --feed-empty-text: #9ca3af;
+
+  /* CreatePost & PostCard specific */
+  --post-card-bg: rgba(255, 255, 255, 0.9);
+  --post-card-border: rgba(255, 255, 255, 0.4);
+  --post-card-shadow: rgba(31, 38, 135, 0.12);
+  --post-card-hover-shadow: rgba(31, 38, 135, 0.18);
+  --post-text: #1f2937;
+  --post-text-secondary: #6b7280;
+  --post-author-name: #111827;
+  --post-input-bg: linear-gradient(to right, #f9fafb, rgba(238, 242, 255, 0.3));
+  --post-input-focus-bg: #ffffff;
+  --post-input-border: #e5e7eb;
+  --post-border: #dcd9e0;
+  --post-icon-primary: #6366f1;
+  --post-icon-secondary: #9ca3af;
+  --post-icon-smile: #d1902f;
+  --post-icon-hover: #4f46e5;
+  --post-button-bg: linear-gradient(120deg, #6366f1 0%, #22d3ee 100%);
+  --post-like-active: #ff6b9d;
+  --post-menu-bg: #ffffff;
+  --post-menu-border: #9ca3af;
+  --post-shared-bg: rgba(238, 242, 255, 0.3);
+  --post-shared-border: rgba(99, 102, 241, 0.5);
+  --post-online-indicator: #10b981;
+
+  /* RightPanel specific */
+  --panel-bg: #ffffff;
+  --panel-border: #f3f4f6;
+  --panel-text: #111827;
+  --panel-text-secondary: #9ca3af;
+  --panel-hover-bg: #f9fafb;
+  --panel-link-color: #6366f1;
+  --panel-icon-color: #6366f1;
+  --panel-empty-bg: #f9fafb;
+  --panel-empty-text: #9ca3af;
+  --panel-badge-bg: rgba(99, 102, 241, 0.1);
+  --panel-badge-text: #6366f1;
+
+  /* ProfilePage specific */
+  --profile-bg: rgba(125, 195, 212, 0.2);
+  --profile-card-bg: #ffffff;
+  --profile-card-shadow: rgba(0, 0, 0, 0.05);
+  --profile-cover-fallback: #a0a0a0;
+  --profile-text-primary: #111827;
+  --profile-text-secondary: #6b7280;
+  --profile-text-muted: #9ca3af;
+  --profile-border: #e5e7eb;
+  --profile-button-bg: #ffffff;
+  --profile-button-hover: rgba(199, 210, 254, 1);
+  --profile-button-text: #374151;
+  --profile-button-border: #e5e7eb;
+  --profile-badge-bg: rgba(199, 210, 254, 0.3);
+  --profile-badge-border: #c7d2fe;
+  --profile-badge-text: #374151;
+  --profile-stats-text: #000000;
+  --profile-online-indicator: #10b981;
+  --profile-empty-bg: #f9fafb;
+  --profile-empty-border: #e5e7eb;
+  --profile-menu-bg: #ffffff;
+  --profile-menu-border: #f3f4f6;
+  --profile-posts-bg: rgba(199, 210, 254, 0.2);
+
+  /* === Modal (EditProfile, ReportModal) === */
+  --modal-overlay: rgba(0, 0, 0, 0.5);
+  --modal-bg: #ffffff;
+  --modal-header-bg: #f9fafb;
+  --modal-text: #111827;
+  --modal-text-secondary: #6b7280;
+  --modal-border: #e5e7eb;
+  --modal-footer-bg: #f9fafb;
+  --modal-hover-bg: #f3f4f6;
+  --modal-upload-bg: #f9fafb;
+  --modal-upload-border: #e5e7eb;
+  --modal-upload-hover-border: rgba(59, 130, 246, 0.5);
+  --modal-report-icon: #ef4444;
+
+  /* === Button Component === */
+  --button-primary-bg: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  --button-primary-text: #ffffff;
+  --button-outline-bg: #ffffff;
+  --button-outline-border: #3b82f6;
+  --button-outline-text: #3b82f6;
+  --button-outline-hover-bg: #eff6ff;
+  --button-ghost-bg: #e5e7eb;
+  --button-ghost-text: #374151;
+  --button-ghost-hover-bg: #d1d5db;
+
+  /* === Input Fields === */
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  --input-text: #111827;
+  --input-placeholder: #9ca3af;
+  --input-focus-border: #3b82f6;
+  --input-focus-ring: rgba(59, 130, 246, 0.2);
+  --input-disabled-bg: #f3f4f6;
+  --input-disabled-text: #6b7280;
+  --input-error-border: #ef4444;
+  --input-error-ring: rgba(239, 68, 68, 0.2);
+  --input-icon: #9ca3af;
+  --input-icon-hover: #374151;
+  --input-label: #374151;
+  --input-helper: #6b7280;
+  --input-counter: #9ca3af;
+
+  /* === Avatar === */
+  --avatar-bg: #e5e7eb;
+  --avatar-ring: rgba(84, 86, 233, 0.3);
 }
 
 /*dark Mode */
 :root.dark {
-  --color-bg-main: #39383f; /* slate-50 */
-
-  /* Primary (Indigo) */
-  --color-primary-50: #1e1e2f;
-  --color-primary-100: #2e2e4f;
-  --color-primary-200: #3e3e6f;
-  --color-primary-300: #4e4e8f;
-  --color-primary-400: #5e5ea0;
-  --color-primary-500: #6e6eb0;
-  --color-primary-600: #7e7ec0;
-  --color-primary-700: #8e8ed0;
-  --color-primary-800: #9e9ee0;
-  --color-primary-900: #aeaeef;
-
-  /* Secondary */
-  --color-secondary-400: #4a4a6a;
-  --color-secondary-500: #5a5a7a;
-  --color-secondary-600: #6a6a8a;
-
-  /* Tertiary */
-  --color-tertiary-400: #5a3a4a;
-  --color-tertiary-500: #6a2a3a;
-  --color-tertiary-600: #7a1a2a;
-
-  /* Error */
-  --color-error-400: #ef4444;
-  --color-error-500: #ba1a1a;
-  --color-error-600: #991b1b;
-
-  /* Neutral (Gray) */
-  --color-neutral-50: #1f1f1f;
-  --color-neutral-100: #2a2a2a;
-  --color-neutral-200: #3a3a3a;
-  --color-neutral-300: #4a4a4a;
-  --color-neutral-400: #5a5a5a;
-  --color-neutral-500: #6a6a6a;
-  --color-neutral-600: #7a7a7a;
-  --color-neutral-700: #8a8a8a;
-  --color-neutral-800: #9a9a9a;
-  --color-neutral-900: #aaaaaa;
-
-  /* Surface*/
-  --color-surface-dim: #131318;
-  --color-surface: #131318;
-  --color-surface-bright: #39383f;
-
   --background-image-gradient-feedpage: linear-gradient(
     135deg,
     #111827 0%,
     #1f2937 100%
   );
+
+  /* TopBar specific dark mode */
+  --topbar-bg: #1f2937;
+  --topbar-border: #374151;
+  --topbar-text: #f3f4f6;
+  --topbar-text-secondary: #9ca3af;
+  --topbar-icon: #d1d5db;
+  --topbar-hover-bg: #374151;
+  --topbar-search-bg: #374151;
+  --topbar-search-text: #f9fafb;
+  --topbar-search-placeholder: #9ca3af;
+  --topbar-dropdown-bg: #1f2937;
+  --topbar-dropdown-border: #374151;
+  --topbar-dropdown-hover: #374151;
+  --topbar-badge-bg: #581c87;
+  --topbar-badge-text: #c4b5fd;
+  --topbar-unread-bg: rgba(30, 58, 138, 0.3);
+  --topbar-logo-text: #a78bfa;
+
+  /* Sidebar specific dark mode */
+  --sidebar-bg: #1f2937;
+  --sidebar-border: #374151;
+  --sidebar-text: #f3f4f6;
+  --sidebar-text-secondary: #9ca3af;
+  --sidebar-icon: #d1d5db;
+  --sidebar-hover-bg: rgba(139, 92, 246, 0.15);
+  --sidebar-hover-text: #a78bfa;
+  --sidebar-active-bg: #581c87;
+  --sidebar-active-text: #a78bfa;
+  --sidebar-active-shadow: rgba(124, 58, 237, 0.25);
+  --sidebar-card-bg: #1f2937;
+  --sidebar-button-bg: linear-gradient(to right, #7c3aed, #22d3ee);
+  --sidebar-button-shadow: rgba(124, 58, 237, 0.35);
+  --sidebar-button-ring: rgba(124, 58, 237, 0.4);
+  --sidebar-badge-bg: #ef4444;
+  --sidebar-badge-text: #ffffff;
+  --sidebar-badge-ring: #1f2937;
+
+  /* FeedPage specific dark mode */
+  --feed-bg: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+  --feed-content-bg: rgba(88, 28, 135, 0.15);
+  --feed-text: #f3f4f6;
+  --feed-text-secondary: #9ca3af;
+  --feed-loading-text: #9ca3af;
+  --feed-error-text: #ef4444;
+  --feed-empty-text: #6b7280;
+
+  /* CreatePost & PostCard dark mode */
+  --post-card-bg: rgba(31, 41, 55, 0.95);
+  --post-card-border: rgba(75, 85, 99, 0.4);
+  --post-card-shadow: rgba(0, 0, 0, 0.3);
+  --post-card-hover-shadow: rgba(0, 0, 0, 0.4);
+  --post-text: #f3f4f6;
+  --post-text-secondary: #9ca3af;
+  --post-author-name: #f9fafb;
+  --post-input-bg: #374151;
+  --post-input-focus-bg: #1f2937;
+  --post-input-border: #4b5563;
+  --post-border: rgba(75, 85, 99, 0.6);
+  --post-icon-primary: #a78bfa;
+  --post-icon-secondary: #6b7280;
+  --post-icon-smile: #fbbf24;
+  --post-icon-hover: #c4b5fd;
+  --post-button-bg: linear-gradient(120deg, #7c3aed 0%, #22d3ee 100%);
+  --post-like-active: #ff6b9d;
+  --post-menu-bg: #1f2937;
+  --post-menu-border: #374151;
+  --post-shared-bg: rgba(88, 28, 135, 0.3);
+  --post-shared-border: rgba(124, 58, 237, 0.5);
+  --post-online-indicator: #10b981;
+
+  /* RightPanel dark mode */
+  --panel-bg: #1f2937;
+  --panel-border: #374151;
+  --panel-text: #f9fafb;
+  --panel-text-secondary: #9ca3af;
+  --panel-hover-bg: #374151;
+  --panel-link-color: #a78bfa;
+  --panel-icon-color: #a78bfa;
+  --panel-empty-bg: #374151;
+  --panel-empty-text: #6b7280;
+  --panel-badge-bg: rgba(124, 58, 237, 0.2);
+  --panel-badge-text: #c4b5fd;
+
+  /* ProfilePage dark mode */
+  --profile-bg: rgba(31, 41, 55, 0.2);
+  --profile-card-bg: #1f2937;
+  --profile-card-shadow: rgba(0, 0, 0, 0.3);
+  --profile-cover-fallback: #4b5563;
+  --profile-text-primary: #f9fafb;
+  --profile-text-secondary: #d1d5db;
+  --profile-text-muted: #9ca3af;
+  --profile-border: #374151;
+  --profile-button-bg: #1f2937;
+  --profile-button-hover: rgba(88, 28, 135, 0.5);
+  --profile-button-text: #d1d5db;
+  --profile-button-border: #374151;
+  --profile-badge-bg: rgba(88, 28, 135, 0.3);
+  --profile-badge-border: #581c87;
+  --profile-badge-text: #d1d5db;
+  --profile-stats-text: #f9fafb;
+  --profile-online-indicator: #10b981;
+  --profile-empty-bg: #374151;
+  --profile-empty-border: #4b5563;
+  --profile-menu-bg: #1f2937;
+  --profile-menu-border: #374151;
+  --profile-posts-bg: rgba(88, 28, 135, 0.15);
+
+  /* === Modal dark mode === */
+  --modal-overlay: rgba(0, 0, 0, 0.7);
+  --modal-bg: #1f2937;
+  --modal-header-bg: #111827;
+  --modal-text: #f9fafb;
+  --modal-text-secondary: #d1d5db;
+  --modal-border: #374151;
+  --modal-footer-bg: #111827;
+  --modal-hover-bg: #374151;
+  --modal-upload-bg: #111827;
+  --modal-upload-border: #374151;
+  --modal-upload-hover-border: rgba(124, 58, 237, 0.5);
+  --modal-report-icon: #f87171;
+
+  /* === Button dark mode === */
+  --button-primary-bg: linear-gradient(135deg, #7c3aed 0%, #22d3ee 100%);
+  --button-primary-text: #ffffff;
+  --button-outline-bg: #1f2937;
+  --button-outline-border: #7c3aed;
+  --button-outline-text: #a78bfa;
+  --button-outline-hover-bg: rgba(88, 28, 135, 0.3);
+  --button-ghost-bg: #374151;
+  --button-ghost-text: #d1d5db;
+  --button-ghost-hover-bg: #4b5563;
+
+  /* === Input Fields dark mode === */
+  --input-bg: #1f2937;
+  --input-border: #4b5563;
+  --input-text: #f9fafb;
+  --input-placeholder: #6b7280;
+  --input-focus-border: #7c3aed;
+  --input-focus-ring: rgba(124, 58, 237, 0.3);
+  --input-disabled-bg: #374151;
+  --input-disabled-text: #9ca3af;
+  --input-error-border: #f87171;
+  --input-error-ring: rgba(248, 113, 113, 0.2);
+  --input-icon: #6b7280;
+  --input-icon-hover: #d1d5db;
+  --input-label: #d1d5db;
+  --input-helper: #9ca3af;
+  --input-counter: #6b7280;
+
+  /* === Avatar dark mode === */
+  --avatar-bg: #374151;
+  --avatar-ring: rgba(124, 58, 237, 0.4);
 }
 
 body {

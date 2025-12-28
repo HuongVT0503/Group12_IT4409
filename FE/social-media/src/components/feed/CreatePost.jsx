@@ -2,15 +2,16 @@ import { useState, useRef } from "react";
 import { createPost } from "../../services/postService";
 import { useAuth } from "../../context/AuthContext";
 import { uploadMedia } from "../../services/mediaService";
-import { 
-  Image, 
-  X, 
+import {
+  Image,
+  X,
   Smile,
-  //Video 
+  //Video
 } from "lucide-react";
 import Avatar from "../common/Avatar";
 import { Button } from "@heroui/react";
 import EmojiPicker from "emoji-picker-react";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function CreatePost({ onPostCreated }) {
   const [content, setContent] = useState("");
@@ -20,6 +21,7 @@ export default function CreatePost({ onPostCreated }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const { user } = useAuth(); //JSON.parse(localStorage.getItem('user')) || {};
+  const { theme } = useTheme();
   const fileInputRef = useRef(null);
 
   const onEmojiClick = (emojiData) => {
@@ -70,7 +72,14 @@ export default function CreatePost({ onPostCreated }) {
   };
 
   return (
-    <div className="flex gap-4 items-start bg-white/90 backdrop-blur-md rounded-2xl  p-5  border border-white/40 shadow-[0_8px_32px_rgba(31,38,135,0.12)]">
+    <div
+      style={{
+        backgroundColor: "var(--post-card-bg)",
+        borderColor: "var(--post-card-border)",
+        boxShadow: `0 8px 32px var(--post-card-shadow)`,
+      }}
+      className="flex gap-4 items-start backdrop-blur-md rounded-2xl p-5 border"
+    >
       <Avatar
         src={
           user?.avatar_url ||
@@ -87,60 +96,69 @@ export default function CreatePost({ onPostCreated }) {
           placeholder={`What's on your mind, ${
             user?.display_name?.split(" ")[0]
           }?`}
-          className="w-full bg-gradient-to-r from-gray-50 to-primary-50/30 rounded-xl py-3 px-4 transition-all text-sm font-medium outline-none resize-none focus:bg-white focus:ring-2 focus:ring-primary-400/40 focus:shadow-lg"
+          style={{
+            background: "var(--post-input-bg)",
+            color: "var(--post-text)",
+          }}
+          className="w-full rounded-xl py-3 px-4 transition-all text-sm font-medium outline-none resize-none focus:[background:var(--post-input-focus-bg)] focus:ring-2 focus:ring-[var(--post-icon-primary)]/40 focus:shadow-lg placeholder:text-[var(--post-text-secondary)]"
           rows={3}
         />
 
         {/*img */}
         {previewUrl && (
           <div className="relative w-full mt-2 ">
-
-            {selectedFile?.type?.startsWith('video/') ? (
-                <video 
-                  src={previewUrl} 
-                  controls 
-                  className="w-full max-h-60 object-cover rounded-xl border border-gray-200/60 shadow-md" 
-                />
+            {selectedFile?.type?.startsWith("video/") ? (
+              <video
+                src={previewUrl}
+                controls
+                className="w-full max-sm:max-h-60 max-h-64 object-cover rounded-xl border border-gray-200/60 shadow-md"
+              />
             ) : (
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="w-full max-h-60 object-cover rounded-xl border border-gray-200/60 shadow-md"
-                />
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="w-full max-sm:max-h-60 max-h-64 object-cover rounded-xl border border-gray-200/60 shadow-md"
+              />
             )}
             <button
               onClick={clearFile}
-              className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+              className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors cursor-pointer"
             >
-              <X size={16} />
+              <X size={18} />
             </button>
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-2 border-t border-gray-300">
+        <div
+          style={{ borderTopColor: "var(--post-border)" }}
+          className="flex items-center justify-between pt-2 border-t "
+        >
           <div className="flex items-center gap-2">
             <label
               htmlFor="images"
-              className="text-primary-500 hover:bg-primary-100/60 rounded-full transition-all hover:scale-110"
+              style={{ color: "var(--post-icon-primary)" }}
+              className="hover:opacity-80 rounded-full transition-all hover:scale-110 cursor-pointer"
               onClick={() => fileInputRef.current?.click()}
             >
               <div className="flex gap-2">
-              <Image size={25} /></div>
+                <Image size={25} />
+              </div>
             </label>
             <button
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="text-gray-400 hover:text-yellow-500 rounded-full transition-colors"
+              style={{ color: "var(--post-icon-smile)" }}
+              className="hover:opacity-80 rounded-full transition-all hover:scale-110 cursor-pointer"
             >
               <Smile size={25} />
             </button>
           </div>
           {showEmojiPicker && (
-            <div className="absolute top-full left-0 mt-2 z-150">
+            <div className="absolute top-full left-0 mt-2 z-[100]">
               <div
-                className="fixed inset-0 z-40"
+                className="fixed inset-0 z-[90]"
                 onClick={() => setShowEmojiPicker(false)}
               />
-              <div className="relative z-50">
+              <div className="relative z-[100]">
                 <EmojiPicker
                   onEmojiClick={onEmojiClick}
                   width={300}
@@ -163,7 +181,8 @@ export default function CreatePost({ onPostCreated }) {
             onPress={handleSubmit}
             disabled={!content.trim() && !selectedFile}
             loading={loading}
-            className="bg-gradient-primary text-white shadow-md hover:brightness-110 rounded-lg px-5 py-3 font-semibold"
+            style={{ background: "var(--post-button-bg)" }}
+            className="text-white shadow-md hover:brightness-110 rounded-lg px-5 py-3 font-semibold"
           >
             Post
           </Button>

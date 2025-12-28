@@ -31,6 +31,7 @@ import ReportModal from "../common/ReportModal";
 import EmojiPicker from "emoji-picker-react";
 import ShareModal from "../common/ShareModal";
 import { uploadMedia } from "../../services/mediaService";
+import { useTheme } from "../../context/ThemeContext";
 
 const safeFormatDate = (dateString) => {
   try {
@@ -46,6 +47,7 @@ export default function PostCard({ post, onDelete, highlightId }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { socket, isUserOnline } = useSocketContext();
+  const { theme } = useTheme();
 
   const [isSharing, setIsSharing] = useState(false);
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
@@ -180,18 +182,18 @@ export default function PostCard({ post, onDelete, highlightId }) {
 
       if (payload.reactionChange) {
         const { commentId, userId, reaction } = payload.reactionChange;
-        
-        setComments((prev) => 
+
+        setComments((prev) =>
           prev.map((c) => {
             if (c.comment.id === commentId) {
               const isMe = userId === user?.id;
-              
+
               let newCount = c.comment.stats?.likes || 0;
-              
+
               if (reaction) {
-                 newCount++;
+                newCount++;
               } else {
-                 newCount = Math.max(0, newCount - 1);
+                newCount = Math.max(0, newCount - 1);
               }
 
               return {
@@ -201,16 +203,15 @@ export default function PostCard({ post, onDelete, highlightId }) {
                   ...c.comment,
                   stats: {
                     ...c.comment.stats,
-                    likes: newCount
-                  }
-                }
+                    likes: newCount,
+                  },
+                },
               };
             }
             return c;
           })
         );
       }
-    
     };
 
     socket.on("post_update", handleUpdate);
@@ -405,8 +406,13 @@ export default function PostCard({ post, onDelete, highlightId }) {
 
   return (
     <div
-      className={`w-full bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_8px_32px_rgba(31,38,135,0.12)] border border-white/40 p-5 transition-all duration-300 hover:shadow-[0_12px_40px_rgba(31,38,135,0.18)] hover:-translate-y-0.5 ${
-        showMenu ? "relative z-20" : ""
+      style={{
+        backgroundColor: "var(--post-card-bg)",
+        borderColor: "var(--post-card-border)",
+        boxShadow: `0 8px 32px var(--post-card-shadow)`,
+      }}
+      className={`w-full backdrop-blur-md rounded-2xl border p-5 transition-all duration-300 hover:shadow-[0_12px_40px_var(--post-card-hover-shadow)] hover:-translate-y-0.5 ${
+        showMenu ? "relative z-20" : "relative z-0"
       }`}
     >
       <div className="flex justify-between items-center mb-4">
@@ -426,10 +432,16 @@ export default function PostCard({ post, onDelete, highlightId }) {
           </div>
 
           <div className="flex flex-col items-start justify-between">
-            <h3 className="font-bold text-gray-900 leading-tight">
+            <h3
+              style={{ color: "var(--post-author-name)" }}
+              className="font-bold leading-tight"
+            >
               {post.author.name}
             </h3>
-            <p className="text-sm text-gray-500">
+            <p
+              style={{ color: "var(--post-text-secondary)" }}
+              className="text-sm"
+            >
               @{post.author.handle} • {safeFormatDate(post.timestamp)}
             </p>
           </div>
@@ -437,7 +449,8 @@ export default function PostCard({ post, onDelete, highlightId }) {
         {isAuthor ? (
           <button
             onClick={handleDelete}
-            className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all"
+            style={{ color: "var(--post-icon-secondary)" }}
+            className="hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all"
           >
             <Trash2 size={20} />
           </button>
@@ -445,19 +458,26 @@ export default function PostCard({ post, onDelete, highlightId }) {
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="text-gray-400 hover:bg-gray-100 p-2 rounded-lg transition-all"
+              style={{ color: "var(--post-icon-secondary)" }}
+              className="hover:[background:var(--panel-hover-bg)] p-2 rounded-lg transition-all cursor-pointer"
             >
               <MoreVertical size={20} />
             </button>
 
             {showMenu && (
-              <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-100 z-10 overflow-hidden">
+              <div
+                style={{
+                  backgroundColor: "var(--post-menu-bg)",
+                  borderColor: "var(--post-menu-border)",
+                }}
+                className="absolute right-0 top-full mt-1 w-32 rounded-lg shadow-lg border-2 z-10 overflow-hidden"
+              >
                 <button
                   onClick={() => {
                     setShowMenu(false);
                     setIsReportOpen(true);
                   }}
-                  className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer"
                 >
                   <Flag size={16} /> Report
                 </button>
@@ -468,13 +488,19 @@ export default function PostCard({ post, onDelete, highlightId }) {
       </div>
 
       <div className="mb-3 2xl:mb-5">
-        <p className="text-gray-800 text-[15px] 2xl:text-lg leading-relaxed whitespace-pre-line">
+        <p
+          style={{ color: "var(--post-text)" }}
+          className="text-[15px] 2xl:text-lg leading-relaxed whitespace-pre-line"
+        >
           {post.content}
         </p>
       </div>
 
       {post.image && !post.sharePost && (
-        <div className="mb-4 rounded-xl overflow-hidden border border-gray-200/60 shadow-sm">
+        <div
+          style={{ borderColor: "var(--post-input-border)" }}
+          className="mb-4 rounded-xl overflow-hidden border shadow-sm"
+        >
           {isVideoUrl(post.image) ? (
             <video
               src={post.image}
@@ -493,7 +519,11 @@ export default function PostCard({ post, onDelete, highlightId }) {
 
       {post.sharedPost && (
         <div
-          className="mb-4 border border-primary-300/50 rounded-xl overflow-hidden cursor-pointer bg-gradient-to-br from-primary-50/30 to-transparent hover:from-primary-50/50 transition-all shadow-sm"
+          style={{
+            background: "var(--post-shared-bg)",
+            borderColor: "var(--post-shared-border)",
+          }}
+          className="mb-4 border rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-all shadow-sm"
           onClick={() => navigate(`/post/${post.sharedPost.id}`)}
         >
           {post.sharedPost.image && (
@@ -542,12 +572,18 @@ export default function PostCard({ post, onDelete, highlightId }) {
         </div>
       )}
 
-      <div className="flex items-center gap-6 border-t border-gray-200/60 pt-4 mt-3">
+      <div
+        style={{ borderTopColor: "var(--post-border)" }}
+        className="flex items-center gap-6 border-t pt-4 mt-3"
+      >
         <button
           onClick={toggleLike}
-          className={`flex items-center gap-2 text-sm font-semibold transition-all hover:scale-105 ${
-            isLiked ? "text-[#ff6b9d]" : "text-gray-600 hover:text-primary-500"
-          }`}
+          style={{
+            color: isLiked
+              ? "var(--post-like-active)"
+              : "var(--post-icon-secondary)",
+          }}
+          className="flex items-center gap-2 text-sm font-semibold transition-all hover:scale-105 cursor-pointer"
         >
           <Heart size={21} className={isLiked ? "fill-current" : ""} />
           <span>{likeCount > 0 ? likeCount : "Like"}</span>
@@ -555,7 +591,8 @@ export default function PostCard({ post, onDelete, highlightId }) {
 
         <button
           onClick={handleFetchComments}
-          className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-primary-500 transition-all hover:scale-105"
+          style={{ color: "var(--post-icon-secondary)" }}
+          className="flex items-center gap-2 text-sm font-semibold hover:scale-105 cursor-pointer"
         >
           <MessageSquare size={21} />
           <span>{commentCount > 0 ? commentCount : "Comment"}</span>
@@ -564,7 +601,8 @@ export default function PostCard({ post, onDelete, highlightId }) {
         <button
           onClick={handleShareClick}
           disabled={isSharing}
-          className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-primary-500 transition-all hover:scale-105 disabled:opacity-50"
+          style={{ color: "var(--post-icon-secondary)" }}
+          className="flex items-center gap-2 text-sm font-semibold hover:scale-105 cursor-pointer disabled:opacity-50"
         >
           <Share2 size={21} />
           <span>
@@ -616,10 +654,17 @@ export default function PostCard({ post, onDelete, highlightId }) {
                 onKeyDown={handlePostComment}
                 placeholder="Write a comment..."
                 disabled={isUploading}
-                className="w-full bg-gradient-to-r from-gray-50 to-primary-50/30 rounded-full py-2.5 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400/40 transition-all pr-20"
+                style={{
+                  background: "var(--post-input-bg)",
+                  color: "var(--post-text)",
+                }}
+                className="w-full rounded-full py-2.5 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--post-icon-primary)]/40 transition-all pr-20 placeholder:text-[var(--post-text-secondary)]"
               />
 
-              <label className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary cursor-pointer p-1">
+              <label
+                style={{ color: "var(--post-icon-secondary)" }}
+                className="absolute right-10 top-1/2 -translate-y-1/2 hover:[color:var(--post-icon-primary)] cursor-pointer p-1"
+              >
                 <input
                   type="file"
                   hidden
@@ -631,7 +676,8 @@ export default function PostCard({ post, onDelete, highlightId }) {
 
               <button
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-500"
+                style={{ color: "var(--post-icon-secondary)" }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 hover:text-yellow-500"
               >
                 <Smile size={20} />
               </button>

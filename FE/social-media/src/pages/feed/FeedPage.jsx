@@ -5,12 +5,14 @@ import CreatePost from "../../components/feed/CreatePost.jsx";
 import { getFeed } from "../../services/postService";
 import { useSocket } from "../../context/SocketContext";
 import RightPanel from "../../components/layout/RightPanel.jsx";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function FeedPage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const socket = useSocket();
+  const { theme } = useTheme();
 
   //helper to format raw BE data to fe
   //postRepository.js: { post: {...}, author: {...} }
@@ -118,27 +120,51 @@ export default function FeedPage() {
     return () => socket.off("new_post", handleNewPost);
   }, [socket]);
 
-  if (loading) return <div className="text-center pt-10">Loading feed...</div>;
+  if (loading)
+    return (
+      <div
+        style={{ color: "var(--feed-loading-text)" }}
+        className="text-center pt-10"
+      >
+        Loading feed...
+      </div>
+    );
   if (error)
-    return <div className="text-center pt-10 text-red-500">{error}</div>;
+    return (
+      <div
+        style={{ color: "var(--feed-error-text)" }}
+        className="text-center pt-10"
+      >
+        {error}
+      </div>
+    );
 
   return (
-    <div className="w-full min-h-screen flex relative bg-gradient-feedpage">
+    <div
+      style={{ background: "var(--feed-bg)" }}
+      className="w-full min-h-screen flex relative"
+    >
       <div className="w-full flex justify-center">
-        <div className="w-full max-w-2xl pt-8 px-4 sm:px-6 bg-primary-300/20 ">
+        <div
+          style={{ backgroundColor: "var(--feed-content-bg)" }}
+          className="w-full max-w-2xl pt-8 px-4 sm:px-6"
+        >
           {/* Create Post Input */}
 
-          <div className="relative">
+          <div className="relative mb-6 z-30">
             <CreatePost onPostCreated={handlePostCreated} />
           </div>
           {/* Feed List */}
-          <div className="flex flex-col gap-4 relative">
+          <div className="flex flex-col gap-4 relative z-0">
             {posts.map((post) => (
               <PostCard key={post.id} post={post} onDelete={handlePostDelete} />
             ))}
 
             {posts.length === 0 && (
-              <p className="text-center text-gray-500 mt-10">
+              <p
+                style={{ color: "var(--feed-empty-text)" }}
+                className="text-center mt-10"
+              >
                 No posts yet. Be the first!
               </p>
             )}
