@@ -299,65 +299,53 @@ export default function RightPanel() {
           </div>
         ) : conversations.length > 0 ? (
           <div className="flex flex-col gap-1">
-            {conversations.slice(0, 6).map((chat) => (
-              <div
-                key={chat.id}
-                onClick={() => navigate(`/chat/${chat.id}`)}
-                className="flex items-center gap-3 cursor-pointer hover:[background:var(--panel-hover-bg)] p-2 rounded-xl -mx-2 transition-colors group"
-              >
-                <div className="relative">
-                  <img
-                    src={getAvatar(chat.otherUser)}
-                    alt={chat.otherUser?.display_name}
-                    style={{ borderColor: "var(--panel-border)" }}
-                    className="w-10 h-10 rounded-full object-cover border"
-                  />
-                  {isUserOnline(chat.otherUser?.id) && (
-                    <span
-                      style={{
-                        backgroundColor: "var(--post-online-indicator)",
-                        borderColor: "var(--panel-bg)",
-                      }}
-                      className="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 rounded-full"
-                    ></span>
+            {conversations.slice(0, 6).map((chat) => {
+              // Calculate unread status
+              const isUnread =
+                !chat.lastMessage?.is_read &&
+                chat.lastMessage?.sender?.id !== user?.id;
+
+              return (
+                <div
+                  key={chat.id}
+                  onClick={() => navigate(`/chat/${chat.id}`)}
+                  className={`flex items-center gap-3 cursor-pointer p-2 rounded-xl -mx-2 transition-colors group ${
+                    isUnread
+                      ? "bg-purple-50 hover:bg-purple-100" // Purple if unread
+                      : "hover:bg-gray-50" // Default gray hover
+                  }`}
+                >
+                  <div className="relative">
+                    <img
+                      src={getAvatar(chat.otherUser)}
+                      alt={chat.otherUser?.display_name}
+                      className="w-10 h-10 rounded-full object-cover border border-gray-100"
+                    />
+                    {isUserOnline(chat.otherUser?.id) && (
+                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-primary transition-colors">
+                      {chat.otherUser?.display_name}
+                    </p>
+
+                    <p
+                      className={`text-xs truncate ${
+                        isUnread ? "font-bold text-gray-900" : "text-gray-500"
+                      }`}
+                    >
+                      {renderLastMessage(chat)}
+                    </p>
+                  </div>
+                  {chat.updated_at && (
+                    <span className="text-[10px] text-gray-400 whitespace-nowrap self-start mt-1">
+                      {formatTime(chat.updated_at)}
+                    </span>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p
-                    style={{ color: "var(--panel-text)" }}
-                    className="text-sm font-semibold truncate group-hover:[color:var(--panel-link-color)] transition-colors"
-                  >
-                    {chat.otherUser?.display_name}
-                  </p>
-
-                  <p
-                    style={{
-                      color:
-                        !chat.lastMessage?.is_read &&
-                        chat.lastMessage?.sender?.id !== user?.id
-                          ? "var(--panel-text)"
-                          : "var(--panel-text-secondary)",
-                    }}
-                    className={`text-xs truncate ${
-                      !chat.lastMessage?.is_read &&
-                      chat.lastMessage?.sender?.id !== user?.id
-                        ? "font-bold"
-                        : ""
-                    }`}
-                  >
-                    {renderLastMessage(chat)}
-                  </p>
-                </div>
-                {chat.updated_at && (
-                  <span
-                    style={{ color: "var(--panel-text-secondary)" }}
-                    className="text-[10px] whitespace-nowrap self-start mt-1"
-                  >
-                    {formatTime(chat.updated_at)}
-                  </span>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-6">
