@@ -9,13 +9,13 @@ import { getFollowing } from "../../services/userService";
 import { formatDistanceToNow } from "date-fns";
 import { MessageCircle, UserPlus, Users } from "lucide-react";
 import { useSocketContext } from "../../context/SocketContext";
-import { useTheme } from "../../context/ThemeContext";
+//import { useTheme } from "../../context/ThemeContext";
 
 export default function RightPanel() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { socket, isUserOnline } = useSocketContext();
-  const { theme } = useTheme();
+  //const { theme } = useTheme();
 
   const [conversations, setConversations] = useState([]);
   const [contacts, setContacts] = useState([]);
