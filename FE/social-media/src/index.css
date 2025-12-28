@@ -54,6 +54,7 @@
 :root {
   /*default/light*/
 
+  --color-bg-main: white;
   /* Base (Light) */
   --color-main: #fff;
   --color-text-main: #111827; /* gray-900 */
@@ -194,7 +195,7 @@
   --panel-badge-text: #6366f1;
 
   /* ProfilePage specific */
-  --profile-bg: rgba(125, 195, 212, 0.2);
+  --profile-bg: #e0f2fe;
   --profile-card-bg: #ffffff;
   --profile-card-shadow: rgba(0, 0, 0, 0.05);
   --profile-cover-fallback: #a0a0a0;
@@ -262,10 +263,24 @@
   /* === Avatar === */
   --avatar-bg: #e5e7eb;
   --avatar-ring: rgba(84, 86, 233, 0.3);
+
+  /* === Comment Item === */
+  --comment-bg: #f3f4f6;
+  --comment-text: #1f2937;
+  --comment-text-secondary: #9ca3af;
+  --comment-author: #111827;
+  --comment-border: #f3f4f6;
+  --comment-input-bg: #f3f4f6;
+  --comment-input-text: #1f2937;
+  --comment-action-text: #6b7280;
+  --comment-action-hover: #6366f1;
+  --comment-like-active: #ef4444;
+  --comment-reply-border: #e5e7eb;
 }
 
 /*dark Mode */
 :root.dark {
+  --color-bg-main: #1f1f2e;
   --background-image-gradient-feedpage: linear-gradient(
     135deg,
     #111827 0%,
@@ -356,7 +371,7 @@
   --panel-badge-text: #c4b5fd;
 
   /* ProfilePage dark mode */
-  --profile-bg: rgba(31, 41, 55, 0.2);
+  --profile-bg: #1f2937;
   --profile-card-bg: #1f2937;
   --profile-card-shadow: rgba(0, 0, 0, 0.3);
   --profile-cover-fallback: #4b5563;
@@ -424,6 +439,19 @@
   /* === Avatar dark mode === */
   --avatar-bg: #374151;
   --avatar-ring: rgba(124, 58, 237, 0.4);
+
+  /* === Comment Item dark mode === */
+  --comment-bg: #374151;
+  --comment-text: #f3f4f6;
+  --comment-text-secondary: #9ca3af;
+  --comment-author: #f9fafb;
+  --comment-border: #374151;
+  --comment-input-bg: #1f2937;
+  --comment-input-text: #f9fafb;
+  --comment-action-text: #9ca3af;
+  --comment-action-hover: #a78bfa;
+  --comment-like-active: #f87171;
+  --comment-reply-border: #4b5563;
 }
 
 body {
