@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
 import * as commentRepo from '../repositories/commentRepository.js';
-import * as notificationRepo from '../repositories/notificationRepository.js';
 
 export async function createComment({ authorId, postId, content, parentCommentId = null }) {
   const id = uuidv4();
