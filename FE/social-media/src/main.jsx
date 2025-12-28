@@ -10,13 +10,16 @@ import "./index.css"; //reset + base uses Inter
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { SocketProvider } from "./context/SocketContext.jsx";
 import { HeroUIProvider } from "@heroui/react";
+import { ThemeProvider } from "./context/ThemeContext.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <HeroUIProvider>
       <AuthProvider>
         <SocketProvider>
-          <App />
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
         </SocketProvider>
       </AuthProvider>
     </HeroUIProvider>

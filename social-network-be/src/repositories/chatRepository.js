@@ -53,10 +53,13 @@ async function getUserConversations(userId) {
       WITH conv, participant, collect({
         id: msg.id,
         content: msg.content,
+        mediaUrl: msg.mediaUrl,
         created_at: msg.created_at,
+        is_read: msg.is_read,
         sender: { id: sender.id } 
       }) AS messages
       WITH conv, participant, messages[0] AS lastMessage
+      WHERE lastMessage.id IS NOT NULL
       RETURN {
         id: conv.id,
         participants: conv.participants,
@@ -64,7 +67,8 @@ async function getUserConversations(userId) {
           id: participant.id,
           username: participant.username,
           display_name: participant.display_name,
-          avatar_url: participant.avatar_url
+          avatar_url: participant.avatar_url,
+          isBanned: participant.isBanned
         },
         lastMessage: lastMessage,
         updated_at: CASE WHEN lastMessage IS NOT NULL THEN lastMessage.created_at ELSE conv.created_at END
@@ -177,7 +181,7 @@ async function getConversationMessages(conversationId, limit = 50, offset = 0) {
     const messages = result.records.map((r) => {
       const msg = r.get("message");
       if (msg.created_at)
-        msg.created_at = new Date(msg.created_at).toISOString();
+        msg.created_at = new Date(msg.created_at.toString()).toISOString();
       return msg;
     });
 
@@ -222,7 +226,7 @@ async function markConversationAsRead(conversationId, userId) {
 
     if (result.records.length === 0) return 0;
 
-    return result.records[0].get("readCount");
+    return result.records[0].get("readCount").toNumber();
   } finally {
     await session.close();
   }
@@ -250,36 +254,17 @@ async function getUnreadMessageCount(userId) {
   try {
     const query = `
       MATCH (u:User {id: $userId})-[:IN_CONVERSATION]->(conv:Conversation)
-      WITH conv, u
-      UNWIND conv.participants AS participantId
-      MATCH (participant:User {id: participantId})
-      WHERE participantId <> u.id
-      WITH conv, participant
-      OPTIONAL MATCH (conv)<-[:BELONGS_TO]-(msg:Message)
-      WITH conv, participant, msg
-      ORDER BY msg.created_at DESC
-      WITH conv, participant, collect(msg) AS messages
-      WITH conv, participant, messages[0] AS lastMessage
-      RETURN {
-        id: conv.id,
-        participants: conv.participants,
-        otherUser: {
-          id: participant.id,
-          username: participant.username,
-          display_name: participant.display_name,
-          avatar_url: participant.avatar_url
-        },
-        lastMessage: lastMessage,
-        updated_at: CASE WHEN lastMessage IS NOT NULL THEN lastMessage.created_at ELSE conv.created_at END
-      } AS conversation
-      ORDER BY conversation.updated_at DESC
+      MATCH (conv)<-[:BELONGS_TO]-(msg:Message)
+      MATCH (sender:User)-[:SENT]->(msg)
+      WHERE msg.is_read = false AND sender.id <> $userId
+      RETURN count(msg) AS unreadCount
     `;
 
     const result = await session.run(query, { userId });
 
     if (result.records.length === 0) return 0;
 
-    return result.records[0].get("unreadCount");
+    return result.records[0].get("unreadCount").toNumber();
   } finally {
     await session.close();
   }
@@ -321,6 +306,25 @@ async function findConversationByUsers(userId1, userId2) {
   }
 }
 
+async function getUserById(userId) {
+  const session = getSession();
+  try {
+    const query = `
+      MATCH (u:User {id: $userId})
+      RETURN u
+    `;
+    const result = await session.run(query, { userId });
+    if (result.records.length === 0) return null;
+    const user = result.records[0].get("u").properties;
+    if (user.isBanned !== undefined && typeof user.isBanned === 'object') {
+      user.isBanned = Boolean(user.isBanned);
+    }
+    return user;
+  } finally {
+    await session.close();
+  }
+}
+
 export {
   getOrCreateConversation,
   getUserConversations,
@@ -332,4 +336,5 @@ export {
   getUnreadMessageCount,
   findConversationById,
   findConversationByUsers,
+  getUserById,
 };

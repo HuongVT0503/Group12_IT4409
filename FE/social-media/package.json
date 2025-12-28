@@ -19,6 +19,7 @@
     "@tailwindcss/vite": "^4.0.0",
     "axios": "^1.13.2",
     "date-fns": "^4.1.0",
+    "emoji-picker-react": "^4.16.1",
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.555.0",
     "react": "^19.1.1",

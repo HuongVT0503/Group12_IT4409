@@ -42,7 +42,11 @@ export default function InputField({
       className={cn("flex flex-col gap-2", fullWidth && "w-full", className)}
     >
       {label && (
-        <label htmlFor={name} className="text-sm font-semibold text-gray-700">
+        <label
+          htmlFor={name}
+          className="text-sm font-semibold"
+          style={{ color: "var(--input-label)" }}
+        >
           {label}
         </label>
       )}
@@ -50,7 +54,10 @@ export default function InputField({
       <div className="relative">
         {/* Icon bên trái */}
         {Icon && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none flex items-center">
+          <div
+            className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none flex items-center"
+            style={{ color: "var(--input-icon)" }}
+          >
             <Icon size={20} />
           </div>
         )}
@@ -61,12 +68,23 @@ export default function InputField({
           name={name}
           type={inputType}
           disabled={disabled}
+          style={{
+            backgroundColor: disabled
+              ? "var(--input-disabled-bg)"
+              : "var(--input-bg)",
+            borderColor: error
+              ? "var(--input-error-border)"
+              : "var(--input-border)",
+            color: disabled
+              ? "var(--input-disabled-text)"
+              : "var(--input-text)",
+          }}
           className={cn(
-            "w-full font-medium rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 outline-none transition-colors",
-            "focus:border-primary focus:ring-2 focus:ring-gray-500",
-            "disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed",
-            error &&
-              "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+            "w-full font-medium rounded-lg border outline-none transition-colors placeholder:text-[var(--input-placeholder)]",
+            "focus:border-[var(--input-focus-border)] focus:ring-2",
+            "disabled:cursor-not-allowed",
+            error && "focus:ring-[var(--input-error-ring)]",
+            !error && "focus:ring-[var(--input-focus-ring)]",
             sizes[size],
             Icon && "pl-11",
             (isPassword || showClearButton) && "pr-11"
@@ -79,7 +97,8 @@ export default function InputField({
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none"
+            style={{ color: "var(--input-icon)" }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 hover:[color:var(--input-icon-hover)] transition-colors focus:outline-none"
             tabIndex={-1}
           >
             {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
@@ -91,7 +110,8 @@ export default function InputField({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+            style={{ color: "var(--input-icon)" }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 hover:[color:var(--input-icon-hover)] transition-colors focus:outline-none"
             tabIndex={-1}
           >
             <X size={20} />
@@ -102,10 +122,10 @@ export default function InputField({
       {/* Error and helper text */}
       {(error || helperText) && (
         <span
-          className={cn(
-            "text-xs font-medium",
-            error ? "text-red-500" : "text-gray-500"
-          )}
+          style={{
+            color: error ? "var(--input-error-border)" : "var(--input-helper)",
+          }}
+          className="text-xs font-medium"
         >
           {error || helperText}
         </span>

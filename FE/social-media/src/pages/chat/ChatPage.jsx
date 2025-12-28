@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { useSocket } from "../../context/SocketContext";
+import { useSocketContext } from "../../context/SocketContext";
 import {
   getConversations,
   getMessages,
@@ -17,15 +17,18 @@ import {
   Image as ImageIcon,
   Check,
   CheckCheck,
+  Smile,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "../../utils/cn";
 import { uploadMedia } from "../../services/mediaService";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
+import EmojiPicker from "emoji-picker-react";
 
 export default function ChatPage() {
   const { user } = useAuth();
-  const socket = useSocket();
+  const { socket, isUserOnline, updateUnreadCount } = useSocketContext();
+  const location = useLocation();
 
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -35,13 +38,14 @@ export default function ChatPage() {
   const messagesEndRef = useRef(null);
 
   const typingTimeoutRef = useRef(null);
-
   const [isMobileListVisible, setIsMobileListVisible] = useState(true);
 
   const fileInputRef = useRef(null);
   //const [selectedFile, setSelectedFile] = useState(null);
 
   const [friends, setFriends] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const { id: routeChatId } = useParams();
   const navigate = useNavigate();
@@ -143,6 +147,7 @@ export default function ChatPage() {
     socket.on("user_typing", (data) =>
       handleTyping({ ...data, isTyping: true })
     );
+
     return () => {
       socket.off("new_message", handleNewMessage);
       socket.off("user_typing");
@@ -152,52 +157,88 @@ export default function ChatPage() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]); //auto-scroll
+  }, [messages]);
+  //auto-scroll
 
   //restore last active chat
   useEffect(() => {
+    if (location.state?.conversation) {
+      const passedConvo = location.state.conversation;
+      setConversations((prev) => {
+        if (prev.find((c) => c.id === passedConvo.id)) return prev;
+        return [passedConvo, ...prev];
+      });
+      handleSelectChat(passedConvo);
+
+      window.history.replaceState({}, document.title);
+      return;
+    }
+
     //convo are loaded
     if (conversations.length === 0) return;
 
     let targetId = routeChatId;
 
-    if (targetId && selectedChat?.id !== targetId) {
-      const conv = conversations.find((c) => String(c.id) === String(targetId));
+    if (targetId && String(selectedChat?.id) !== String(targetId)) {
+        const conv = conversations.find((c) => String(c.id) === String(targetId));
       if (conv) {
-        handleSelectChat(conv);
+        loadChatData(conv);
       }
     }
-  }, [routeChatId, conversations]); //run when URL changes or convos load
+  }, [routeChatId, conversations, location.state, selectedChat?.id]);
+  //run when URL changes or convos load
 
   //select chat &fetch
-  const handleSelectChat = async (conv) => {
+  const loadChatData = async (conv) => {
+    //realtime read/unread
+    setConversations((prev) =>
+      prev.map((c) => {
+        if (c.id === conv.id && c.lastMessage) {
+          return {
+            ...c,
+            lastMessage: { ...c.lastMessage, is_read: true }
+          };
+        }
+        return c;
+      })
+    );
+
     setSelectedChat(conv);
     setIsMobileListVisible(false);
 
-    navigate(`/chat/${conv.id}`); //update URL wo reload
+    //navigate(`/chat/${conv.id}`); //update URL wo reload
 
     localStorage.setItem("lastActiveChatId", conv.id);
+
+    setMessages([]); 
+    setInputText("");
+    
     try {
       const res = await getMessages(conv.id);
       setMessages(res.data.messages || []);
 
       scrollToBottom();
-
       //join Socket Room for Typing Indicators
       socket.emit("join_conversation", conv.id);
+
+      if (updateUnreadCount) updateUnreadCount();
     } catch (error) {
       console.error("Failed to fetch messages", error);
     }
   };
 
+  const handleSelectChat = (conv) => {
+    navigate(`/chat/${conv.id}`);
+  };
+
   const handleStartChatWithFriend = async (friend) => {
     try {
       //
-      const res = await getOrCreateConversation(friend.id); //raw convo
+      const res = await getOrCreateConversation(friend.id);
+      //raw convo
 
       if (res.data.success && res.data.conversation) {
         const rawConversation = res.data.conversation;
-
         if (!rawConversation.id) {
           console.error(
             "Backend returned conversation without ID:",
@@ -209,14 +250,13 @@ export default function ChatPage() {
         const conversation = {
           ...rawConversation,
           otherUser: friend, //attach friend obj as otherUser
+          isBanned: friend.isBanned || friend.is_banned,
         };
-
         //update convo list if neww
         setConversations((prev) => {
           if (prev.find((c) => c.id === conversation.id)) return prev;
           return [conversation, ...prev];
         });
-
         handleSelectChat(conversation);
       }
     } catch (error) {
@@ -231,7 +271,7 @@ export default function ChatPage() {
     try {
       //loading staet?
       const uploaded = await uploadMedia(file);
-      await handleSend(uploaded.url);
+      await handleSend(null, uploaded.url);
     } catch (error) {
       console.error("Upload failed:", error);
     } finally {
@@ -243,19 +283,31 @@ export default function ChatPage() {
   const isImageUrl = (url) => {
     if (!url) return false;
     return (
-      url.match(/\.(jpeg|jpg|gif|png|webp)$/) != null ||
-      url.includes("/uploads/")
+      url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null);
+      //url.includes("/uploads/")
+    //);
+  };
+
+  const isVideoUrl = (url) => {
+    if (!url) return false;
+    return (
+      url.match(/\.(mp4|webm|ogg|mov)$/i) != null || url.includes("data:video")
     );
   };
 
   //
-  const handleSend = async (contentOverride = null) => {
+  const handleSend = async (contentOverride = null, mediaUrlOverride = null) => {
     const actualContent =
-      typeof contentOverride === "string" ? contentOverride : null;
+      typeof contentOverride === "string" ? contentOverride : inputText;
+    const actualMedia = mediaUrlOverride || null;
+    
     const textToSend = actualContent || inputText;
-    if (!textToSend?.trim() || !selectedChat) return;
+    const mediaToSend = mediaUrlOverride || null;
 
-    if (!actualContent) {
+    if ((!actualContent?.trim() && !actualMedia) || !selectedChat) return;
+    if (!textToSend?.trim() && !mediaToSend || !selectedChat) return;
+
+    if (!contentOverride) {
       setInputText("");
     } //clear immediately
 
@@ -263,11 +315,14 @@ export default function ChatPage() {
     const tempMsg = {
       id: Date.now(),
       content: textToSend,
+      mediaUrl: actualMedia,
       sender: { id: user.id },
       created_at: new Date().toISOString(),
       is_read: false,
     };
+
     setMessages((prev) => [...prev, tempMsg]);
+
 
     scrollToBottom();
 
@@ -287,7 +342,7 @@ export default function ChatPage() {
         return [updated, ...others];
       });
 
-      const res = await sendMessage(selectedChat.otherUser.id, textToSend);
+      const res = await sendMessage(selectedChat.otherUser.id, actualContent, actualMedia);
 
       //
       setMessages((prev) =>
@@ -299,17 +354,36 @@ export default function ChatPage() {
       console.error("Failed to send", err);
       //remove temp msg
       setMessages((prev) => prev.filter((m) => m.id !== tempMsg.id));
+      
+      if (err.response?.data?.code === "USER_BANNED") {
+         //trigger ui stwitch
+         setSelectedChat((prev) => ({
+            ...prev,
+            otherUser: { ...prev.otherUser, isBanned: true }
+         }));
+
+         setConversations((prev) => 
+            prev.map(c => 
+               c.id === selectedChat.id 
+               ? { ...c, otherUser: { ...c.otherUser, isBanned: true } }
+               : c
+            )
+         );
+      }
+
+      
+      if (err.response?.data?.message) {
+        alert(err.response.data.message);
+      }
     }
   };
 
   const handleInputChange = (e) => {
     setInputText(e.target.value);
-
     if (socket && selectedChat) {
       socket.emit("typing", selectedChat.id);
       //clear existing timeout
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-
       //new timeout to stop typing after 2s inactive
       typingTimeoutRef.current = setTimeout(() => {
         socket.emit("stop_typing", selectedChat.id);
@@ -333,19 +407,28 @@ export default function ChatPage() {
     const msg = chat.lastMessage;
     //if no message
     if (!msg) return "Start a conversation";
-
+    const contentToCheck = msg.mediaUrl || msg.content;
     //is img
-    const isImage = isImageUrl(msg.content);
+    const isImage = isImageUrl(contentToCheck);
+    const isVideo = isVideoUrl(contentToCheck);
 
     //did current user sent it
     const isMe = msg.sender?.id === user?.id;
 
+    if (isVideo) {
+      if (isMe) return "You sent a video";
+      return `${
+        chat.otherUser?.display_name?.split(" ")[0] || "User"
+      } sent a video`;
+    }
+    
     if (isImage) {
       if (isMe) return "You sent a picture";
       return `${
         chat.otherUser?.display_name?.split(" ")[0] || "User"
       } sent a picture`;
     }
+
 
     if (isMe) return `You: ${msg.content}`;
     return msg.content;
@@ -357,7 +440,7 @@ export default function ChatPage() {
     }, 100);
   };
 
-  //merge following n ppl i ve chat w 
+  //merge following n ppl i ve chat w
   const horizontalListUsers = useMemo(() => {
     const uniqueMap = new Map();
 
@@ -372,23 +455,36 @@ export default function ChatPage() {
     return Array.from(uniqueMap.values());
   }, [friends, conversations]);
 
+  const filteredConversations = conversations.filter((chat) => {
+    const lowerQuery = searchQuery.toLowerCase();
+    const name = chat.otherUser?.display_name?.toLowerCase() || "";
+    const username = chat.otherUser?.username?.toLowerCase() || "";
+
+    return name.includes(lowerQuery) || username.includes(lowerQuery);
+  });
+
+  const onEmojiClick = (emojiData) => {
+    setInputText((prev) => prev + emojiData.emoji);
+  };
+
   const getAvatar = (u) =>
     u?.avatar_url ||
     `https://ui-avatars.com/api/?name=${
       u?.display_name || "User"
     }&background=random`;
 
+
   return (
     <div className="flex h-[calc(100vh-140px)] lg:h-[calc(100vh-100px)] bg-white rounded-[var(--radius-box)] shadow-sm border border-gray-100 overflow-hidden mt-4">
       {/* LEFT: Conversation List */}
       <div
         className={cn(
-          "w-full md:w-[350px] border-r border-gray-100 flex flex-col bg-white",
+          "w-full md:w-[350px] h-full border-r border-neutral-300 flex flex-col bg-white",
           !isMobileListVisible && "hidden md:flex" //hide on mobile if chat open
         )}
       >
         {/* Search Header */}
-        <div className="p-4 border-b border-gray-100">
+        <div className="p-4 border-b border-neutral-300 ">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Messages</h2>
           <div className="relative">
             <Search
@@ -397,7 +493,9 @@ export default function ChatPage() {
             />
             <input
               type="text"
-              placeholder="Search for something..."
+              placeholder="Search conversations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-gray-50 rounded-full py-2.5 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
@@ -420,7 +518,9 @@ export default function ChatPage() {
                     className="w-12 h-12 rounded-full object-cover border border-gray-100 group-hover:border-primary transition-colors"
                   />
 
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                  {isUserOnline(friend.id) && (
+                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                  )}
                 </div>
                 <span className="text-xs text-gray-600 font-medium truncate w-[64px] text-center">
                   {friend.display_name?.split(" ")[0]}
@@ -438,65 +538,74 @@ export default function ChatPage() {
             </div>
           )}
 
-          {conversations.map((chat) => (
-            <div
-              key={chat.id}
-              onClick={() => handleSelectChat(chat)}
-              className={cn(
-                "p-4 flex gap-3 cursor-pointer transition-all border-l-4 border-transparent hover:bg-gray-50",
-                selectedChat?.id === chat.id
-                  ? "bg-primary/5 border-primary"
-                  : ""
-              )}
-            >
-              <div className="relative">
-                <img
-                  src={getAvatar(chat.otherUser)}
-                  className="w-12 h-12 rounded-full object-cover border border-gray-200"
-                  alt={chat.otherUser?.display_name}
-                />
-                {/* Online Status: always online??*/}
-                <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
-              </div>
+          {filteredConversations.map((chat) => {
+            const isUnread = !chat.lastMessage?.is_read && chat.lastMessage?.sender?.id !== user?.id;
 
-              <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <div className="flex justify-between items-baseline mb-0.5">
-                  <h4
+            return (
+              <div
+                key={chat.id}
+                onClick={() => handleSelectChat(chat)}
+                className={cn(
+                  "p-4 flex gap-3 cursor-pointer transition-all border-l-4 hover:bg-gray-50",
+                  selectedChat?.id === chat.id
+                    ? "bg-primary/5 border-primary"       // Selected
+                    : isUnread
+                    ? "bg-purple-50 border-purple-500"    // Unread
+                    : "border-transparent"                // Default
+                )}
+              >
+                <div className="relative">
+                  <img
+                    src={getAvatar(chat.otherUser)}
+                    className="w-12 h-12 rounded-full object-cover border border-gray-200"
+                    alt={chat.otherUser?.display_name}
+                  />
+                  {/* Online Status*/}
+                  {isUserOnline(chat.otherUser?.id) && (
+                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                  <div className="flex justify-between items-baseline mb-0.5">
+                    <h4
+                      className={cn(
+                        "font-semibold truncate text-[15px]",
+                        selectedChat?.id === chat.id
+                          ? "text-primary"
+                          : "text-gray-900"
+                      )}
+                    >
+                      {chat.otherUser?.display_name}
+                    </h4>
+                    <span className="text-[11px] text-gray-400 font-medium">
+                      {safeFormatDate(
+                        chat.lastMessage?.created_at || chat.updated_at
+                      )}
+                    </span>
+                  </div>
+                  <p
                     className={cn(
-                      "font-semibold truncate text-[15px]",
+                      "text-sm truncate",
                       selectedChat?.id === chat.id
-                        ? "text-primary"
-                        : "text-gray-900"
+                        ? "text-primary/80 font-medium"
+                        : isUnread
+                        ? "text-gray-900 font-bold"
+                        : "text-gray-500"
                     )}
                   >
-                    {chat.otherUser?.display_name}
-                  </h4>
-                  <span className="text-[11px] text-gray-400 font-medium">
-                    {safeFormatDate(
-                      chat.lastMessage?.created_at || chat.updated_at
+                    {typingUsers[chat.id] ? (
+                      <span className="italic text-primary animate-pulse">
+                        Typing...
+                      </span>
+                    ) : (
+                      renderLastMessage(chat)
                     )}
-                  </span>
+                  </p>
                 </div>
-                <p
-                  className={cn(
-                    "text-sm truncate",
-                    selectedChat?.id === chat.id
-                      ? "text-primary/80 font-medium"
-                      : "text-gray-500"
-                  )}
-                >
-                  {/*?user is typing? otherwise show last msg */}
-                  {typingUsers[chat.id] ? (
-                    <span className="italic text-primary animate-pulse">
-                      Typing...
-                    </span>
-                  ) : (
-                    renderLastMessage(chat)
-                  )}
-                </p>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -542,12 +651,18 @@ export default function ChatPage() {
                     <h3 className="font-bold text-gray-900 leading-tight">
                       {selectedChat.otherUser?.display_name}
                     </h3>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                    {isUserOnline(selectedChat.otherUser?.id) ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span className="text-xs text-gray-500 font-medium">
+                          Online
+                        </span>
+                      </div>
+                    ) : (
                       <span className="text-xs text-gray-500 font-medium">
-                        Online
+                        Offline
                       </span>
-                    </div>
+                    )}
                   </div>
                 </Link>
               </div>
@@ -568,6 +683,8 @@ export default function ChatPage() {
             {/* Messages Area */}
             <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4 bg-[#F8F9FA]">
               {messages.map((msg, index) => {
+                const displayMedia = msg.mediaUrl || msg.content;
+
                 const isMe = msg.sender?.id === user?.id;
                 //group logic: check if next msg is same sender to adjust border radius
                 const isNextSame =
@@ -592,17 +709,24 @@ export default function ChatPage() {
                             (isMe ? "rounded-br-sm" : "rounded-bl-sm") // Stack effect
                         )}
                       >
-                        {isImageUrl(msg.content) ? (
+                        {isImageUrl(displayMedia) ? (
                           <img
-                            src={msg.content}
+                            src={displayMedia}
                             alt="Attachment"
                             className="max-w-[200px] max-h-[200px] rounded-lg object-cover"
                             onError={(e) => {
                               e.target.style.display = "none";
                             }}
                           />
+                        ) : isVideoUrl(displayMedia) ? (
+                          <video
+                            src={displayMedia}
+                            controls
+                            preload="metadata"
+                            className="max-w-[250px] max-h-[250px] rounded-lg object-cover bg-black"
+                          />
                         ) : (
-                          <p>{msg.content}</p>
+                          <p>{msg.content ||""}</p>
                         )}
                       </div>
 
@@ -641,14 +765,38 @@ export default function ChatPage() {
             </div>
 
             {/* Input Area */}
-            <div className="p-4 bg-white border-t border-gray-100">
+            {(selectedChat.otherUser?.isBanned || selectedChat.otherUser?.is_banned)? (
+              <div className="p-6 bg-gray-50 border-t border-gray-200 flex flex-col items-center justify-center text-center">
+                <div className="bg-red-100 text-red-500 p-3 rounded-full mb-2">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                </div>
+                <p className="text-gray-700 font-semibold">User Banned</p>
+                <p className="text-sm text-gray-500 mt-1">You cannot chat with this user because their account has been suspended.</p>
+              </div>
+            ) : (
+            <div className="p-4 bg-white border-t border-gray-100 relative">
+              {showEmojiPicker && (
+                <div className="absolute bottom-20 left-4 z-50 shadow-xl">
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowEmojiPicker(false)}
+                  />
+                  <div className="relative z-50">
+                    <EmojiPicker
+                      onEmojiClick={onEmojiClick}
+                      width={300}
+                      height={350}
+                    />
+                  </div>
+                </div>
+              )}
               <div className="flex items-center gap-2 max-w-4xl mx-auto">
                 <label className="p-2.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-full transition-colors">
                   <input
                     type="file"
                     ref={fileInputRef}
                     className="hidden"
-                    accept="image/*"
+                    accept="image/*, video/*"
                     onChange={handleImageUpload}
                   />
 
@@ -659,6 +807,12 @@ export default function ChatPage() {
                     <ImageIcon size={22} />
                   </button>
                 </label>
+                <button
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="p-2.5 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 rounded-full transition-colors"
+                >
+                  <Smile size={22} />
+                </button>
 
                 <div className="flex-1 relative">
                   <input
@@ -687,6 +841,7 @@ export default function ChatPage() {
                 </div>
               </div>
             </div>
+            )}
           </>
         ) : (
           // Empty State

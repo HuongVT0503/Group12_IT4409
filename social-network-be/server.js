@@ -25,8 +25,27 @@ export { io };
 
 io.use(socketAuthMiddleware);
 
+const onlineUsers = new Map(); // Map<userId, Set<socketId>>
+
 io.on('connection', (socket) => {
     console.log('New client connected:', socket.id, 'User:', socket.user?.id);
+
+    const userId = socket.user?.id;
+
+    if (userId) {
+        if (!onlineUsers.has(userId)) {
+            onlineUsers.set(userId, new Set());
+        }
+        onlineUsers.get(userId).add(socket.id);
+
+        //broadcast that this user is online
+        io.emit('user_online', userId);
+        
+        //send list of online users to the newly connected client
+        socket.emit('get_online_users', Array.from(onlineUsers.keys()));
+        
+        console.log(`User ${userId} connected. Online: ${onlineUsers.size}`);
+    }
 
     // Join user's personal room
     socket.on('join', (userId) => {
@@ -77,6 +96,15 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
+        if (userId && onlineUsers.has(userId)) {
+            const userSockets = onlineUsers.get(userId);
+            userSockets.delete(socket.id);
+
+            if (userSockets.size === 0) {
+                onlineUsers.delete(userId);
+                io.emit('user_offline', userId);
+            }
+        }
         console.log('Client disconnected:', socket.id);
     });
 });

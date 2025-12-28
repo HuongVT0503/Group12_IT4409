@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { formatDistanceToNow } from "date-fns"; //?date-fns
+import { formatDistanceToNow } from "date-fns";
 import {
   Heart,
   MessageSquare,
@@ -7,8 +7,10 @@ import {
   Share2,
   MoreVertical,
   Flag,
-} from "lucide-react"; //share2
-//import Button from "../common/ButtonComponent";
+  Smile,
+  Image as ImageIcon,
+  X,
+} from "lucide-react";
 import {
   likePost,
   unlikePost,
@@ -21,11 +23,15 @@ import {
   deleteComment,
 } from "../../services/commentService";
 import { useAuth } from "../../context/AuthContext";
-import { useSocket } from "../../context/SocketContext";
+import { useSocketContext } from "../../context/SocketContext";
 import { Link, useNavigate } from "react-router-dom";
 import Avatar from "../common/Avatar";
 import CommentItem from "./CommentItem";
 import ReportModal from "../common/ReportModal";
+import EmojiPicker from "emoji-picker-react";
+import ShareModal from "../common/ShareModal";
+import { uploadMedia } from "../../services/mediaService";
+import { useTheme } from "../../context/ThemeContext";
 
 const safeFormatDate = (dateString) => {
   try {
@@ -37,17 +43,22 @@ const safeFormatDate = (dateString) => {
   }
 };
 
-export default function PostCard({ post, onDelete }) {
+export default function PostCard({
+  post,
+  onDelete,
+  highlightId,
+  readOnly = false,
+}) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const socket = useSocket();
+  const { socket, isUserOnline } = useSocketContext();
+  const { theme } = useTheme();
 
   const [isSharing, setIsSharing] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [showComments, setShowComments] = useState(false);
   const [likeCount, setLikeCount] = useState(post.stats?.likes || 0);
   const [commentCount, setCommentCount] = useState(post.stats?.comments || 0);
-
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
@@ -55,16 +66,42 @@ export default function PostCard({ post, onDelete }) {
 
   const [showMenu, setShowMenu] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  const [isUploading, setIsUploading] = useState(false);
+
+  const [commentFile, setCommentFile] = useState(null);
+  const [commentPreview, setCommentPreview] = useState(null);
+
+  const isVideoUrl = (url) => {
+    if (!url) return false;
+    return (
+      url.match(/\.(mp4|webm|ogg|mov)$/i) != null || url.includes("data:video")
+    );
+  };
+
+  const handleCommentFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCommentFile(file);
+      setCommentPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const clearCommentFile = () => {
+    setCommentFile(null);
+    setCommentPreview(null);
+  };
 
   const commentTree = useMemo(() => {
     const map = {};
     const roots = [];
 
-    //innit
     comments.forEach((c) => {
       map[c.comment.id] = { ...c, replies: [] };
     });
-    //link
+
     comments.forEach((c) => {
       if (c.parentId && map[c.parentId]) {
         map[c.parentId].replies.push(map[c.comment.id]);
@@ -76,19 +113,20 @@ export default function PostCard({ post, onDelete }) {
     return roots;
   }, [comments]);
 
-  //initialize
-  useEffect(() => {}, [post]);
-
-  //listen for real-time update
   useEffect(() => {
     if (!socket || !post.id) return;
 
-    //JOIN post ROOM
     socket.emit("join_post", post.id);
 
     const handleUpdate = (payload) => {
+      if (payload.postId && payload.postId !== post.id) return;
+
       if (payload.deleted) {
         if (onDelete) onDelete(post.id);
+        return;
+      }
+
+      if (payload.likedBy === user?.id || payload.unlikedBy === user?.id) {
         return;
       }
 
@@ -104,11 +142,8 @@ export default function PostCard({ post, onDelete }) {
         if (payload.newComment.author?.id === user?.id) {
           return;
         }
-        //be payload: { newComment: commentObj }
-        //commentCount;
         setCommentCount((prev) => prev + 1);
 
-        //be 'createComment' needs author info?
         if (showComments) {
           setComments((prev) => {
             if (prev.find((c) => c.comment.id === payload.newComment.id))
@@ -149,6 +184,39 @@ export default function PostCard({ post, onDelete }) {
           );
         }
       }
+
+      if (payload.reactionChange) {
+        const { commentId, userId, reaction } = payload.reactionChange;
+
+        setComments((prev) =>
+          prev.map((c) => {
+            if (c.comment.id === commentId) {
+              const isMe = userId === user?.id;
+
+              let newCount = c.comment.stats?.likes || 0;
+
+              if (reaction) {
+                newCount++;
+              } else {
+                newCount = Math.max(0, newCount - 1);
+              }
+
+              return {
+                ...c,
+                isLiked: isMe ? !!reaction : c.isLiked,
+                comment: {
+                  ...c.comment,
+                  stats: {
+                    ...c.comment.stats,
+                    likes: newCount,
+                  },
+                },
+              };
+            }
+            return c;
+          })
+        );
+      }
     };
 
     socket.on("post_update", handleUpdate);
@@ -159,6 +227,31 @@ export default function PostCard({ post, onDelete }) {
       socket.emit("leave_post", post.id);
     };
   }, [socket, post.id, user?.id, showComments, onDelete, comments]);
+
+  //auto openning & scrolling
+  useEffect(() => {
+    if (highlightId && !showComments) {
+      handleFetchComments();
+    }
+  }, [highlightId]);
+
+  //scroll once cmt is loaded
+  useEffect(() => {
+    if (highlightId && showComments && comments.length > 0) {
+      setTimeout(() => {
+        const element = document.getElementById(`comment-${highlightId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          element.classList.add(
+            "bg-blue-50",
+            "transition-colors",
+            "duration-1000"
+          );
+          setTimeout(() => element.classList.remove("bg-blue-50"), 2000);
+        }
+      }, 500);
+    }
+  }, [highlightId, showComments, comments.length]);
 
   const toggleLike = async () => {
     // UI update
@@ -173,7 +266,7 @@ export default function PostCard({ post, onDelete }) {
         await likePost(post.id);
       }
     } catch (error) {
-      setIsLiked(previousState); //revert
+      setIsLiked(previousState);
       setLikeCount((prev) => (previousState ? prev + 1 : prev - 1));
       console.error("Like failed", error);
     }
@@ -193,7 +286,7 @@ export default function PostCard({ post, onDelete }) {
       setLoadingComments(true);
       try {
         const res = await getComments(post.id);
-        setComments(res.data.data); // BE returns { data: [...] }
+        setComments(res.data.data);
       } catch (e) {
         console.error(e);
       }
@@ -203,9 +296,20 @@ export default function PostCard({ post, onDelete }) {
   };
 
   const handlePostComment = async (e) => {
-    if (e.key === "Enter" && newComment.trim()) {
+    if (
+      e.key === "Enter" &&
+      (newComment.trim() || commentFile) &&
+      !isUploading
+    ) {
       try {
-        const res = await createComment(post.id, newComment);
+        let mediaUrl = null;
+        if (commentFile) {
+          setIsUploading(true);
+          const uploaded = await uploadMedia(commentFile);
+          mediaUrl = uploaded.url;
+          setIsUploading(false);
+        }
+        const res = await createComment(post.id, newComment, null, mediaUrl);
         setComments((prev) => {
           if (prev.some((c) => c.comment.id === res.data.comment.id))
             return prev;
@@ -216,16 +320,18 @@ export default function PostCard({ post, onDelete }) {
           ];
         });
         setNewComment("");
+        clearCommentFile();
         setCommentCount((prev) => prev + 1);
       } catch (err) {
         console.error(err);
+        setIsUploading(false);
       }
     }
   };
 
-  const handleReplySubmit = async (parentId, content) => {
+  const handleReplySubmit = async (parentId, content, mediaUrl) => {
     try {
-      const res = await createComment(post.id, content, parentId);
+      const res = await createComment(post.id, content, parentId, mediaUrl);
 
       setComments((prev) => {
         if (prev.some((c) => c.comment.id === res.data.comment.id)) return prev;
@@ -261,7 +367,6 @@ export default function PostCard({ post, onDelete }) {
     const previousComments = [...comments];
     const previousCount = commentCount;
 
-    //
     setComments((prev) => prev.filter((c) => !idsToRemove.has(c.comment.id)));
     setCommentCount((prev) => Math.max(0, prev - idsToRemove.size));
 
@@ -276,12 +381,13 @@ export default function PostCard({ post, onDelete }) {
     }
   };
 
-  const handleShare = async () => {
-    //caption
-    const caption = window.prompt("Say something about this post (optional):");
-    if (caption === null) return; //user cancel
+  const handleShareClick = () => {
+    setShowShareModal(true);
+  };
 
+  const handleShareSubmit = async (caption) => {
     setIsSharing(true);
+    setShowShareModal(false);
     try {
       await sharePost(post.id, caption);
       alert("Post shared successfully!");
@@ -294,32 +400,56 @@ export default function PostCard({ post, onDelete }) {
     }
   };
 
+  const onEmojiClick = (emojiData) => {
+    setNewComment((prev) => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
+  };
+
   ///
   const isAuthor =
     user?.id === post.author.id || user?.id === post.author.userId;
 
   return (
     <div
-      className={`w-full bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_8px_32px_rgba(31,38,135,0.12)] border border-white/40 p-5 transition-all duration-300 hover:shadow-[0_12px_40px_rgba(31,38,135,0.18)] hover:-translate-y-0.5 ${
-        showMenu ? "relative z-20" : ""
+      style={{
+        backgroundColor: "var(--post-card-bg)",
+        borderColor: "var(--post-card-border)",
+        boxShadow: `0 8px 32px var(--post-card-shadow)`,
+      }}
+      className={`w-full backdrop-blur-md rounded-2xl border p-5 transition-all duration-300 hover:shadow-[0_12px_40px_var(--post-card-hover-shadow)] hover:-translate-y-0.5 ${
+        showMenu ? "relative z-20" : "relative z-0"
       }`}
     >
-      {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <Link to={`/profile/${post.author.id}`} className="flex gap-3">
-          <Avatar
-            src={
-              post.author.avatar ||
-              `https://ui-avatars.com/api/?name=${post.author.name}`
-            }
-            alt={post.author.name}
-            size={11}
-          />
+        <Link
+          to={`/profile/${post.author.id}`}
+          className={`flex gap-3 ${readOnly ? "pointer-events-none" : ""}`}
+        >
+          <div className="relative">
+            <Avatar
+              src={
+                post.author.avatar ||
+                `https://ui-avatars.com/api/?name=${post.author.name}`
+              }
+              alt={post.author.name}
+              size={11}
+            />
+            {isUserOnline(post.author.id) && (
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+            )}
+          </div>
+
           <div className="flex flex-col items-start justify-between">
-            <h3 className="font-bold text-gray-900 leading-tight">
+            <h3
+              style={{ color: "var(--post-author-name)" }}
+              className="font-bold leading-tight"
+            >
               {post.author.name}
             </h3>
-            <p className="text-sm text-gray-500">
+            <p
+              style={{ color: "var(--post-text-secondary)" }}
+              className="text-sm"
+            >
               @{post.author.handle} • {safeFormatDate(post.timestamp)}
             </p>
           </div>
@@ -327,7 +457,8 @@ export default function PostCard({ post, onDelete }) {
         {isAuthor ? (
           <button
             onClick={handleDelete}
-            className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all"
+            style={{ color: "var(--post-icon-secondary)" }}
+            className="hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all"
           >
             <Trash2 size={20} />
           </button>
@@ -335,20 +466,26 @@ export default function PostCard({ post, onDelete }) {
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="text-gray-400 hover:bg-gray-100 p-2 rounded-lg transition-all"
+              style={{ color: "var(--post-icon-secondary)" }}
+              className="hover:[background:var(--panel-hover-bg)] p-2 rounded-lg transition-all cursor-pointer"
             >
               <MoreVertical size={20} />
             </button>
 
-            {/* Dropdown Menu */}
             {showMenu && (
-              <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-100 z-10 overflow-hidden">
+              <div
+                style={{
+                  backgroundColor: "var(--post-menu-bg)",
+                  borderColor: "var(--post-menu-border)",
+                }}
+                className="absolute right-0 top-full mt-1 w-32 rounded-lg shadow-lg border-2 z-10 overflow-hidden"
+              >
                 <button
                   onClick={() => {
                     setShowMenu(false);
                     setIsReportOpen(true);
                   }}
-                  className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer"
                 >
                   <Flag size={16} /> Report
                 </button>
@@ -358,41 +495,67 @@ export default function PostCard({ post, onDelete }) {
         )}
       </div>
 
-      {/* Content */}
       <div className="mb-3 2xl:mb-5">
-        <p className="text-gray-800 text-[15px] 2xl:text-lg leading-relaxed whitespace-pre-line">
+        <p
+          style={{ color: "var(--post-text)" }}
+          className="text-[15px] 2xl:text-lg leading-relaxed whitespace-pre-line"
+        >
           {post.content}
         </p>
       </div>
 
-      {/* Media */}
       {post.image && !post.sharePost && (
-        <div className="mb-4 rounded-xl overflow-hidden border border-gray-200/60 shadow-sm">
-          <img
-            src={post.image}
-            alt="Post content"
-            className="w-full h-auto object-cover max-h-[500px] 2xl:max-h-[700px]"
-          />
+        <div
+          style={{ borderColor: "var(--post-input-border)" }}
+          className="mb-4 rounded-xl overflow-hidden border shadow-sm"
+        >
+          {isVideoUrl(post.image) ? (
+            <video
+              src={post.image}
+              controls
+              className="w-full h-auto object-cover max-h-[500px]"
+            />
+          ) : (
+            <img
+              src={post.image}
+              alt="Post content"
+              className="w-full h-auto object-cover max-h-[500px]"
+            />
+          )}
         </div>
       )}
 
-      {/*Shared Post / if isrepost */}
       {post.sharedPost && (
         <div
-          className="mb-4 border border-primary-300/50 rounded-xl overflow-hidden cursor-pointer bg-gradient-to-br from-primary-50/30 to-transparent hover:from-primary-50/50 transition-all shadow-sm"
-          onClick={() => navigate(`/post/${post.sharedPost.id}`)} //og post link
+          style={{
+            background: "var(--post-shared-bg)",
+            borderColor: "var(--post-shared-border)",
+          }}
+          className="mb-4 border rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-all shadow-sm"
+          onClick={() => navigate(`/post/${post.sharedPost.id}`)}
         >
-          {/* Sharedpost media */}
           {post.sharedPost.image && (
             <div className="h-48 w-full overflow-hidden bg-gray-100 border-b border-neutral-300">
-              <img
-                src={post.sharedPost.image}
-                alt="Shared post content"
-                className="w-full h-full object-cover"
-              />
+              {isVideoUrl(post.sharedPost.image) ? (
+                <video
+                  src={post.sharedPost.image}
+                  controls
+                  preload="metadata"
+                  className="w-full h-full object-cover"
+                  onClick={(e) => {
+                    //e.preventDefault();
+                    e.target.paused ? e.target.play() : e.target.pause();
+                  }}
+                />
+              ) : (
+                <img
+                  src={post.sharedPost.image}
+                  alt="Shared post content"
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
           )}
-          {/* Sharedpost in4 */}
           <div className="p-3">
             <div className="flex items-center gap-2 mb-2">
               <img
@@ -417,13 +580,18 @@ export default function PostCard({ post, onDelete }) {
         </div>
       )}
 
-      {/* Actions */}
-      <div className="flex items-center gap-6 border-t border-gray-200/60 pt-4 mt-3">
+      <div
+        style={{ borderTopColor: "var(--post-border)" }}
+        className="flex items-center gap-6 border-t pt-4 mt-3"
+      >
         <button
           onClick={toggleLike}
-          className={`flex items-center gap-2 text-sm font-semibold transition-all hover:scale-105 ${
-            isLiked ? "text-[#ff6b9d]" : "text-gray-600 hover:text-primary-500"
-          }`}
+          style={{
+            color: isLiked
+              ? "var(--post-like-active)"
+              : "var(--post-icon-secondary)",
+          }}
+          className="flex items-center gap-2 text-sm font-semibold transition-all hover:scale-105 cursor-pointer"
         >
           <Heart size={21} className={isLiked ? "fill-current" : ""} />
           <span>{likeCount > 0 ? likeCount : "Like"}</span>
@@ -431,16 +599,18 @@ export default function PostCard({ post, onDelete }) {
 
         <button
           onClick={handleFetchComments}
-          className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-primary-500 transition-all hover:scale-105"
+          style={{ color: "var(--post-icon-secondary)" }}
+          className="flex items-center gap-2 text-sm font-semibold hover:scale-105 cursor-pointer"
         >
           <MessageSquare size={21} />
           <span>{commentCount > 0 ? commentCount : "Comment"}</span>
         </button>
 
         <button
-          onClick={handleShare}
+          onClick={handleShareClick}
           disabled={isSharing}
-          className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-primary-500 transition-all hover:scale-105 disabled:opacity-50"
+          style={{ color: "var(--post-icon-secondary)" }}
+          className="flex items-center gap-2 text-sm font-semibold hover:scale-105 cursor-pointer disabled:opacity-50"
         >
           <Share2 size={21} />
           <span>
@@ -448,10 +618,34 @@ export default function PostCard({ post, onDelete }) {
           </span>
         </button>
       </div>
-      {/* Comments Section  */}
-      {showComments && (
+
+      {!readOnly && showComments && (
         <div className="mt-4 pt-4 border-t border-gray-200/60 animate-in fade-in slide-in-from-top-2">
-          <div className="flex gap-3 items-center mb-4">
+          {commentPreview && (
+            <div className="relative mb-2 ml-12 w-24 h-24 group">
+              {commentFile?.type?.startsWith("video/") ? (
+                <video
+                  src={commentPreview}
+                  className="w-full h-full object-cover rounded-lg border border-gray-200"
+                  autoPlay
+                  muted
+                  loop
+                />
+              ) : (
+                <img
+                  src={commentPreview}
+                  className="w-full h-full object-cover rounded-lg border border-gray-200"
+                />
+              )}
+              <button
+                onClick={clearCommentFile}
+                className="absolute -top-2 -right-2 bg-gray-900 text-white rounded-full p-1 hover:bg-black transition-colors"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          )}
+          <div className="flex gap-3 items-center mb-4 relative">
             <img
               src={
                 user?.avatar_url ||
@@ -459,15 +653,60 @@ export default function PostCard({ post, onDelete }) {
               }
               className="w-9 h-9 rounded-full ring-2 ring-primary-400/20"
             />
-            <input
-              type="text"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              onKeyDown={handlePostComment}
-              placeholder="Write a comment..."
-              className="w-full bg-gradient-to-r from-gray-50 to-primary-50/30 rounded-full py-2.5 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400/40 transition-all"
-            />
+
+            <div className="relative w-full">
+              <input
+                type="text"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                onKeyDown={handlePostComment}
+                placeholder="Write a comment..."
+                disabled={isUploading}
+                style={{
+                  background: "var(--post-input-bg)",
+                  color: "var(--post-text)",
+                }}
+                className="w-full rounded-full py-2.5 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--post-icon-primary)]/40 transition-all pr-20 placeholder:text-[var(--post-text-secondary)]"
+              />
+
+              <label
+                style={{ color: "var(--post-icon-secondary)" }}
+                className="absolute right-10 top-1/2 -translate-y-1/2 hover:[color:var(--post-icon-primary)] cursor-pointer p-1"
+              >
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*,video/*"
+                  onChange={handleCommentFileSelect}
+                />
+                <ImageIcon size={18} />
+              </label>
+
+              <button
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                style={{ color: "var(--post-icon-secondary)" }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 hover:text-yellow-500"
+              >
+                <Smile size={20} />
+              </button>
+            </div>
           </div>
+
+          {showEmojiPicker && (
+            <div className="absolute top-10 right-0 z-50">
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowEmojiPicker(false)}
+              />
+              <div className="relative z-50">
+                <EmojiPicker
+                  onEmojiClick={onEmojiClick}
+                  width={300}
+                  height={350}
+                />
+              </div>
+            </div>
+          )}
 
           {loadingComments ? (
             <p className="text-xs 2xl:text-sm text-center">Loading...</p>
@@ -492,6 +731,13 @@ export default function PostCard({ post, onDelete }) {
         onClose={() => setIsReportOpen(false)}
         targetId={post.id}
         targetType="Post"
+      />
+
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        onShare={handleShareSubmit}
+        loading={isSharing}
       />
     </div>
   );
