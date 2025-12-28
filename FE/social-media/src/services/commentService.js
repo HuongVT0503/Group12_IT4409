@@ -28,3 +28,7 @@ export const likeComment = async (commentId) => {
 export const unlikeComment = async (commentId) => {
   return await api.delete(`/comments/${commentId}/reactions`);
 };
+
+export const updateComment = async (commentId, content) => {
+  return await api.put(`/comments/${commentId}`, { content });
+};

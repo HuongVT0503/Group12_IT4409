@@ -12,7 +12,7 @@ import {
 import { useSocketContext } from "../../context/SocketContext";
 import EmojiPicker from "emoji-picker-react";
 import { uploadMedia } from "../../services/mediaService";
-import { likeComment, unlikeComment } from "../../services/commentService";
+import { likeComment, unlikeComment, updateComment } from "../../services/commentService";
 import Avatar from "../common/Avatar";
 
 export default function CommentItem({
@@ -33,6 +33,9 @@ export default function CommentItem({
   const [isLiked, setIsLiked] = useState(item.isLiked || false);
   const [likeCount, setLikeCount] = useState(item.comment.stats?.likes || 0);
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(item.comment.content);
+
   //sync when parent 'item' changes
   useEffect(() => {
     setIsLiked(item.isLiked || false);
@@ -42,6 +45,16 @@ export default function CommentItem({
   const onEmojiClick = (emojiData) => {
     setReplyText((prev) => prev + emojiData.emoji);
     setShowEmojiPicker(false);
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editContent.trim()) return;
+    try {
+      await updateComment(item.comment.id, editContent);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to edit comment", error);
+    }
   };
 
   const isCommentAuthor =
@@ -160,13 +173,28 @@ export default function CommentItem({
                 • {safeDate(item.comment.created_at)}
               </span>
             </div>
-            <p
-              className="text-sm mt-1 whitespace-pre-wrap break-words"
-              style={{ color: "var(--comment-text)" }}
-            >
-              {item.comment.content}
-            </p>
-
+            {isEditing ? (
+              <div className="mt-1 flex flex-col gap-2">
+                 <textarea
+                   value={editContent}
+                   onChange={(e) => setEditContent(e.target.value)}
+                   className="w-full text-sm p-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
+                   rows={2}
+                 />
+                 <div className="flex gap-2 justify-end">
+                    <button onClick={() => setIsEditing(false)} className="text-xs text-red-500 font-medium">Cancel</button>
+                    <button onClick={handleEditSubmit} className="text-xs text-green-600 font-medium">Save</button>
+                 </div>
+              </div>
+            ) : (
+              <p
+                className="text-sm mt-1 whitespace-pre-wrap break-words"
+                style={{ color: "var(--comment-text)" }}
+              >
+                {item.comment.content}
+              </p>
+            )}
+            
             {/* render media */}
             {item.comment.media && item.comment.media.length > 0 && (
               <div className="mt-2">
@@ -209,6 +237,15 @@ export default function CommentItem({
             >
               Reply
             </button>
+            
+            {isCommentAuthor && (
+               <button
+                onClick={() => setIsEditing(!isEditing)}
+                className="text-xs font-semibold text-gray-500 hover:text-blue-500 transition-colors flex items-center gap-1"
+              >
+                Edit
+              </button>
+            )}
 
             {canDelete && (
               <button
@@ -219,6 +256,10 @@ export default function CommentItem({
                 Delete
               </button>
             )}
+
+            {item.comment.updated_at && item.comment.updated_at !== item.comment.created_at && (
+                  <span className="text-[10px] text-gray-400 ml-2">(edited)</span>
+                )}
           </div>
         </div>
       </div>

@@ -10,12 +10,15 @@ import {
   Smile,
   Image as ImageIcon,
   X,
+  Edit2,
+  Check,
 } from "lucide-react";
 import {
   likePost,
   unlikePost,
   deletePost,
   sharePost,
+  editPost,
 } from "../../services/postService";
 import {
   getComments,
@@ -74,6 +77,9 @@ export default function PostCard({
   const [commentFile, setCommentFile] = useState(null);
   const [commentPreview, setCommentPreview] = useState(null);
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(post.content);
+
   const isInteracting = showMenu || showEmojiPicker || showComments;
 
   const isVideoUrl = (url) => {
@@ -122,6 +128,30 @@ export default function PostCard({
 
     const handleUpdate = (payload) => {
       if (payload.postId && payload.postId !== post.id) return;
+
+      if (payload.updatedPost) {
+        setEditContent(payload.updatedPost.content);
+      }
+
+      if (payload.updatedComment) {
+        if (showComments) {
+          setComments((prev) =>
+            prev.map((c) => {
+              if (c.comment.id === payload.updatedComment.id) {
+                return {
+                  ...c,
+                  comment: {
+                    ...c.comment,
+                    content: payload.updatedComment.content,
+                    updated_at: payload.updatedComment.updated_at,
+                  },
+                };
+              }
+              return c;
+            })
+          );
+        }
+      }
 
       if (payload.deleted) {
         if (onDelete) onDelete(post.id);
@@ -407,6 +437,21 @@ export default function PostCard({
     setShowEmojiPicker(false);
   };
 
+  const handleSaveEdit = async () => {
+    if (!editContent.trim() || editContent === post.content) {
+      setIsEditing(false);
+      return;
+    }
+    try {
+      await editPost(post.id, editContent);
+      setIsEditing(false);
+      post.content = editContent;
+    } catch (error) {
+      console.error("Failed to edit post", error);
+      alert("Failed to update post");
+    }
+  };
+
   ///
   const isAuthor =
     user?.id === post.author.id || user?.id === post.author.userId;
@@ -459,6 +504,15 @@ export default function PostCard({
           </div>
         </Link>
         {isAuthor ? (
+          <div className="flex gap-1">
+    <button
+      onClick={() => setIsEditing(true)}
+      style={{ color: "var(--post-icon-secondary)" }}
+      className="hover:text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-all"
+      title="Edit Post"
+    >
+      <Edit2 size={20} />
+    </button>
           <button
             onClick={handleDelete}
             style={{ color: "var(--post-icon-secondary)" }}
@@ -466,6 +520,7 @@ export default function PostCard({
           >
             <Trash2 size={20} />
           </button>
+          </div>
         ) : (
           <div className="relative">
             <button
@@ -487,6 +542,16 @@ export default function PostCard({
                 <button
                   onClick={() => {
                     setShowMenu(false);
+                    setIsEditing(true);
+                  }}
+                  className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 cursor-pointer"
+                >
+                  <Edit2 size={16} /> Edit
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
                     setIsReportOpen(true);
                   }}
                   className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer"
@@ -500,12 +565,40 @@ export default function PostCard({
       </div>
 
       <div className="mb-3 2xl:mb-5">
-        <p
-          style={{ color: "var(--post-text)" }}
-          className="text-[15px] 2xl:text-lg leading-relaxed whitespace-pre-line"
-        >
-          {post.content}
-        </p>
+        {isEditing ? (
+          <div className="flex flex-col gap-2">
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="w-full p-2 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              rows={3}
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setIsEditing(false);
+                  setEditContent(post.content);
+                }}
+                className="p-1 text-red-500 hover:bg-red-50 rounded"
+              >
+                <X size={20} />
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="p-1 text-green-500 hover:bg-green-50 rounded"
+              >
+                <Check size={20} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p
+            style={{ color: "var(--post-text)" }}
+            className="text-[15px] 2xl:text-lg leading-relaxed whitespace-pre-line"
+          >
+            {isEditing ? editContent : post.content}
+          </p>
+        )}
       </div>
 
       {post.image && !post.sharePost && (
