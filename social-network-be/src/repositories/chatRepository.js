@@ -55,6 +55,7 @@ async function getUserConversations(userId) {
         content: msg.content,
         mediaUrl: msg.mediaUrl,
         created_at: msg.created_at,
+        is_read: msg.is_read,
         sender: { id: sender.id } 
       }) AS messages
       WITH conv, participant, messages[0] AS lastMessage

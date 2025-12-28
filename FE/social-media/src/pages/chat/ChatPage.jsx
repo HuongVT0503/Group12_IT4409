@@ -179,23 +179,40 @@ export default function ChatPage() {
 
     let targetId = routeChatId;
 
-    if (targetId && selectedChat?.id !== targetId) {
-      const conv = conversations.find((c) => String(c.id) === String(targetId));
+    if (targetId && String(selectedChat?.id) !== String(targetId)) {
+        const conv = conversations.find((c) => String(c.id) === String(targetId));
       if (conv) {
-        handleSelectChat(conv);
+        loadChatData(conv);
       }
     }
-  }, [routeChatId, conversations, location.state]);
+  }, [routeChatId, conversations, location.state, selectedChat?.id]);
   //run when URL changes or convos load
 
   //select chat &fetch
-  const handleSelectChat = async (conv) => {
+  const loadChatData = async (conv) => {
+    //realtime read/unread
+    setConversations((prev) =>
+      prev.map((c) => {
+        if (c.id === conv.id && c.lastMessage) {
+          return {
+            ...c,
+            lastMessage: { ...c.lastMessage, is_read: true }
+          };
+        }
+        return c;
+      })
+    );
+
     setSelectedChat(conv);
     setIsMobileListVisible(false);
 
-    navigate(`/chat/${conv.id}`); //update URL wo reload
+    //navigate(`/chat/${conv.id}`); //update URL wo reload
 
     localStorage.setItem("lastActiveChatId", conv.id);
+
+    setMessages([]); 
+    setInputText("");
+    
     try {
       const res = await getMessages(conv.id);
       setMessages(res.data.messages || []);
@@ -208,6 +225,10 @@ export default function ChatPage() {
     } catch (error) {
       console.error("Failed to fetch messages", error);
     }
+  };
+
+  const handleSelectChat = (conv) => {
+    navigate(`/chat/${conv.id}`);
   };
 
   const handleStartChatWithFriend = async (friend) => {
@@ -517,67 +538,74 @@ export default function ChatPage() {
             </div>
           )}
 
-          {filteredConversations.map((chat) => (
-            <div
-              key={chat.id}
-              onClick={() => handleSelectChat(chat)}
-              className={cn(
-                "p-4 flex gap-3 cursor-pointer transition-all border-l-4 border-transparent hover:bg-gray-50",
-                selectedChat?.id === chat.id
-                  ? "bg-primary/5 border-primary"
-                  : ""
-              )}
-            >
-              <div className="relative">
-                <img
-                  src={getAvatar(chat.otherUser)}
-                  className="w-12 h-12 rounded-full object-cover border border-gray-200"
-                  alt={chat.otherUser?.display_name}
-                />
-                {/* Online Status*/}
-                {isUserOnline(chat.otherUser?.id) && (
-                  <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
-                )}
-              </div>
+          {filteredConversations.map((chat) => {
+            const isUnread = !chat.lastMessage?.is_read && chat.lastMessage?.sender?.id !== user?.id;
 
-              <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <div className="flex justify-between items-baseline mb-0.5">
-                  <h4
+            return (
+              <div
+                key={chat.id}
+                onClick={() => handleSelectChat(chat)}
+                className={cn(
+                  "p-4 flex gap-3 cursor-pointer transition-all border-l-4 hover:bg-gray-50",
+                  selectedChat?.id === chat.id
+                    ? "bg-primary/5 border-primary"       // Selected
+                    : isUnread
+                    ? "bg-purple-50 border-purple-500"    // Unread
+                    : "border-transparent"                // Default
+                )}
+              >
+                <div className="relative">
+                  <img
+                    src={getAvatar(chat.otherUser)}
+                    className="w-12 h-12 rounded-full object-cover border border-gray-200"
+                    alt={chat.otherUser?.display_name}
+                  />
+                  {/* Online Status*/}
+                  {isUserOnline(chat.otherUser?.id) && (
+                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                  <div className="flex justify-between items-baseline mb-0.5">
+                    <h4
+                      className={cn(
+                        "font-semibold truncate text-[15px]",
+                        selectedChat?.id === chat.id
+                          ? "text-primary"
+                          : "text-gray-900"
+                      )}
+                    >
+                      {chat.otherUser?.display_name}
+                    </h4>
+                    <span className="text-[11px] text-gray-400 font-medium">
+                      {safeFormatDate(
+                        chat.lastMessage?.created_at || chat.updated_at
+                      )}
+                    </span>
+                  </div>
+                  <p
                     className={cn(
-                      "font-semibold truncate text-[15px]",
+                      "text-sm truncate",
                       selectedChat?.id === chat.id
-                        ? "text-primary"
-                        : "text-gray-900"
+                        ? "text-primary/80 font-medium"
+                        : isUnread
+                        ? "text-gray-900 font-bold"
+                        : "text-gray-500"
                     )}
                   >
-                    {chat.otherUser?.display_name}
-                  </h4>
-                  <span className="text-[11px] text-gray-400 font-medium">
-                    {safeFormatDate(
-                      chat.lastMessage?.created_at || chat.updated_at
+                    {typingUsers[chat.id] ? (
+                      <span className="italic text-primary animate-pulse">
+                        Typing...
+                      </span>
+                    ) : (
+                      renderLastMessage(chat)
                     )}
-                  </span>
+                  </p>
                 </div>
-                <p
-                  className={cn(
-                    "text-sm truncate",
-                    selectedChat?.id === chat.id
-                      ? "text-primary/80 font-medium"
-                      : "text-gray-500"
-                  )}
-                >
-                  {/*?user is typing? otherwise show last msg */}
-                  {typingUsers[chat.id] ? (
-                    <span className="italic text-primary animate-pulse">
-                      Typing...
-                    </span>
-                  ) : (
-                    renderLastMessage(chat)
-                  )}
-                </p>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
