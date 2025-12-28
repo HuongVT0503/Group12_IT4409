@@ -1,7 +1,16 @@
 //mobile header //llogo, search, notification, profile
 
 import logo from "../../assets/img/logo/logo.png";
-import { Search, Bell, LogOut, User, Settings, X } from "lucide-react";
+import {
+  Search,
+  Bell,
+  LogOut,
+  User,
+  Settings,
+  X,
+  Sun,
+  Moon,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -13,6 +22,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { getProfile } from "../../services/userService";
 import { searchUsers } from "../../services/userService";
+import { useTheme } from "../../context/ThemeContext";
 
 //import { Avatar, Badge, Button } from "@heroui/react";
 
@@ -44,6 +54,9 @@ export default function TopBar() {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+
+  const { theme, toggleTheme } = useTheme();
+
   const searchRef = useRef(null);
 
   //refs for click outside detection
@@ -279,12 +292,7 @@ export default function TopBar() {
   };
 
   return (
-    <header
-      className="fixed top-0 left-0 z-100
-     w-full bg-white border-b border-neutral-300 
-     flex items-center justify-between
-      px-4 h-16 lg:h-20  lg:px-10  shadow-sm"
-    >
+    <header className="fixed top-0 left-0 z-100 w-full bg-main border-b border-neutral-300 flex items-center justify-between px-4 h-16 lg:h-20 lg:px-10 shadow-sm transition-colors duration-300">
       {/* Logo Area */}
       <div className="flex items-center gap-3">
         <img
@@ -369,6 +377,14 @@ export default function TopBar() {
 
       {/* Right User Actions */}
       <div className="flex items-center gap-3 lg:gap-6">
+        {/* THEME */}
+        <button
+          onClick={toggleTheme}
+          className="p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 rounded-full transition-colors"
+          title="Toggle Theme"
+        >
+          {theme === "dark" ? <Sun size={24} /> : <Moon size={24} />}
+        </button>
         {/* Notification Dropdown */}
         <div className="relative" ref={notiRef}>
           <button

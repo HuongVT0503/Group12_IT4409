@@ -9,26 +9,6 @@
 @theme {
   --font-sans: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
 
-  --color-bg: #8bdae6;
-  --color-bg-card: #ffffff;
-
-  --color-primary-300: #a5b4fc;
-  --color-primary-400: #6366f1;
-  --color-primary-500: #4338ca;
-
-  --color-primary-hover: #312e81;
-
-  --color-neutral-50: #f9fafb;
-  --color-neutral-100: #f3f4f6;
-  --color-neutral-200: #e5e7eb;
-  --color-neutral-300: #d1d5db;
-  --color-neutral-400: #9ca3af;
-  --color-neutral-500: #6b7280;
-  --color-neutral-600: #4b5563;
-  --color-neutral-700: #374151;
-  --color-neutral-800: #1f2937;
-  --color-neutral-900: #111827;
-
   --color-success: #10b981;
   --color-success-light: #d1fae5;
 
@@ -69,6 +49,156 @@
 
   --radius-box: 14px;
   --radius-btn: 16px;
+}
+
+:root {
+  /*default/light*/
+
+  /* Base (Light) */
+  --color-bg-main: #fff;
+  --color-text-main: #111827; /* gray-900 */
+  --color-text-secondary: #6b7280; /* gray-600 */
+  --color-border: #e5e7eb; /* gray-200 */
+
+  /* Primary (Indigo) */
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
+
+  /* Secondary */
+  --color-secondary-400: #a3a0bf;
+  --color-secondary-500: #8f8db1;
+  --color-secondary-600: #7a78a0;
+
+  /* Tertiary */
+  --color-tertiary-400: #8f667a;
+  --color-tertiary-500: #7a5368;
+  --color-tertiary-600: #6a475b;
+
+  /* Error */
+  --color-error-400: #ef4444;
+  --color-error-500: #ba1a1a;
+  --color-error-600: #991b1b;
+
+  /* Neutral (Gray) */
+  --color-neutral-50: #f9fafb;
+  --color-neutral-100: #f3f4f6;
+  --color-neutral-200: #e5e7eb;
+  --color-neutral-300: #d1d5db;
+  --color-neutral-400: #9ca3af;
+  --color-neutral-500: #929094;
+  --color-neutral-600: #6b7280;
+  --color-neutral-700: #374151;
+  --color-neutral-800: #1f2937;
+  --color-neutral-900: #111827;
+
+  /* Surface*/
+  --color-surface-dim: #dcd9e0;
+  --color-surface: #fcf8ff;
+  --color-surface-bright: #fcf8ff;
+}
+
+/*dark Mode */
+:root.dark {
+  --color-bg-main: #39383f; /* slate-50 */
+
+  /* Primary (Indigo) */
+  --color-primary-50: #1e1e2f;
+  --color-primary-100: #2e2e4f;
+  --color-primary-200: #3e3e6f;
+  --color-primary-300: #4e4e8f;
+  --color-primary-400: #5e5ea0;
+  --color-primary-500: #6e6eb0;
+  --color-primary-600: #7e7ec0;
+  --color-primary-700: #8e8ed0;
+  --color-primary-800: #9e9ee0;
+  --color-primary-900: #aeaeef;
+
+  /* Secondary */
+  --color-secondary-400: #4a4a6a;
+  --color-secondary-500: #5a5a7a;
+  --color-secondary-600: #6a6a8a;
+
+  /* Tertiary */
+  --color-tertiary-400: #5a3a4a;
+  --color-tertiary-500: #6a2a3a;
+  --color-tertiary-600: #7a1a2a;
+
+  /* Error */
+  --color-error-400: #ef4444;
+  --color-error-500: #ba1a1a;
+  --color-error-600: #991b1b;
+
+  /* Neutral (Gray) */
+  --color-neutral-50: #1f1f1f;
+  --color-neutral-100: #2a2a2a;
+  --color-neutral-200: #3a3a3a;
+  --color-neutral-300: #4a4a4a;
+  --color-neutral-400: #5a5a5a;
+  --color-neutral-500: #6a6a6a;
+  --color-neutral-600: #7a7a7a;
+  --color-neutral-700: #8a8a8a;
+  --color-neutral-800: #9a9a9a;
+  --color-neutral-900: #aaaaaa;
+
+  /* Surface*/
+  --color-surface-dim: #131318;
+  --color-surface: #131318;
+  --color-surface-bright: #39383f;
+
+  --background-image-gradient-feedpage: linear-gradient(
+    135deg,
+    #111827 0%,
+    #1f2937 100%
+  );
+}
+
+body {
+  background-color: var(--color-bg-main);
+  color: var(--color-text-main);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#root {
+  background-color: var(--color-bg-main);
+}
+.dark .bg-white {
+  background-color: var(--color-bg-card) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-main) !important;
+}
+
+.dark .bg-gray-50,
+.dark .bg-gray-100,
+.dark .bg-gray-200 {
+  background-color: #374151 !important;
+  color: var(--color-text-main) !important;
+  border-color: var(--color-border) !important;
+}
+
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700 {
+  color: #f3f4f6 !important;
+}
+
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-gray-400 {
+  color: #9ca3af !important;
+}
+
+.dark .border-gray-100,
+.dark .border-gray-200,
+.dark .border-gray-300 {
+  border-color: #374151 !important;
 }
 
 html,
