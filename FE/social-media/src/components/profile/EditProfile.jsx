@@ -49,8 +49,12 @@ export default function EditProfileModal({
     e.preventDefault();
     setLoading(true);
     try {
+      const cleanData = Object.fromEntries(
+        Object.entries(formData).filter(([, value]) => value !== "" && value !== null)
+      );
+
       //call api to update db
-      const res = await updateProfile(formData);
+      const res = await updateProfile(cleanData);
 
       //access data.user from wrapped resp
       const updatedUserData = res.data.user;
