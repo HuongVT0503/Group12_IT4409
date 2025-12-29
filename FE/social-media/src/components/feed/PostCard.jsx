@@ -563,15 +563,7 @@ export default function PostCard({
                 }}
                 className="absolute right-0 top-full mt-1 w-32 rounded-lg shadow-lg border-2 z-10 overflow-hidden"
               >
-                <button
-                  onClick={() => {
-                    setShowMenu(false);
-                    setIsEditing(true);
-                  }}
-                  className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 cursor-pointer"
-                >
-                  <Edit2 size={16} /> Edit
-                </button>
+                
 
                 <button
                   onClick={() => {
