@@ -32,7 +32,7 @@ const updateProfileValidators = [
   body('cover_url')
     .optional({ checkFalsy: true })
     .trim()
-    .isURL({ require_tld: false }) //to allow localhost
+    .isURL({ require_tld: false }) //to allow localhost 
     .withMessage('Cover URL must be a valid URL'),
   
   body('date_of_birth')
