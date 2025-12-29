@@ -71,18 +71,38 @@ export default function PostDetailsPage() {
 
   return (
     <div className="w-full min-h-screen bg-gradient-feedpage">
-      <div className="max-w-2xl h-screen mx-auto pt-6 px-4 pb-20">
+      <div className="max-w-2xl mx-auto pt-6 px-4 pb-20">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-gray-500 hover:text-primary mb-4 font-medium transition-colors cursor-pointer"
+          className="flex items-center gap-2 mb-4 font-medium transition-colors cursor-pointer"
+          style={{ color: "var(--post-detail-back-text)" }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.color = "var(--post-detail-back-hover)")
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.color = "var(--post-detail-back-text)")
+          }
         >
           <ArrowLeft size={20} /> Back
         </button>
 
-        {loading && <div className="text-center py-10">Loading post...</div>}
+        {loading && (
+          <div
+            className="text-center py-10"
+            style={{ color: "var(--post-detail-loading-text)" }}
+          >
+            Loading post...
+          </div>
+        )}
 
         {error && (
-          <div className="text-center py-10 bg-red-50 text-red-600 rounded-xl">
+          <div
+            className="text-center py-10 rounded-xl"
+            style={{
+              backgroundColor: "var(--post-detail-error-bg)",
+              color: "var(--post-detail-error-text)",
+            }}
+          >
             {error}
           </div>
         )}

@@ -180,7 +180,7 @@ export default function ChatPage() {
     let targetId = routeChatId;
 
     if (targetId && String(selectedChat?.id) !== String(targetId)) {
-        const conv = conversations.find((c) => String(c.id) === String(targetId));
+      const conv = conversations.find((c) => String(c.id) === String(targetId));
       if (conv) {
         loadChatData(conv);
       }
@@ -196,7 +196,7 @@ export default function ChatPage() {
         if (c.id === conv.id && c.lastMessage) {
           return {
             ...c,
-            lastMessage: { ...c.lastMessage, is_read: true }
+            lastMessage: { ...c.lastMessage, is_read: true },
           };
         }
         return c;
@@ -210,9 +210,9 @@ export default function ChatPage() {
 
     localStorage.setItem("lastActiveChatId", conv.id);
 
-    setMessages([]); 
+    setMessages([]);
     setInputText("");
-    
+
     try {
       const res = await getMessages(conv.id);
       setMessages(res.data.messages || []);
@@ -282,9 +282,8 @@ export default function ChatPage() {
 
   const isImageUrl = (url) => {
     if (!url) return false;
-    return (
-      url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null);
-      //url.includes("/uploads/")
+    return url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null;
+    //url.includes("/uploads/")
     //);
   };
 
@@ -296,16 +295,19 @@ export default function ChatPage() {
   };
 
   //
-  const handleSend = async (contentOverride = null, mediaUrlOverride = null) => {
+  const handleSend = async (
+    contentOverride = null,
+    mediaUrlOverride = null
+  ) => {
     const actualContent =
       typeof contentOverride === "string" ? contentOverride : inputText;
     const actualMedia = mediaUrlOverride || null;
-    
+
     const textToSend = actualContent || inputText;
     const mediaToSend = mediaUrlOverride || null;
 
     if ((!actualContent?.trim() && !actualMedia) || !selectedChat) return;
-    if (!textToSend?.trim() && !mediaToSend || !selectedChat) return;
+    if ((!textToSend?.trim() && !mediaToSend) || !selectedChat) return;
 
     if (!contentOverride) {
       setInputText("");
@@ -322,7 +324,6 @@ export default function ChatPage() {
     };
 
     setMessages((prev) => [...prev, tempMsg]);
-
 
     scrollToBottom();
 
@@ -342,7 +343,11 @@ export default function ChatPage() {
         return [updated, ...others];
       });
 
-      const res = await sendMessage(selectedChat.otherUser.id, actualContent, actualMedia);
+      const res = await sendMessage(
+        selectedChat.otherUser.id,
+        actualContent,
+        actualMedia
+      );
 
       //
       setMessages((prev) =>
@@ -354,24 +359,23 @@ export default function ChatPage() {
       console.error("Failed to send", err);
       //remove temp msg
       setMessages((prev) => prev.filter((m) => m.id !== tempMsg.id));
-      
-      if (err.response?.data?.code === "USER_BANNED") {
-         //trigger ui stwitch
-         setSelectedChat((prev) => ({
-            ...prev,
-            otherUser: { ...prev.otherUser, isBanned: true }
-         }));
 
-         setConversations((prev) => 
-            prev.map(c => 
-               c.id === selectedChat.id 
-               ? { ...c, otherUser: { ...c.otherUser, isBanned: true } }
-               : c
-            )
-         );
+      if (err.response?.data?.code === "USER_BANNED") {
+        //trigger ui stwitch
+        setSelectedChat((prev) => ({
+          ...prev,
+          otherUser: { ...prev.otherUser, isBanned: true },
+        }));
+
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === selectedChat.id
+              ? { ...c, otherUser: { ...c.otherUser, isBanned: true } }
+              : c
+          )
+        );
       }
 
-      
       if (err.response?.data?.message) {
         alert(err.response.data.message);
       }
@@ -421,14 +425,13 @@ export default function ChatPage() {
         chat.otherUser?.display_name?.split(" ")[0] || "User"
       } sent a video`;
     }
-    
+
     if (isImage) {
       if (isMe) return "You sent a picture";
       return `${
         chat.otherUser?.display_name?.split(" ")[0] || "User"
       } sent a picture`;
     }
-
 
     if (isMe) return `You: ${msg.content}`;
     return msg.content;
@@ -473,37 +476,59 @@ export default function ChatPage() {
       u?.display_name || "User"
     }&background=random`;
 
-
   return (
-    <div className="flex h-[calc(100vh-140px)] lg:h-[calc(100vh-100px)] bg-white rounded-[var(--radius-box)] shadow-sm border border-gray-100 overflow-hidden mt-4">
+    <div
+      className="flex h-[calc(100vh-130px)] lg:h-[calc(100vh-80px)] rounded-t rounded-[var(--radius-box)] shadow-sm border overflow-hidden"
+      style={{
+        backgroundColor: "var(--chat-bg)",
+        borderColor: "var(--chat-border)",
+      }}
+    >
       {/* LEFT: Conversation List */}
       <div
         className={cn(
-          "w-full md:w-[350px] h-full border-r border-neutral-300 flex flex-col bg-white",
+          "w-full md:w-[350px] h-full border-r-2 flex flex-col",
           !isMobileListVisible && "hidden md:flex" //hide on mobile if chat open
         )}
+        style={{
+          backgroundColor: "var(--chat-bg)",
+          borderColor: "var(--chat-border)",
+        }}
       >
         {/* Search Header */}
-        <div className="p-4 border-b border-neutral-300 ">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Messages</h2>
+        <div
+          className="p-4 border-b"
+          style={{ borderColor: "var(--chat-border)" }}
+        >
+          <h2
+            className="text-xl font-bold mb-4"
+            style={{ color: "var(--chat-text-primary)" }}
+          >
+            Messages
+          </h2>
           <div className="relative">
             <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2"
               size={18}
+              style={{ color: "var(--chat-icon-color)" }}
             />
             <input
               type="text"
               placeholder="Search conversations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-50 rounded-full py-2.5 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full rounded-full py-2.5 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              style={{
+                backgroundColor: "var(--chat-input-bg)",
+                color: "var(--chat-input-text)",
+              }}
             />
           </div>
         </div>
 
         {/*Horizontal Friends List */}
         {horizontalListUsers.length > 0 && (
-          <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+          <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar p-4">
             {/* Friend Items */}
             {horizontalListUsers.map((friend) => (
               <div
@@ -515,14 +540,18 @@ export default function ChatPage() {
                   <img
                     src={getAvatar(friend)}
                     alt={friend.display_name}
-                    className="w-12 h-12 rounded-full object-cover border border-gray-100 group-hover:border-primary transition-colors"
+                    className="w-12 h-12 rounded-full object-cover border transition-colors"
+                    style={{ borderColor: "var(--chat-border)" }}
                   />
 
                   {isUserOnline(friend.id) && (
                     <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
                   )}
                 </div>
-                <span className="text-xs text-gray-600 font-medium truncate w-[64px] text-center">
+                <span
+                  className="text-xs font-medium truncate w-[64px] text-center"
+                  style={{ color: "var(--chat-text-secondary)" }}
+                >
                   {friend.display_name?.split(" ")[0]}
                 </span>
               </div>
@@ -533,32 +562,47 @@ export default function ChatPage() {
         {/* List */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           {conversations.length === 0 && (
-            <div className="p-8 text-center text-gray-400 text-sm">
+            <div
+              className="p-8 text-center text-sm"
+              style={{ color: "var(--chat-text-secondary)" }}
+            >
               No conversations yet
             </div>
           )}
 
           {filteredConversations.map((chat) => {
-            const isUnread = !chat.lastMessage?.is_read && chat.lastMessage?.sender?.id !== user?.id;
+            const isUnread =
+              !chat.lastMessage?.is_read &&
+              chat.lastMessage?.sender?.id !== user?.id;
+
+            const isSelected = selectedChat?.id === chat.id;
 
             return (
               <div
                 key={chat.id}
                 onClick={() => handleSelectChat(chat)}
                 className={cn(
-                  "p-4 flex gap-3 cursor-pointer transition-all border-l-4 hover:bg-gray-50",
-                  selectedChat?.id === chat.id
-                    ? "bg-primary/5 border-primary"       // Selected
-                    : isUnread
-                    ? "bg-purple-50 border-purple-500"    // Unread
-                    : "border-transparent"                // Default
+                  "p-4 flex gap-3 cursor-pointer transition-all border-l-4"
                 )}
+                style={{
+                  backgroundColor: isSelected
+                    ? "var(--chat-selected-bg)"
+                    : isUnread
+                    ? "var(--chat-unread-bg)"
+                    : "transparent",
+                  borderLeftColor: isSelected
+                    ? "var(--chat-selected-border)"
+                    : isUnread
+                    ? "var(--chat-unread-border)"
+                    : "transparent",
+                }}
               >
                 <div className="relative">
                   <img
                     src={getAvatar(chat.otherUser)}
-                    className="w-12 h-12 rounded-full object-cover border border-gray-200"
+                    className="w-12 h-12 rounded-full object-cover border"
                     alt={chat.otherUser?.display_name}
+                    style={{ borderColor: "var(--chat-border)" }}
                   />
                   {/* Online Status*/}
                   {isUserOnline(chat.otherUser?.id) && (
@@ -569,33 +613,40 @@ export default function ChatPage() {
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
                   <div className="flex justify-between items-baseline mb-0.5">
                     <h4
-                      className={cn(
-                        "font-semibold truncate text-[15px]",
-                        selectedChat?.id === chat.id
-                          ? "text-primary"
-                          : "text-gray-900"
-                      )}
+                      className={cn("font-semibold truncate text-[15px]")}
+                      style={{
+                        color: isSelected
+                          ? "var(--chat-selected-border)"
+                          : "var(--chat-text-primary)",
+                      }}
                     >
                       {chat.otherUser?.display_name}
                     </h4>
-                    <span className="text-[11px] text-gray-400 font-medium">
+                    <span
+                      className="text-[11px] font-medium"
+                      style={{ color: "var(--chat-text-secondary)" }}
+                    >
                       {safeFormatDate(
                         chat.lastMessage?.created_at || chat.updated_at
                       )}
                     </span>
                   </div>
                   <p
-                    className={cn(
-                      "text-sm truncate",
-                      selectedChat?.id === chat.id
-                        ? "text-primary/80 font-medium"
+                    className={cn("text-sm truncate")}
+                    style={{
+                      color: isSelected
+                        ? "var(--chat-selected-border)"
                         : isUnread
-                        ? "text-gray-900 font-bold"
-                        : "text-gray-500"
-                    )}
+                        ? "var(--chat-text-primary)"
+                        : "var(--chat-text-secondary)",
+                      fontWeight: isUnread ? "bold" : "normal",
+                    }}
                   >
                     {typingUsers[chat.id] ? (
-                      <span className="italic text-primary animate-pulse">
+                      <span
+                        className="italic animate-pulse"
+                        style={{ color: "var(--chat-selected-border)" }}
+                      >
                         Typing...
                       </span>
                     ) : (
@@ -612,18 +663,26 @@ export default function ChatPage() {
       {/* RIGHT: Chat Window */}
       <div
         className={cn(
-          "flex-1 flex flex-col bg-gray-50/50",
+          "flex-1 flex flex-col",
           isMobileListVisible && "hidden md:flex" //hide on mobile if list is visible
         )}
+        style={{ backgroundColor: "var(--chat-area-bg)" }}
       >
         {selectedChat ? (
           <>
             {/* Chat Header */}
-            <div className="h-16 px-6 bg-white border-b border-gray-100 flex items-center justify-between shadow-sm z-10">
+            <div
+              className="h-16 px-6 border-b flex items-center justify-between shadow-sm z-10"
+              style={{
+                backgroundColor: "var(--chat-header-bg)",
+                borderColor: "var(--chat-header-border)",
+              }}
+            >
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setIsMobileListVisible(true)}
-                  className="md:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full"
+                  className="md:hidden p-2 -ml-2 rounded-full"
+                  style={{ color: "var(--chat-text-secondary)" }}
                 >
                   <svg
                     width="24"
@@ -644,22 +703,32 @@ export default function ChatPage() {
                 >
                   <img
                     src={getAvatar(selectedChat.otherUser)}
-                    className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                    className="w-10 h-10 rounded-full object-cover border"
                     alt="User"
+                    style={{ borderColor: "var(--chat-border)" }}
                   />
                   <div>
-                    <h3 className="font-bold text-gray-900 leading-tight">
+                    <h3
+                      className="font-bold leading-tight"
+                      style={{ color: "var(--chat-text-primary)" }}
+                    >
                       {selectedChat.otherUser?.display_name}
                     </h3>
                     {isUserOnline(selectedChat.otherUser?.id) ? (
                       <div className="flex items-center gap-1.5">
                         <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                        <span className="text-xs text-gray-500 font-medium">
+                        <span
+                          className="text-xs font-medium"
+                          style={{ color: "var(--chat-text-secondary)" }}
+                        >
                           Online
                         </span>
                       </div>
                     ) : (
-                      <span className="text-xs text-gray-500 font-medium">
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: "var(--chat-text-secondary)" }}
+                      >
                         Offline
                       </span>
                     )}
@@ -667,7 +736,10 @@ export default function ChatPage() {
                 </Link>
               </div>
 
-              <div className="flex items-center gap-2 text-primary">
+              <div
+                className="flex items-center gap-2"
+                style={{ color: "var(--chat-icon-hover)" }}
+              >
                 <button className="p-2.5 hover:bg-primary/5 rounded-full transition-colors">
                   <Phone size={20} />
                 </button>
@@ -681,7 +753,10 @@ export default function ChatPage() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4 bg-[#F8F9FA]">
+            <div
+              className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4"
+              style={{ backgroundColor: "var(--chat-area-bg)" }}
+            >
               {messages.map((msg, index) => {
                 const displayMedia = msg.mediaUrl || msg.content;
 
@@ -702,12 +777,27 @@ export default function ChatPage() {
                       <div
                         className={cn(
                           "px-5 py-3 shadow-sm text-[15px] leading-relaxed break-words relative group",
-                          isMe
-                            ? "bg-gradient-primary text-white rounded-2xl rounded-tr-sm"
-                            : "bg-white text-gray-800 border border-gray-100 rounded-2xl rounded-tl-sm",
                           isNextSame &&
                             (isMe ? "rounded-br-sm" : "rounded-bl-sm") // Stack effect
                         )}
+                        style={{
+                          background: isMe
+                            ? "var(--chat-message-bg-me)"
+                            : "var(--chat-message-bg-other)",
+                          color: isMe
+                            ? "var(--chat-message-text-me)"
+                            : "var(--chat-message-text-other)",
+                          border: isMe
+                            ? "none"
+                            : "1px solid var(--chat-message-border-other)",
+                          borderRadius: "1rem",
+                          borderTopLeftRadius: isMe ? "1rem" : "0.125rem",
+                          borderTopRightRadius: isMe ? "0.125rem" : "1rem",
+                          borderBottomRightRadius:
+                            isNextSame && isMe ? "0.125rem" : "1rem",
+                          borderBottomLeftRadius:
+                            isNextSame && !isMe ? "0.125rem" : "1rem",
+                        }}
                       >
                         {isImageUrl(displayMedia) ? (
                           <img
@@ -726,16 +816,17 @@ export default function ChatPage() {
                             className="max-w-[250px] max-h-[250px] rounded-lg object-cover bg-black"
                           />
                         ) : (
-                          <p>{msg.content ||""}</p>
+                          <p>{msg.content || ""}</p>
                         )}
                       </div>
 
                       {/* Time & Read Receipt */}
                       <div
                         className={cn(
-                          "flex items-center gap-1 mt-1 px-1 text-[10px] font-medium text-gray-400",
+                          "flex items-center gap-1 mt-1 px-1 text-[10px] font-medium",
                           isMe ? "justify-end" : "justify-start"
                         )}
+                        style={{ color: "var(--chat-text-secondary)" }}
                       >
                         <span>
                           {new Date(msg.created_at).toLocaleTimeString([], {
@@ -745,9 +836,11 @@ export default function ChatPage() {
                         </span>
                         {isMe && (
                           <span
-                            className={
-                              msg.is_read ? "text-primary" : "text-gray-300"
-                            }
+                            style={{
+                              color: msg.is_read
+                                ? "var(--chat-icon-hover)"
+                                : "var(--chat-icon-color)",
+                            }}
                           >
                             {msg.is_read ? (
                               <CheckCheck size={14} />
@@ -765,94 +858,146 @@ export default function ChatPage() {
             </div>
 
             {/* Input Area */}
-            {(selectedChat.otherUser?.isBanned || selectedChat.otherUser?.is_banned)? (
-              <div className="p-6 bg-gray-50 border-t border-gray-200 flex flex-col items-center justify-center text-center">
+            {selectedChat.otherUser?.isBanned ||
+            selectedChat.otherUser?.is_banned ? (
+              <div
+                className="p-6 border-t flex flex-col items-center justify-center text-center"
+                style={{
+                  backgroundColor: "var(--chat-header-bg)",
+                  borderColor: "var(--chat-border)",
+                }}
+              >
                 <div className="bg-red-100 text-red-500 p-3 rounded-full mb-2">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                  </svg>
                 </div>
-                <p className="text-gray-700 font-semibold">User Banned</p>
-                <p className="text-sm text-gray-500 mt-1">You cannot chat with this user because their account has been suspended.</p>
+                <p
+                  className="font-semibold"
+                  style={{ color: "var(--chat-text-primary)" }}
+                >
+                  User Banned
+                </p>
+                <p
+                  className="text-sm mt-1"
+                  style={{ color: "var(--chat-text-secondary)" }}
+                >
+                  You cannot chat with this user because their account has been
+                  suspended.
+                </p>
               </div>
             ) : (
-            <div className="p-4 bg-white border-t border-gray-100 relative">
-              {showEmojiPicker && (
-                <div className="absolute bottom-20 left-4 z-50 shadow-xl">
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setShowEmojiPicker(false)}
-                  />
-                  <div className="relative z-50">
-                    <EmojiPicker
-                      onEmojiClick={onEmojiClick}
-                      width={300}
-                      height={350}
+              <div
+                className="p-4 border-t-2 relative"
+                style={{
+                  backgroundColor: "var(--chat-header-bg)",
+                  borderColor: "var(--chat-border)",
+                }}
+              >
+                {showEmojiPicker && (
+                  <div className="absolute bottom-20 left-4 z-50 shadow-xl">
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowEmojiPicker(false)}
                     />
+                    <div className="relative z-50">
+                      <EmojiPicker
+                        onEmojiClick={onEmojiClick}
+                        width={300}
+                        height={350}
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 max-w-4xl mx-auto">
+                  <label className="p-2.5 rounded-full transition-colors hover:bg-[var(--chat-icon-hover)]/20 hover:text-[var(--chat-icon-hover)] cursor-pointer">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*, video/*"
+                      onChange={handleImageUpload}
+                    />
+
+                    <div style={{ color: "var(--chat-icon-color)" }}>
+                      <ImageIcon size={22} />
+                    </div>
+                  </label>
+                  <button
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    className="p-2.5 rounded-full transition-colors hover:bg-yellow-50 cursor-pointer"
+                    style={{ color: "var(--chat-icon-color)" }}
+                  >
+                    <Smile size={22} className="hover:text-yellow-500" />
+                  </button>
+
+                  <div className="flex-1 relative">
+                    <input
+                      type="text"
+                      value={inputText}
+                      onChange={handleInputChange}
+                      onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                      placeholder="Type a message..."
+                      className="w-full rounded-[20px] py-3.5 pl-5 pr-12 outline-none focus:ring-2 focus:ring-primary/20 transition-all border border-transparent"
+                      style={{
+                        backgroundColor: "var(--chat-input-bg)",
+                        color: "var(--chat-input-text)",
+                      }}
+                    />
+                    <button
+                      onClick={() => handleSend()}
+                      disabled={!inputText.trim()}
+                      className={cn(
+                        "absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all duration-200",
+                        inputText.trim()
+                          ? "hover:bg-primary/10"
+                          : "cursor-not-allowed"
+                      )}
+                      style={{
+                        color: inputText.trim()
+                          ? "var(--chat-icon-hover)"
+                          : "var(--chat-icon-color)",
+                      }}
+                    >
+                      <Send
+                        size={18}
+                        className={inputText.trim() ? "translate-x-0.5" : ""}
+                      />
+                    </button>
                   </div>
                 </div>
-              )}
-              <div className="flex items-center gap-2 max-w-4xl mx-auto">
-                <label className="p-2.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-full transition-colors">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*, video/*"
-                    onChange={handleImageUpload}
-                  />
-
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="p-2.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-full transition-colors"
-                  >
-                    <ImageIcon size={22} />
-                  </button>
-                </label>
-                <button
-                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="p-2.5 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 rounded-full transition-colors"
-                >
-                  <Smile size={22} />
-                </button>
-
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    value={inputText}
-                    onChange={handleInputChange}
-                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                    placeholder="Type a message..."
-                    className="w-full bg-gray-100/80 rounded-[20px] py-3.5 pl-5 pr-12 outline-none focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all border border-transparent focus:border-primary/20"
-                  />
-                  <button
-                    onClick={() => handleSend()}
-                    disabled={!inputText.trim()}
-                    className={cn(
-                      "absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all duration-200",
-                      inputText.trim()
-                        ? "text-primary hover:bg-primary/10"
-                        : "text-gray-400 cursor-not-allowed"
-                    )}
-                  >
-                    <Send
-                      size={18}
-                      className={inputText.trim() ? "translate-x-0.5" : ""}
-                    />
-                  </button>
-                </div>
               </div>
-            </div>
             )}
           </>
         ) : (
           // Empty State
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-white/50">
+          <div
+            className="flex-1 flex flex-col items-center justify-center text-center p-8"
+            style={{ backgroundColor: "var(--chat-empty-bg)" }}
+          >
             <div className="w-24 h-24 bg-primary/5 rounded-full flex items-center justify-center mb-6 animate-pulse">
               <Send size={40} className="text-primary/40 ml-2" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">
+            <h3
+              className="text-2xl font-bold mb-2"
+              style={{ color: "var(--chat-text-primary)" }}
+            >
               Your Messages
             </h3>
-            <p className="text-gray-500 max-w-xs">
+            <p
+              className="max-w-xs"
+              style={{ color: "var(--chat-text-secondary)" }}
+            >
               Select a conversation from the list to start chatting or connect
               with new people.
             </p>
