@@ -124,6 +124,7 @@ export default function ProfilePage() {
           return {
             id: item.post.id,
             isLiked: item.isLiked || false,
+            isSaved: item.isSaved || false,
             content: item.post.content,
             timestamp: item.post.created_at,
             image: item.post.media?.[0] || null,

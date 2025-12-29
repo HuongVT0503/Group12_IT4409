@@ -25,7 +25,7 @@ import AdminLayout from "./components/admin/AdminLayout";
 import UserManagement from "./pages/admin/UserManagement";
 import PostManagement from "./pages/admin/PostManagement";
 import BannedPage from "./pages/auth/BannedPage";
-
+import SavedPostsPage from "./components/feed/SavedPostsPage";
 
 import { useAuth } from "./context/AuthContext";
 
@@ -112,6 +112,7 @@ function AppRouter() {
         <Route path="connections" element={<ConnectionsPage />} />
         <Route path="create" element={<CreatePostPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="saved" element={<SavedPostsPage />} />
       </Route>
 
       {/* ADMIN ROUTES */}

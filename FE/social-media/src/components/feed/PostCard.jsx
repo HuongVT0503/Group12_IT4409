@@ -12,6 +12,7 @@ import {
   X,
   Edit2,
   Check,
+  Bookmark,
 } from "lucide-react";
 import {
   likePost,
@@ -19,6 +20,8 @@ import {
   deletePost,
   sharePost,
   editPost,
+  savePost,
+  unsavePost,
 } from "../../services/postService";
 import {
   getComments,
@@ -49,6 +52,7 @@ const safeFormatDate = (dateString) => {
 export default function PostCard({
   post,
   onDelete,
+  onUnsave,
   highlightId,
   readOnly = false,
 }) {
@@ -82,6 +86,8 @@ export default function PostCard({
   const [editContent, setEditContent] = useState(post.content);
 
   const isInteracting = showMenu || showEmojiPicker || showComments;
+
+  const [isSaved, setIsSaved] = useState(post.isSaved || false);
 
   const isVideoUrl = (url) => {
     if (!url) return false;
@@ -129,6 +135,17 @@ export default function PostCard({
 
     const handleUpdate = (payload) => {
       if (payload.postId && payload.postId !== post.id) return;
+
+      if (payload.savedBy) {
+        if (payload.savedBy === user?.id) setIsSaved(true);
+      }
+
+      if (payload.unsavedBy) {
+        if (payload.unsavedBy === user?.id) {
+          setIsSaved(false);
+          if (onUnsave) onUnsave(post.id); 
+        }
+      }
 
       if (payload.updatedPost) {
         const newContent = payload.updatedPost.post
@@ -266,7 +283,7 @@ export default function PostCard({
       socket.off("post_update", handleUpdate);
       socket.emit("leave_post", post.id);
     };
-  }, [socket, post.id, user?.id, showComments, onDelete, comments]);
+  }, [socket, post.id, user?.id, showComments, onDelete, onUnsave, comments]);
 
   //auto openning & scrolling
   useEffect(() => {
@@ -309,6 +326,23 @@ export default function PostCard({
       setIsLiked(previousState);
       setLikeCount((prev) => (previousState ? prev + 1 : prev - 1));
       console.error("Like failed", error);
+    }
+  };
+
+  const toggleSave = async () => {
+    const previousState = isSaved;
+    setIsSaved(!isSaved);
+
+    try {
+      if (previousState) {
+        if (onUnsave) onUnsave(post.id);
+        await unsavePost(post.id);
+      } else {
+        await savePost(post.id);
+      }
+    } catch (error) {
+      setIsSaved(previousState);
+      console.error("Save failed", error);
     }
   };
 
@@ -537,6 +571,20 @@ export default function PostCard({
             >
               <Edit2 size={20} />
             </button>
+
+            <button
+              onClick={toggleSave}
+              style={{
+                color: isSaved
+                  ? "var(--post-icon-primary)" 
+                  : "var(--post-icon-secondary)",
+              }}
+              className="flex items-center gap-2 text-sm font-semibold hover:scale-105 cursor-pointer"
+              title={isSaved ? "Unsave" : "Save"}
+            >
+              <Bookmark size={21} className={isSaved ? "fill-current" : ""} />
+            </button>
+
             <button
               onClick={handleDelete}
               style={{ color: "var(--post-icon-secondary)" }}
@@ -563,8 +611,6 @@ export default function PostCard({
                 }}
                 className="absolute right-0 top-full mt-1 w-32 rounded-lg shadow-lg border-2 z-10 overflow-hidden"
               >
-                
-
                 <button
                   onClick={() => {
                     setShowMenu(false);
@@ -573,6 +619,22 @@ export default function PostCard({
                   className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer"
                 >
                   <Flag size={16} /> Report
+                </button>
+
+                <button
+                  onClick={toggleSave}
+                  style={{
+                    color: isSaved
+                      ? "var(--post-icon-primary)" 
+                      : "var(--post-icon-secondary)",
+                  }}
+                  className="flex items-center gap-2 text-sm font-semibold hover:scale-105 cursor-pointer"
+                  title={isSaved ? "Unsave" : "Save"}
+                >
+                  <Bookmark
+                    size={21}
+                    className={isSaved ? "fill-current" : ""}
+                  />
                 </button>
               </div>
             )}
@@ -604,14 +666,14 @@ export default function PostCard({
                 {/* Emoji Picker Popup */}
                 {showEditEmojiPicker && (
                   <div className="absolute top-10 left-0 z-50">
-                    <div 
-                      className="fixed inset-0 z-40" 
-                      onClick={() => setShowEditEmojiPicker(false)} 
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowEditEmojiPicker(false)}
                     />
                     <div className="relative z-50 shadow-xl rounded-xl">
-                      <EmojiPicker 
-                        onEmojiClick={onEditEmojiClick} 
-                        width={300} 
+                      <EmojiPicker
+                        onEmojiClick={onEditEmojiClick}
+                        width={300}
                         height={350}
                       />
                     </div>
@@ -619,24 +681,24 @@ export default function PostCard({
                 )}
               </div>
 
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditContent(post.content);
-                  setShowEditEmojiPicker(false);
-                }}
-                className="p-1 text-red-500 hover:bg-red-50 rounded"
-              >
-                <X size={20} />
-              </button>
-              <button
-                onClick={handleSaveEdit}
-                className="p-1 text-green-500 hover:bg-green-50 rounded"
-              >
-                <Check size={20} />
-              </button>
-            </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditContent(post.content);
+                    setShowEditEmojiPicker(false);
+                  }}
+                  className="p-1 text-red-500 hover:bg-red-50 rounded"
+                >
+                  <X size={20} />
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  className="p-1 text-green-500 hover:bg-green-50 rounded"
+                >
+                  <Check size={20} />
+                </button>
+              </div>
             </div>
           </div>
         ) : (

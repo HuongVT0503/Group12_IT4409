@@ -10,6 +10,7 @@ import {
   X,
   Sun,
   Moon,
+  Bookmark,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect, useRef } from "react";
@@ -595,6 +596,16 @@ export default function TopBar() {
               >
                 <User size={18} />
                 Profile
+              </Link>
+
+              <Link
+                to="/saved"
+                onClick={() => setShowUserMenu(false)}
+                style={{ color: "var(--topbar-text)" }}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:[background:var(--topbar-dropdown-hover)] hover:[color:var(--topbar-badge-text)]"
+              >
+                <Bookmark size={18} />
+                Saved Posts
               </Link>
 
               <Link
