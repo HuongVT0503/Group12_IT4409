@@ -288,6 +288,7 @@ async function savePost(req, res, next) {
         const userId = req.user.id;
         const postId = req.params.id;
         await postService.savePost(userId, postId);
+        emitPostUpdate(postId, { savedBy: userId });
         res.json({ success: true, message: "Post saved" });
     } catch (err) {
         next(err);
@@ -299,6 +300,7 @@ async function unsavePost(req, res, next) {
         const userId = req.user.id;
         const postId = req.params.id;
         await postService.unsavePost(userId, postId);
+        emitPostUpdate(postId, { unsavedBy: userId });
         res.json({ success: true, message: "Post unsaved" });
     } catch (err) {
         next(err);

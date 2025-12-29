@@ -19,9 +19,10 @@ export default function SavedPostsPage() {
       id: postObj.id,
       content: postObj.content,
       isLiked: data.isLiked || false,
-      isSaved: true, 
+      isSaved: true,
       timestamp: postObj.created_at,
-      image: postObj.media && postObj.media.length > 0 ? postObj.media[0] : null,
+      image:
+        postObj.media && postObj.media.length > 0 ? postObj.media[0] : null,
       author: {
         id: authorObj.id,
         name: authorObj.display_name || authorObj.username || "Unknown",
@@ -70,25 +71,37 @@ export default function SavedPostsPage() {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
   };
 
+  const handleUnsave = (postId) => {
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+  };
+
   if (loading)
     return (
-      <div style={{ color: "var(--feed-loading-text)" }} className="text-center pt-10">
+      <div
+        style={{ color: "var(--feed-loading-text)" }}
+        className="text-center pt-10"
+      >
         Loading saved posts...
       </div>
     );
 
   return (
-    <div style={{ background: "var(--feed-bg)" }} className="w-full min-h-screen flex relative">
+    <div
+      style={{ background: "var(--feed-bg)" }}
+      className="w-full min-h-screen flex relative"
+    >
       <div className="w-full flex justify-center">
         <div className="w-full max-w-2xl pt-8 px-4 sm:px-6">
-          
           <div className="mb-6 flex items-center gap-2">
-             <div className="p-2 rounded-lg bg-purple-100 text-purple-600">
-                <Bookmark size={24} />
-             </div>
-             <h1 style={{ color: "var(--feed-text)" }} className="text-2xl font-bold">
-                Saved Posts
-             </h1>
+            <div className="p-2 rounded-lg bg-purple-100 text-purple-600">
+              <Bookmark size={24} />
+            </div>
+            <h1
+              style={{ color: "var(--feed-text)" }}
+              className="text-2xl font-bold"
+            >
+              Saved Posts
+            </h1>
           </div>
 
           {error && <div className="text-red-500 text-center">{error}</div>}
@@ -96,16 +109,24 @@ export default function SavedPostsPage() {
           <div className="flex flex-col gap-4 pb-10">
             {posts.length > 0 ? (
               posts.map((post) => (
-                <PostCard key={post.id} post={post} onDelete={handlePostDelete} />
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  onDelete={handlePostDelete}
+                  onUnsave={handleUnsave}
+                />
               ))
             ) : (
-              <div style={{ color: "var(--feed-empty-text)" }} className="text-center mt-10 py-10 bg-white/50 rounded-xl border border-gray-200/50">
+              <div
+                style={{ color: "var(--feed-empty-text)" }}
+                className="text-center mt-10 py-10 bg-white/50 rounded-xl border border-gray-200/50"
+              >
                 <p>{"You haven't saved any posts yet."}</p>
               </div>
             )}
           </div>
         </div>
-        
+
         <aside className="hidden xl:block w-[320px] h-[calc(100vh-80px)] overflow-y-auto no-scrollbar sticky top-20 ml-10">
           <RightPanel />
         </aside>
