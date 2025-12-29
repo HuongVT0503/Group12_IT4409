@@ -54,6 +54,7 @@ const mapPostResult = (r) => {
   };
 
   const isLiked = r.keys.includes('isLiked') ? r.get('isLiked') : false;
+  const isSaved = r.keys.includes('isSaved') ? r.get('isSaved') : false;
 
   if (post.created_at)
     post.created_at = new Date(post.created_at).toISOString();
@@ -68,31 +69,37 @@ const mapPostResult = (r) => {
     sharedPost = { ...sp, author: sa };
   }
 
-  return { post, author, stats, sharedPost, isLiked };
+  return { post, author, stats, sharedPost, isLiked, isSaved };
 };
 
-async function getPostById(id, currentUserId=null) {
+async function getPostById(id, currentUserId = null) {
   const session = getSession();
   try {
     const res = await session.run(
-      `MATCH (u)-[:AUTHORED]->(p:Post {id:$id})
+        `MATCH (u:User)-[:AUTHORED]->(p:Post {id:$id})
       OPTIONAL MATCH (:User)-[l:LIKED]->(p)
       OPTIONAL MATCH (c:Comment)-[:ON]->(p)
       OPTIONAL MATCH (s:Post)-[:SHARES]->(p)
       OPTIONAL MATCH (p)-[:SHARES]->(sp:Post)<-[:AUTHORED]-(sa:User)
 
       OPTIONAL MATCH (me:User {id:$currentUserId})-[myLike:LIKED]->(p)
-      RETURN p, u,count(DISTINCT l) as likes, count(DISTINCT c) as comments, count(DISTINCT s) as shares,sp,sa, count (myLike)>0 as isLiked LIMIT 1`,
-      { id, currentUserId }
+      OPTIONAL MATCH (me)-[mySave:SAVED]->(p)
+      RETURN p, u, 
+             count(DISTINCT l) as likes, 
+             count(DISTINCT c) as comments, 
+             count(DISTINCT s) as shares, 
+             sp, sa, 
+             count(DISTINCT myLike) > 0 as isLiked, 
+             count(DISTINCT mySave) > 0 as isSaved 
+      LIMIT 1`,
+        { id, currentUserId }
     );
     if (!res.records.length) return null;
     const record = res.records[0];
     const author = record.get("u").properties;
-    if (author.isBanned === true && author.id !== currentUserId) {
-      return null;
-    }
+    if (author.isBanned === true && author.id !== currentUserId) return null;
 
-    return mapPostResult(res.records[0]);
+    return mapPostResult(record);
   } finally {
     await session.close();
   }
@@ -118,7 +125,7 @@ async function getRecentPublicPosts(limit = 20, currentUserId=null) {
   const session = getSession();
   try {
     const res = await session.run(
-      `MATCH (u)-[:AUTHORED]->(p:Post)
+        `MATCH (u:User)-[:AUTHORED]->(p:Post)
        WHERE p.privacy='public' AND u.isBanned = false
        OPTIONAL MATCH (:User)-[l:LIKED]->(p)
        OPTIONAL MATCH (c:Comment)-[:ON]->(p)
@@ -126,7 +133,8 @@ async function getRecentPublicPosts(limit = 20, currentUserId=null) {
        OPTIONAL MATCH (p)-[:SHARES]->(sp:Post)<-[:AUTHORED]-(sa:User)
 
        OPTIONAL MATCH (me:User {id:$currentUserId})-[myLike:LIKED]->(p)
-       RETURN p, u, count(DISTINCT l) as likes, count(DISTINCT c) as comments, count(DISTINCT s) as shares, sp, sa, count (myLike)>0 as isLiked
+       OPTIONAL MATCH (me)-[mySave:SAVED]->(p)
+       RETURN p, u, count(DISTINCT l) as likes, count(DISTINCT c) as comments, count(DISTINCT s) as shares, sp, sa, count(DISTINCT myLike) > 0 as isLiked, count(DISTINCT mySave) > 0 as isSaved
        ORDER BY p.created_at DESC LIMIT $limit`,
       { limit: neo4j.int(limit), currentUserId   }
     );
@@ -140,7 +148,7 @@ async function getPostsByAuthor(authorId, limit = 20, currentUserId=null) {
   const session = getSession();
   try {
     const res = await session.run(
-      `MATCH (u:User {id:$authorId})-[:AUTHORED]->(p:Post)
+        `MATCH (u:User {id:$authorId})-[:AUTHORED]->(p:Post)
       WHERE u.isBanned = false OR u.id = $currentUserId
       OPTIONAL MATCH (:User)-[l:LIKED]->(p)
       OPTIONAL MATCH (c:Comment)-[:ON]->(p)
@@ -148,7 +156,8 @@ async function getPostsByAuthor(authorId, limit = 20, currentUserId=null) {
       OPTIONAL MATCH (p)-[:SHARES]->(sp:Post)<-[:AUTHORED]-(sa:User)
 
       OPTIONAL MATCH (me:User {id:$currentUserId})-[myLike:LIKED]->(p)
-      RETURN p, u, count(DISTINCT l) as likes, count(DISTINCT c) as comments, count(DISTINCT s) as shares,sp,sa, count (myLike)>0 as isLiked
+      OPTIONAL MATCH (me)-[mySave:SAVED]->(p)
+      RETURN p, u, count(DISTINCT l) as likes, count(DISTINCT c) as comments, count(DISTINCT s) as shares,sp,sa, count(DISTINCT myLike) > 0 as isLiked, count(DISTINCT mySave)>0 as isSaved
       ORDER BY p.created_at DESC LIMIT $limit`,
       { authorId, limit: neo4j.int(limit), currentUserId }
     );
@@ -223,6 +232,64 @@ async function editPost(postId, userId, newContent) {
   }
 }
 
+async function savePost(userId, postId) {
+  const session = getSession();
+  try {
+    await session.run(
+        `MATCH (u:User {id:$userId}), (p:Post {id:$postId})
+       MERGE (u)-[s:SAVED]->(p)
+       SET s.created_at = datetime()`,
+        { userId, postId }
+    );
+    return true;
+  } finally {
+    await session.close();
+  }
+}
+
+async function unsavePost(userId, postId) {
+  const session = getSession();
+  try {
+    await session.run(
+        `MATCH (u:User {id:$userId})-[s:SAVED]->(p:Post {id:$postId})
+       DELETE s`,
+        { userId, postId }
+    );
+    return true;
+  } finally {
+    await session.close();
+  }
+}
+
+// Lấy danh sách các bài viết đã lưu của một user
+async function getSavedPosts(userId, limit = 20) {
+  const session = getSession();
+  try {
+    const res = await session.run(
+        `MATCH (me:User {id:$userId})-[mySave:SAVED]->(p:Post)<-[:AUTHORED]-(u:User)
+       WHERE u.isBanned = false
+       OPTIONAL MATCH (:User)-[l:LIKED]->(p)
+       OPTIONAL MATCH (c:Comment)-[:ON]->(p)
+       OPTIONAL MATCH (shared:Post)-[:SHARES]->(p)
+       OPTIONAL MATCH (p)-[:SHARES]->(sp:Post)<-[:AUTHORED]-(sa:User)
+       
+       OPTIONAL MATCH (me)-[myLike:LIKED]->(p)
+       RETURN p, u, 
+              count(DISTINCT l) as likes, 
+              count(DISTINCT c) as comments, 
+              count(DISTINCT shared) as shares, 
+              sp, sa, 
+              count(DISTINCT myLike) > 0 as isLiked, 
+              count(DISTINCT mySave) > 0 as isSaved
+       ORDER BY mySave.created_at DESC LIMIT $limit`,
+        { userId, limit: neo4j.int(limit) }
+    );
+    return res.records.map(mapPostResult);
+  } finally {
+    await session.close();
+  }
+}
+
 export {
   createPost,
   getPostById,
@@ -233,4 +300,7 @@ export {
   unlikePost,
   countLikes,
   editPost,
+  savePost,
+  unsavePost,
+  getSavedPosts
 };

@@ -325,6 +325,49 @@ async function getUserById(userId) {
   }
 }
 
+async function searchMessagesInConversation(conversationId, searchTerm, limit = 50) {
+  const session = getSession();
+  try {
+    const query = `
+      MATCH (msg:Message)-[:BELONGS_TO]->(conv:Conversation {id: $conversationId})
+      MATCH (sender:User)-[:SENT]->(msg)
+      WHERE toLower(msg.content) CONTAINS toLower($searchTerm)
+      WITH msg, sender
+      ORDER BY msg.created_at DESC
+      LIMIT $limit
+      RETURN {
+        id: msg.id,
+        content: msg.content,
+        mediaUrl: msg.mediaUrl,
+        sender: {
+          id: sender.id,
+          username: sender.username,
+          display_name: sender.display_name,
+          avatar_url: sender.avatar_url
+        },
+        created_at: msg.created_at,
+        is_read: msg.is_read
+      } AS message
+    `;
+
+    const result = await session.run(query, {
+      conversationId,
+      searchTerm,
+      limit: neo4j.int(limit),
+    });
+
+    return result.records.map((r) => {
+      const msg = r.get("message");
+      if (msg.created_at && typeof msg.created_at.toISOString === 'function') {
+        msg.created_at = msg.created_at.toISOString();
+      }
+      return msg;
+    });
+  } finally {
+    await session.close();
+  }
+}
+
 export {
   getOrCreateConversation,
   getUserConversations,
@@ -337,4 +380,5 @@ export {
   findConversationById,
   findConversationByUsers,
   getUserById,
+  searchMessagesInConversation,
 };
