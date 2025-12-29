@@ -400,7 +400,7 @@ export default function ProfilePage() {
           ></div>
 
           <div className="lg:px-8 px-4">
-            <div className="relative flex justify-between items-end lg:-mt-16 -mt-14 mb-4 ">
+            <div className="relative flex flex-col md:flex-row md:justify-between items-start md:items-end lg:-mt-16 -mt-14 mb-4 gap-4">
               <div className="relative">
                 <Avatar
                   src={
@@ -435,7 +435,7 @@ export default function ProfilePage() {
                   Edit Profile
                 </button>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
                   <Button
                     onClick={handleMessage}
                     loading={messageLoading}
@@ -645,7 +645,7 @@ export default function ProfilePage() {
 
         <div
           style={{ backgroundColor: "var(--profile-posts-bg)" }}
-          className="flex flex-col gap-4 w-full rounded-lg p-2 sm:p-4"
+          className="flex flex-col gap-4 w-full rounded-2xl mt-4"
         >
           {isOwnProfile && <CreatePost onPostCreated={handlePostCreated} />}
 
@@ -660,7 +660,7 @@ export default function ProfilePage() {
                 borderColor: "var(--profile-empty-border)",
                 color: "var(--profile-text-muted)",
               }}
-              className="text-center py-10 rounded-xl border border-dashed"
+              className="text-center py-10 rounded-2xl border border-dashed"
             >
               No posts yet.
             </div>

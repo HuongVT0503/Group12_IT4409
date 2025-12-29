@@ -85,6 +85,7 @@ export default function ReportModal({ isOpen, onClose, targetId, targetType }) {
               variant="ghost"
               onClick={onClose}
               disabled={loading}
+              className=" rounded-sm px-2 py-2"
             >
               Cancel
             </Button>
@@ -92,7 +93,7 @@ export default function ReportModal({ isOpen, onClose, targetId, targetType }) {
               type="submit"
               variant="primary"
               loading={loading}
-              className="bg-red-600 hover:bg-red-700 border-red-600"
+              className="rounded-sm px-2 py-2"
             >
               Submit Report
             </Button>

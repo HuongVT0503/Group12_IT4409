@@ -448,7 +448,7 @@ export default function TopBar() {
                 backgroundColor: "var(--topbar-dropdown-bg)",
                 borderColor: "var(--topbar-dropdown-border)",
               }}
-              className="absolute right-0 top-full mt-2 w-80 rounded-xl shadow-xl border overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+              className="absolute right-[-60px] sm:right-0 top-full mt-2 w-[85vw] sm:w-80 rounded-xl shadow-xl border overflow-hidden animate-in fade-in zoom-in-95 duration-200"
             >
               <div
                 style={{
