@@ -17,5 +17,7 @@ router.delete("/:id/like", verifyToken, ctrl.unlikePost);
 router.get("/:id/likes", ctrl.countLikes);
 router.get("/user/:userId", ctrl.getUserPosts); // Lấy bài viết của người dùng
 router.put("/:id", verifyToken, ctrl.editPost);
-
+router.post("/:id/save", verifyToken, ctrl.savePost);
+router.delete("/:id/save", verifyToken, ctrl.unsavePost);
+router.get("/saved/all", verifyToken, ctrl.getSavedPosts); // Xem danh sách đã lưu
 export default router;
