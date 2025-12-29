@@ -24,15 +24,15 @@ const updateProfileValidators = [
     .withMessage('Bio must not exceed 500 characters'),
   
   body('avatar_url')
-    .optional()
+    .optional({ checkFalsy: true })
     .trim()
-    .isURL()
+    .isURL({ require_tld: false })
     .withMessage('Avatar URL must be a valid URL'),
   
   body('cover_url')
-    .optional()
+    .optional({ checkFalsy: true })
     .trim()
-    .isURL()
+    .isURL({ require_tld: false }) //to allow localhost
     .withMessage('Cover URL must be a valid URL'),
   
   body('date_of_birth')
