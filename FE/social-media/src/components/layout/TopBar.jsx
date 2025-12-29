@@ -618,16 +618,6 @@ export default function TopBar() {
                 Settings
               </Link>
 
-              <Link
-                to="/saved"
-                onClick={() => setShowUserMenu(false)}
-                style={{ color: "var(--topbar-text)" }}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:[background:var(--topbar-dropdown-hover)] hover:[color:var(--topbar-badge-text)]"
-              >
-                <Bookmark size={18} />
-                Saved
-              </Link>
-
               <div
                 style={{ backgroundColor: "var(--topbar-dropdown-border)" }}
                 className="h-px my-2"

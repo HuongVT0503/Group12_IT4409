@@ -313,6 +313,34 @@
   --settings-button-update-bg: #111827;
   --settings-button-update-hover: #000000;
 
+  /* === Admin Panel === */
+  --admin-bg: #f3f4f6;
+  --admin-card-bg: #ffffff;
+  --admin-card-border: #e5e7eb;
+  --admin-text-primary: #1f2937;
+  --admin-text-secondary: #6b7280;
+
+  --admin-sidebar-bg: #1e293b;
+  --admin-sidebar-text: #ffffff;
+  --admin-sidebar-border: #334155;
+  --admin-sidebar-hover: #334155;
+  --admin-sidebar-active-bg: #6366f1;
+  --admin-sidebar-active-text: #ffffff;
+
+  --admin-header-bg: #ffffff;
+  --admin-header-border: #e5e7eb;
+  --admin-header-text: #1f2937;
+
+  --admin-table-header-bg: #f9fafb;
+  --admin-table-header-text: #6b7280;
+  --admin-table-row-hover: #f9fafb;
+  --admin-table-border: #f3f4f6;
+
+  --admin-tab-bg: #f3f4f6;
+  --admin-tab-active-bg: #ffffff;
+  --admin-tab-active-text: #2563eb;
+  --admin-tab-inactive-text: #6b7280;
+
   --chat-message-text-other: #1f2937;
   --chat-message-border-other: #f3f4f6;
   --chat-input-bg: #f3f4f6;
@@ -589,6 +617,34 @@
   --settings-button-logout-hover: rgba(239, 68, 68, 0.1);
   --settings-button-update-bg: #4b5563;
   --settings-button-update-hover: #374151;
+
+  /* === Admin Panel (Dark) === */
+  --admin-bg: #111827;
+  --admin-card-bg: #1f2937;
+  --admin-card-border: #374151;
+  --admin-text-primary: #f9fafb;
+  --admin-text-secondary: #9ca3af;
+
+  --admin-sidebar-bg: #1f2937;
+  --admin-sidebar-text: #f3f4f6;
+  --admin-sidebar-border: #374151;
+  --admin-sidebar-hover: #374151;
+  --admin-sidebar-active-bg: #6366f1;
+  --admin-sidebar-active-text: #ffffff;
+
+  --admin-header-bg: #1f2937;
+  --admin-header-border: #374151;
+  --admin-header-text: #f9fafb;
+
+  --admin-table-header-bg: #374151;
+  --admin-table-header-text: #9ca3af;
+  --admin-table-row-hover: #374151;
+  --admin-table-border: #374151;
+
+  --admin-tab-bg: #374151;
+  --admin-tab-active-bg: #1f2937;
+  --admin-tab-active-text: #60a5fa;
+  --admin-tab-inactive-text: #9ca3af;
 }
 
 body {
