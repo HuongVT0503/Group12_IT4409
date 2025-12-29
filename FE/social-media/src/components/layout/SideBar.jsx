@@ -1,6 +1,13 @@
 //desktop left sidebar // nav links
 
-import { Home, User, MessageCircle, Users, PlusCircle } from "lucide-react";
+import {
+  Home,
+  User,
+  MessageCircle,
+  Users,
+  PlusCircle,
+  Bookmark,
+} from "lucide-react";
 import { NavLink, Link } from "react-router-dom";
 import {
   Button,
@@ -27,6 +34,7 @@ export default function SideBar() {
       path: "/connections",
       key: "connections",
     },
+    { icon: Bookmark, label: "Saved", path: "/saved", key: "saved" },
   ];
 
   return (

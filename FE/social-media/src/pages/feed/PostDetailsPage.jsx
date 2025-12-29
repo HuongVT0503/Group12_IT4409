@@ -25,6 +25,8 @@ export default function PostDetailsPage() {
         const formatted = {
           id: raw.post.id,
           content: raw.post.content,
+          isLiked: raw.isLiked || false,
+          isSaved: raw.isSaved || false,
           timestamp: raw.post.created_at,
           image: raw.post.media?.[0] || null,
           author: {
@@ -43,6 +45,8 @@ export default function PostDetailsPage() {
             ? {
                 id: sharedObj.id,
                 content: sharedObj.content,
+                isLiked: sharedObj.isLiked || false,
+                isSaved: sharedObj.isSaved || false,
                 image:
                   sharedObj.media && sharedObj.media.length > 0
                     ? sharedObj.media[0]

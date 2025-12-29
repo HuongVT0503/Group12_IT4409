@@ -1,7 +1,6 @@
 //getUserPosts,createPost,updatePost,deletePost,likePost,unlikePost,getFeed, getPost
 
-
-import api from './api';
+import api from "./api";
 
 export const getFeed = async (limit = 20) => {
   //be returns { posts: [...] }
@@ -10,10 +9,10 @@ export const getFeed = async (limit = 20) => {
 
 export const createPost = async (content, mediaUrl = null) => {
   //be expects: { content, media: [], privacy }
-  return await api.post('/posts', {
+  return await api.post("/posts", {
     content,
     media: mediaUrl ? [mediaUrl] : [],
-    privacy: 'public'
+    privacy: "public",
   });
 };
 
@@ -39,7 +38,7 @@ export const deletePost = async (postId) => {
 
 export const getPostLikes = async (postId) => {
   return await api.get(`/posts/${postId}/likes`);
-}
+};
 
 export const sharePost = async (postId, content) => {
   return await api.post(`/posts/${postId}/share`, { content });
@@ -47,4 +46,16 @@ export const sharePost = async (postId, content) => {
 
 export const editPost = async (postId, content) => {
   return await api.put(`/posts/${postId}`, { content });
+};
+
+export const savePost = async (postId) => {
+  return await api.post(`/posts/${postId}/save`);
+};
+
+export const unsavePost = async (postId) => {
+  return await api.delete(`/posts/${postId}/save`);
+};
+
+export const getSavedPosts = async (limit = 20) => {
+  return await api.get(`/posts/saved/all?limit=${limit}`);
 };
