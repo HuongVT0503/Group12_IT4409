@@ -280,8 +280,9 @@ async function getSavedPosts(userId, limit = 20) {
               count(DISTINCT shared) as shares, 
               sp, sa, 
               count(DISTINCT myLike) > 0 as isLiked, 
-              count(DISTINCT mySave) > 0 as isSaved
-       ORDER BY mySave.created_at DESC LIMIT $limit`,
+              true as isSaved,
+              mySave.created_at as savedAt
+       ORDER BY savedAt DESC LIMIT $limit`,
         { userId, limit: neo4j.int(limit) }
     );
     return res.records.map(mapPostResult);

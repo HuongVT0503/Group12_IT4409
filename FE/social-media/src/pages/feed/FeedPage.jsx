@@ -27,6 +27,7 @@ export default function FeedPage() {
       id: postObj.id,
       content: postObj.content,
       isLiked: data.isLiked || false,
+      isSaved: data.isSaved || false,
       timestamp: postObj.created_at, //keep ISO string, format will done by PostCard   //.toLocaleString(),
       image:
         postObj.media && postObj.media.length > 0 ? postObj.media[0] : null,
