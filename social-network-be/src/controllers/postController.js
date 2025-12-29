@@ -283,6 +283,40 @@ async function editPost(req, res, next) {
     }
 }
 
+async function savePost(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const postId = req.params.id;
+        await postService.savePost(userId, postId);
+        res.json({ success: true, message: "Post saved" });
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function unsavePost(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const postId = req.params.id;
+        await postService.unsavePost(userId, postId);
+        res.json({ success: true, message: "Post unsaved" });
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function getSavedPosts(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const limit = parseInt(req.query.limit) || 20;
+        const posts = await postService.getSavedPosts(userId, limit);
+        res.json({ posts });
+    } catch (err) {
+        next(err);
+    }
+}
+
+
 export {
   createPost,
   getPost,
@@ -293,5 +327,8 @@ export {
   unlikePost,
   countLikes,
   sharePost,
-    editPost,
+  editPost,
+  savePost,
+  unsavePost,
+  getSavedPosts
 };

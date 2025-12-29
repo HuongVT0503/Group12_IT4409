@@ -30,7 +30,7 @@ async function findRefreshToken(tokenHash) {
   try {
     const res = await session.run(
         `MATCH (t:RefreshToken {token_hash: $tokenHash}) 
-       RETURN t, t.expires_at.toString() AS expiresAtStr LIMIT 1`,
+       RETURN t, toString(t.expires_at) AS expiresAtStr LIMIT 1`,
         { tokenHash }
     );
     if (!res.records.length) return null;

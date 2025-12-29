@@ -99,26 +99,69 @@ export default function ConnectionsPage() {
   };
 
   return (
-    <div className="bg-white min-h-screen w-full">
+    <div
+      className="min-h-screen w-full"
+      style={{ backgroundColor: "var(--connection-bg)" }}
+    >
       {/* Header Tabs */}
-      <div className="sticky top-16 lg:top-20 bg-white z-10 flex border-b border-gray-200">
+      <div
+        className="sticky top-16 lg:top-20 z-10 flex border-b"
+        style={{
+          backgroundColor: "var(--connection-bg)",
+          borderColor: "var(--connection-border)",
+        }}
+      >
         <button
           onClick={() => setActiveTab("following")}
-          className={`flex-1 py-4 text-center font-semibold transition-colors ${
-            activeTab === "following"
-              ? "text-primary border-b-3 border-primary-400"
-              : "text-gray-500 hover:bg-primary-300/20 cursor-pointer "
-          }`}
+          className={`flex-1 py-4 text-center font-semibold transition-colors cursor-pointer`}
+          style={{
+            color:
+              activeTab === "following"
+                ? "var(--connection-tab-active)"
+                : "var(--connection-tab-inactive)",
+            borderBottom:
+              activeTab === "following"
+                ? "3px solid var(--connection-tab-active)"
+                : "none",
+            backgroundColor:
+              activeTab !== "following" ? "transparent" : undefined,
+          }}
+          onMouseEnter={(e) => {
+            if (activeTab !== "following")
+              e.currentTarget.style.backgroundColor =
+                "var(--connection-tab-hover)";
+          }}
+          onMouseLeave={(e) => {
+            if (activeTab !== "following")
+              e.currentTarget.style.backgroundColor = "transparent";
+          }}
         >
           Following
         </button>
         <button
           onClick={() => setActiveTab("followers")}
-          className={`flex-1 py-4 text-center font-semibold transition-colors ${
-            activeTab === "followers"
-              ? "text-primary border-b-3 border-primary-400"
-              : "text-gray-500 hover:bg-primary-300/20 cursor-pointer "
-          }`}
+          className={`flex-1 py-4 text-center font-semibold transition-colors cursor-pointer`}
+          style={{
+            color:
+              activeTab === "followers"
+                ? "var(--connection-tab-active)"
+                : "var(--connection-tab-inactive)",
+            borderBottom:
+              activeTab === "followers"
+                ? "3px solid var(--connection-tab-active)"
+                : "none",
+            backgroundColor:
+              activeTab !== "followers" ? "transparent" : undefined,
+          }}
+          onMouseEnter={(e) => {
+            if (activeTab !== "followers")
+              e.currentTarget.style.backgroundColor =
+                "var(--connection-tab-hover)";
+          }}
+          onMouseLeave={(e) => {
+            if (activeTab !== "followers")
+              e.currentTarget.style.backgroundColor = "transparent";
+          }}
         >
           Followers
         </button>
@@ -127,42 +170,66 @@ export default function ConnectionsPage() {
       {/* List Content */}
       <div className="p-4 sticky top-30 lg:top-35 overflow-y-auto">
         {loading ? (
-          <div className="text-center text-gray-400 mt-10">Loading...</div>
+          <div
+            className="text-center mt-10"
+            style={{ color: "var(--connection-text-secondary)" }}
+          >
+            Loading...
+          </div>
         ) : data.length === 0 ? (
-          <div className="text-center text-gray-500 mt-10">
+          <div
+            className="text-center mt-10"
+            style={{ color: "var(--connection-text-secondary)" }}
+          >
             {activeTab === "followers"
               ? "You don't have any followers yet."
               : "You aren't following anyone yet."}
           </div>
         ) : (
-          <div className="flex flex-col gap-4lg:mx-10">
+          <div className="flex flex-col gap-4 lg:mx-10">
             {data.map((person) => (
               <div
                 key={person.id}
-                className="flex items-center justify-between hover:bg-primary-300/10 px-4 py-2 rounded-full transition-colors"
+                className="flex items-center justify-between px-4 py-2 rounded-full transition-colors"
+                style={{ backgroundColor: "transparent" }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor =
+                    "var(--connection-item-hover)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = "transparent")
+                }
               >
                 <Link
                   to={`/profile/${person.id}`}
                   className="flex items-center gap-3 group cursor-pointer"
                 >
                   <div className="relative">
-                    <img
+                    <Avatar
                       src={
                         person.avatar_url ||
                         `https://ui-avatars.com/api/?name=${person.display_name}`
                       }
                       alt={person.display_name}
-                      className="w-12 h-12 rounded-full object-cover bg-gray-100 ring-2 ring-primary-400/30 group-hover:opacity-90"
+                      size={12}
                     />
                     {isUserOnline(person.id) && (
                       <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
                     )}
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-900 group-hover:text-primary transition-colors">
+                    <h4
+                      className="font-bold transition-colors"
+                      style={{ color: "var(--connection-text-primary)" }}
+                    >
                       {person.display_name}
                     </h4>
-                    <p className="text-xs text-gray-500">@{person.username}</p>
+                    <p
+                      className="text-xs"
+                      style={{ color: "var(--connection-text-secondary)" }}
+                    >
+                      @{person.username}
+                    </p>
                   </div>
                 </Link>
 
@@ -170,7 +237,27 @@ export default function ConnectionsPage() {
                 {activeTab === "following" && isOwnProfile && (
                   <button
                     onClick={() => handleUnfollow(person.id)}
-                    className="px-4 py-1.5 text-xs font-bold text-gray-500 border border-gray-200 rounded-full hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
+                    className="px-4 py-1.5 text-xs font-bold border rounded-full transition-all cursor-pointer"
+                    style={{
+                      color: "var(--connection-btn-unfollow-text)",
+                      borderColor: "var(--connection-btn-unfollow-border)",
+                      backgroundColor: "transparent",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        "var(--connection-btn-unfollow-hover-bg)";
+                      e.currentTarget.style.color =
+                        "var(--connection-btn-unfollow-hover-text)";
+                      e.currentTarget.style.borderColor =
+                        "var(--connection-btn-unfollow-hover-border)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                      e.currentTarget.style.color =
+                        "var(--connection-btn-unfollow-text)";
+                      e.currentTarget.style.borderColor =
+                        "var(--connection-btn-unfollow-border)";
+                    }}
                   >
                     Unfollow
                   </button>

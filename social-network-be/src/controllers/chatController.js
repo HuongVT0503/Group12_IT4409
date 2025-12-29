@@ -254,6 +254,17 @@ async function getOrCreateConversation(req, res, next) {
   }
 }
 
+async function searchMessages(req, res, next) {
+  try {
+    const { conversationId } = req.params;
+    const { q } = req.query;
+
+    const results = await chatService.searchMessages(conversationId, q);    res.json({ results });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export {
   getConversations,
   getMessages,
@@ -262,4 +273,5 @@ export {
   deleteMessage,
   getUnreadCount,
   getOrCreateConversation,
+  searchMessages
 };

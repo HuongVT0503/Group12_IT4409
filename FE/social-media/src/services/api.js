@@ -1,4 +1,3 @@
-//axios instance (baseURL, headers)
 import axios from "axios";
 
 const api = axios.create({
@@ -6,13 +5,14 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-    withCredentials: true,
+  withCredentials: true,
 });
 
-//req interceptor used to attach token
+// Re interceptor:attach token
 api.interceptors.request.use(
   (config) => {
-    const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+    const token =
+      sessionStorage.getItem("token") || localStorage.getItem("token");
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }
@@ -21,59 +21,62 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-//resp interceptors to handle 401
+// Resp interceptor: 401/403 n refresh token
 api.interceptors.response.use(
-  (response) => response, //return data directly
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-
-    if (originalRequest.url.includes('/auth/login') || originalRequest.url.includes('/login')) {
+    if (
+      originalRequest.url.includes("/auth/login") ||
+      originalRequest.url.includes("/login")
+    ) {
       return Promise.reject(error.response?.data || error.message);
     }
 
-
-    if (error.response?.status === 403 && error.response?.data?.error?.message === 'Your account has been locked') {
-       window.location.href = "/banned";
-       return Promise.reject(error);
+    if (
+      error.response?.status === 403 &&
+      error.response?.data?.error?.message === "Your account has been locked"
+    ) {
+      window.location.href = "/banned";
+      return Promise.reject(error);
     }
 
-    if (originalRequest.url.includes('/auth/login')) {
-        return Promise.reject(error.response?.data || error.message);
-    }
+    const isTokenError =
+      error.response?.status === 401 ||
+      (error.response?.status === 403 &&
+        error.response?.data?.message === "Token không hợp lệ!");
 
-    const isTokenError = 
-        error.response?.status === 401 || 
-        (error.response?.status === 403 && error.response?.data?.message === 'Token không hợp lệ!');
-
-
-    //401 + 403 didnt retry
     if (isTokenError && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      //refresh token
       try {
-          const { data } = await axios.post("api/v1/auth/refresh-token",
+        const { data } = await axios.post(
+          "/api/v1/auth/refresh-token",
           {},
           { withCredentials: true }
-      );
+        );
 
         localStorage.setItem("token", data.accessToken);
 
         api.defaults.headers.common[
           "Authorization"
         ] = `Bearer ${data.accessToken}`;
-
         originalRequest.headers["Authorization"] = `Bearer ${data.accessToken}`;
 
         return api(originalRequest);
-      } catch (err) {
-        console.error("Refresh failed",err);
+      } catch (refreshError) {
+        console.error("Refresh failed", refreshError);
+
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        if (!window.location.pathname.includes('/login')) {
-             window.location.href = "/login";
+        sessionStorage.removeItem("token");
+
+        if (!window.location.pathname.includes("/login")) {
+          window.location.href = "/login";
         }
+
+        return Promise.reject(refreshError);
       }
     }
     return Promise.reject(error.response?.data || error.message);

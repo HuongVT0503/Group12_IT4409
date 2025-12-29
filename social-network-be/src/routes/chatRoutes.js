@@ -15,5 +15,6 @@ router.get('/:conversationId/messages', chatController.getMessages);
 router.post('/send', upload.array('files', 2), chatController.sendMessage);
 router.patch('/:messageId/read', chatController.markMessageAsRead);
 router.delete('/:messageId', chatController.deleteMessage);
+router.get('/search/:conversationId', verifyToken, chatController.searchMessages);
 
 export default router;

@@ -44,3 +44,7 @@ export const getPostLikes = async (postId) => {
 export const sharePost = async (postId, content) => {
   return await api.post(`/posts/${postId}/share`, { content });
 };
+
+export const editPost = async (postId, content) => {
+  return await api.put(`/posts/${postId}`, { content });
+};

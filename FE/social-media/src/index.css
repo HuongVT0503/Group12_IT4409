@@ -54,6 +54,7 @@
 :root {
   /*default/light*/
 
+  --color-bg-main: white;
   /* Base (Light) */
   --color-main: #fff;
   --color-text-main: #111827; /* gray-900 */
@@ -194,7 +195,7 @@
   --panel-badge-text: #6366f1;
 
   /* ProfilePage specific */
-  --profile-bg: rgba(125, 195, 212, 0.2);
+  --profile-bg: #e0f2fe;
   --profile-card-bg: #ffffff;
   --profile-card-shadow: rgba(0, 0, 0, 0.05);
   --profile-cover-fallback: #a0a0a0;
@@ -262,10 +263,83 @@
   /* === Avatar === */
   --avatar-bg: #e5e7eb;
   --avatar-ring: rgba(84, 86, 233, 0.3);
+
+  /* === Comment Item === */
+  --comment-bg: #f3f4f6;
+  --comment-text: #1f2937;
+  --comment-text-secondary: #9ca3af;
+  --comment-author: #111827;
+  --comment-border: #f3f4f6;
+  --comment-input-bg: #f3f4f6;
+  --comment-input-text: #1f2937;
+  --comment-action-text: #6b7280;
+  --comment-action-hover: #6366f1;
+  --comment-like-active: #ef4444;
+  --comment-reply-border: #e5e7eb;
+
+  /* === Bottom Nav === */
+  --bottom-nav-bg: #ffffff;
+  --bottom-nav-border: #e5e7eb;
+  --bottom-nav-text-active: #6366f1;
+  --bottom-nav-text-inactive: #9ca3af;
+
+  /* === Chat Page === */
+  --chat-bg: #ffffff;
+  --chat-border: #e8e8e8;
+  --chat-header-bg: #ffffff;
+  --chat-header-border: #f3f4f6;
+  --chat-text-primary: #1f2937;
+  --chat-text-secondary: #9ca3af;
+  --chat-hover-bg: #f9fafb;
+  --chat-selected-bg: rgba(99, 102, 241, 0.05);
+  --chat-selected-border: #6366f1;
+  --chat-unread-bg: #eff6ff;
+  --chat-unread-border: #a855f7;
+  --chat-message-bg-me: linear-gradient(120deg, #6366f1 0%, #22d3ee 100%);
+  --chat-message-text-me: #ffffff;
+  --chat-message-bg-other: #ffffff;
+
+  /* === Connection Page === */
+  --connection-bg: #ffffff;
+  --connection-border: #e5e7eb;
+  --connection-text-primary: #111827;
+  --connection-text-secondary: #6b7280;
+  --connection-tab-active: #6366f1;
+  --connection-tab-inactive: #6b7280;
+  --connection-tab-hover: rgba(99, 102, 241, 0.1);
+  --connection-item-hover: rgba(99, 102, 241, 0.05);
+  --connection-avatar-ring: rgba(99, 102, 241, 0.3);
+  --connection-btn-unfollow-text: #6b7280;
+  --connection-btn-unfollow-border: #e5e7eb;
+  --connection-btn-unfollow-hover-bg: #fef2f2;
+  --connection-btn-unfollow-hover-text: #dc2626;
+  --connection-btn-unfollow-hover-border: #fecaca;
+
+  /* === Post Details Page === */
+  --post-detail-back-text: #6b7280;
+  --post-detail-back-hover: #6366f1;
+  --post-detail-error-bg: #fef2f2;
+  --post-detail-error-text: #dc2626;
+  --post-detail-loading-text: #6b7280;
+
+  /* === Create Post Page === */
+  --create-post-title: #1f2937;
+
+  --chat-message-text-other: #1f2937;
+  --chat-message-border-other: #f3f4f6;
+  --chat-input-bg: #f3f4f6;
+  --chat-input-text: #1f2937;
+  --chat-input-placeholder: #9ca3af;
+  --chat-icon-color: #9ca3af;
+  --chat-icon-hover: #6366f1;
+  --chat-empty-bg: #f9fafb;
+  --chat-empty-text: #9ca3af;
+  --chat-area-bg: #f8f9fa;
 }
 
 /*dark Mode */
 :root.dark {
+  --color-bg-main: #1f1f2e;
   --background-image-gradient-feedpage: linear-gradient(
     135deg,
     #111827 0%,
@@ -356,7 +430,7 @@
   --panel-badge-text: #c4b5fd;
 
   /* ProfilePage dark mode */
-  --profile-bg: rgba(31, 41, 55, 0.2);
+  --profile-bg: #1f2937;
   --profile-card-bg: #1f2937;
   --profile-card-shadow: rgba(0, 0, 0, 0.3);
   --profile-cover-fallback: #4b5563;
@@ -424,6 +498,77 @@
   /* === Avatar dark mode === */
   --avatar-bg: #374151;
   --avatar-ring: rgba(124, 58, 237, 0.4);
+
+  /* === Comment Item dark mode === */
+  --comment-bg: #374151;
+  --comment-text: #f3f4f6;
+  --comment-text-secondary: #9ca3af;
+  --comment-author: #f9fafb;
+  --comment-border: #374151;
+  --comment-input-bg: #1f2937;
+  --comment-input-text: #f9fafb;
+  --comment-action-text: #9ca3af;
+  --comment-action-hover: #a78bfa;
+  --comment-like-active: #f87171;
+  --comment-reply-border: #4b5563;
+
+  /* === Bottom Nav dark mode === */
+  --bottom-nav-bg: #1f2937;
+  --bottom-nav-border: #374151;
+  --bottom-nav-text-active: #a78bfa;
+  --bottom-nav-text-inactive: #6b7280;
+
+  /* === Chat Page dark mode === */
+  --chat-bg: #1f2937;
+  --chat-border: #374151;
+  --chat-header-bg: #1f2937;
+  --chat-header-border: #374151;
+  --chat-text-primary: #f9fafb;
+  --chat-text-secondary: #9ca3af;
+  --chat-hover-bg: #374151;
+  --chat-selected-bg: rgba(124, 58, 237, 0.1);
+  --chat-selected-border: #7c3aed;
+  --chat-unread-bg: rgba(124, 58, 237, 0.15);
+  --chat-unread-border: #a78bfa;
+  --chat-message-bg-me: linear-gradient(120deg, #7c3aed 0%, #22d3ee 100%);
+  --chat-message-text-me: #ffffff;
+  --chat-message-bg-other: #374151;
+  --chat-message-text-other: #f9fafb;
+  --chat-message-border-other: #4b5563;
+  --chat-input-bg: #374151;
+  --chat-input-text: #f9fafb;
+  --chat-input-placeholder: #6b7280;
+  --chat-icon-color: #6b7280;
+  --chat-icon-hover: #a78bfa;
+  --chat-empty-bg: #111827;
+  --chat-empty-text: #6b7280;
+  --chat-area-bg: #111827;
+
+  /* === Connection Page (Dark) === */
+  --connection-bg: #1f2937;
+  --connection-border: #374151;
+  --connection-text-primary: #f9fafb;
+  --connection-text-secondary: #9ca3af;
+  --connection-tab-active: #a78bfa;
+  --connection-tab-inactive: #9ca3af;
+  --connection-tab-hover: rgba(139, 92, 246, 0.2);
+  --connection-item-hover: rgba(139, 92, 246, 0.1);
+  --connection-avatar-ring: rgba(139, 92, 246, 0.3);
+  --connection-btn-unfollow-text: #9ca3af;
+  --connection-btn-unfollow-border: #4b5563;
+  --connection-btn-unfollow-hover-bg: rgba(239, 68, 68, 0.2);
+  --connection-btn-unfollow-hover-text: #f87171;
+  --connection-btn-unfollow-hover-border: #ef4444;
+
+  /* === Post Details Page (Dark) === */
+  --post-detail-back-text: #9ca3af;
+  --post-detail-back-hover: #a78bfa;
+  --post-detail-error-bg: rgba(239, 68, 68, 0.1);
+  --post-detail-error-text: #f87171;
+  --post-detail-loading-text: #9ca3af;
+
+  /* === Create Post Page (Dark) === */
+  --create-post-title: #f9fafb;
 }
 
 body {
