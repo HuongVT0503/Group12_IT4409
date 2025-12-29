@@ -6,18 +6,17 @@ import {
   getMessages,
   sendMessage,
   getOrCreateConversation,
+  searchMessages,
 } from "../../services/chatService";
 import { getFollowing } from "../../services/userService";
 import {
   Send,
   Search,
-  MoreVertical,
-  Phone,
-  Video,
   Image as ImageIcon,
   Check,
   CheckCheck,
   Smile,
+  X,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "../../utils/cn";
@@ -46,6 +45,11 @@ export default function ChatPage() {
   const [friends, setFriends] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  const [isMsgSearchOpen, setIsMsgSearchOpen] = useState(false);
+  const [msgSearchQuery, setMsgSearchQuery] = useState("");
+  const [msgSearchResults, setMsgSearchResults] = useState([]);
+  const [isSearchingMsg, setIsSearchingMsg] = useState(false);
 
   const { id: routeChatId } = useParams();
   const navigate = useNavigate();
@@ -188,8 +192,33 @@ export default function ChatPage() {
   }, [routeChatId, conversations, location.state, selectedChat?.id]);
   //run when URL changes or convos load
 
+//debounce message search
+useEffect(() => {
+  const delayDebounceFn = setTimeout(async () => {
+    if (msgSearchQuery.trim().length > 0 && selectedChat) {
+      setIsSearchingMsg(true);
+      try {
+        const res = await searchMessages(selectedChat.id, msgSearchQuery);
+        setMsgSearchResults(res.data.results || []);
+      } catch (error) {
+        console.error("Message search failed", error);
+      } finally {
+        setIsSearchingMsg(false);
+      }
+    } else {
+      setMsgSearchResults([]);
+    }
+  }, 500);
+
+  return () => clearTimeout(delayDebounceFn);
+}, [msgSearchQuery, selectedChat]); 
+
   //select chat &fetch
   const loadChatData = async (conv) => {
+    setIsMsgSearchOpen(false);
+    setMsgSearchQuery("");
+    setMsgSearchResults([]);
+    setIsSearchingMsg(false);
     //realtime read/unread
     setConversations((prev) =>
       prev.map((c) => {
@@ -382,6 +411,8 @@ export default function ChatPage() {
     }
   };
 
+
+
   const handleInputChange = (e) => {
     setInputText(e.target.value);
     if (socket && selectedChat) {
@@ -396,10 +427,14 @@ export default function ChatPage() {
   };
 
   const safeFormatDate = (dateString) => {
+    if (!dateString) return "";
     try {
-      if (!dateString) return "";
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return "Unknown";
+      }
       // formatDistanceToNow returns strings like "5 minutes", addSuffix adds "ago"
-      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+      return formatDistanceToNow(date, { addSuffix: true });
     } catch (e) {
       console.error("Date error:", e);
       return "";
@@ -468,6 +503,14 @@ export default function ChatPage() {
 
   const onEmojiClick = (emojiData) => {
     setInputText((prev) => prev + emojiData.emoji);
+  };
+
+  
+  const closeMsgSearch = () => {
+    setIsMsgSearchOpen(false);
+    setMsgSearchQuery("");
+    setMsgSearchResults([]);
+    setIsSearchingMsg(false);
   };
 
   const getAvatar = (u) =>
@@ -740,120 +783,200 @@ export default function ChatPage() {
                 className="flex items-center gap-2"
                 style={{ color: "var(--chat-icon-hover)" }}
               >
-                <button className="p-2.5 hover:bg-primary/5 rounded-full transition-colors">
-                  <Phone size={20} />
+                <button
+                  onClick={() => setIsMsgSearchOpen(!isMsgSearchOpen)}
+                  className={`p-2.5 rounded-full transition-colors ${
+                    isMsgSearchOpen
+                      ? "bg-primary/10 text-primary"
+                      : "hover:bg-primary/5"
+                  }`}
+                >
+                  <Search size={20} />
                 </button>
-                <button className="p-2.5 hover:bg-primary/5 rounded-full transition-colors">
-                  <Video size={20} />
-                </button>
-                <button className="p-2.5 hover:bg-primary/5 rounded-full transition-colors">
-                  <MoreVertical size={20} />
-                </button>
+                
               </div>
             </div>
+
+            {isMsgSearchOpen && (
+              <div className="px-4 py-2 border-b bg-gray-50 dark:bg-gray-800 flex items-center gap-2 animate-in slide-in-from-top-2 duration-200">
+                <form
+                  onSubmit={(e) => e.preventDefault()}
+                  className="flex-1 relative"
+                >
+                  <input
+                    type="text"
+                    placeholder="Search in conversation..."
+                    value={msgSearchQuery}
+                    onChange={(e) => setMsgSearchQuery(e.target.value)}
+                    className="w-full pl-3 pr-10 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-1 focus:ring-primary bg-white dark:bg-gray-700 dark:text-gray-200"
+                    autoFocus
+                  />
+                  {msgSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMsgSearchQuery("");
+                        setMsgSearchResults([]);
+                      
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </form>
+                <button
+                  onClick={closeMsgSearch}
+                  className="text-xs text-gray-500 hover:text-gray-700 font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
 
             {/* Messages Area */}
             <div
               className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4"
               style={{ backgroundColor: "var(--chat-area-bg)" }}
             >
-              {messages.map((msg, index) => {
-                const displayMedia = msg.mediaUrl || msg.content;
-
-                const isMe = msg.sender?.id === user?.id;
-                //group logic: check if next msg is same sender to adjust border radius
-                const isNextSame =
-                  messages[index + 1]?.sender?.id === msg.sender?.id;
-
-                return (
-                  <div
-                    key={msg.id || index}
-                    className={cn(
-                      "flex w-full",
-                      isMe ? "justify-end" : "justify-start"
-                    )}
-                  >
-                    <div className="flex flex-col max-w-[75%] lg:max-w-[60%]">
+              {isMsgSearchOpen && msgSearchQuery ? (
+                <div className="space-y-4">
+                  {isSearchingMsg ? (
+                    <p className="text-center text-sm text-gray-500 mt-4">
+                      Searching...
+                    </p>
+                  ) : msgSearchResults.length === 0 ? (
+                    <p className="text-center text-sm text-gray-500 mt-4">
+                      No results found.
+                    </p>
+                  ) : (
+                    msgSearchResults.map((msg) => (
                       <div
-                        className={cn(
-                          "px-5 py-3 shadow-sm text-[15px] leading-relaxed break-words relative group",
-                          isNextSame &&
-                            (isMe ? "rounded-br-sm" : "rounded-bl-sm") // Stack effect
-                        )}
-                        style={{
-                          background: isMe
-                            ? "var(--chat-message-bg-me)"
-                            : "var(--chat-message-bg-other)",
-                          color: isMe
-                            ? "var(--chat-message-text-me)"
-                            : "var(--chat-message-text-other)",
-                          border: isMe
-                            ? "none"
-                            : "1px solid var(--chat-message-border-other)",
-                          borderRadius: "1rem",
-                          borderTopLeftRadius: isMe ? "1rem" : "0.125rem",
-                          borderTopRightRadius: isMe ? "0.125rem" : "1rem",
-                          borderBottomRightRadius:
-                            isNextSame && isMe ? "0.125rem" : "1rem",
-                          borderBottomLeftRadius:
-                            isNextSame && !isMe ? "0.125rem" : "1rem",
-                        }}
+                        key={msg.id}
+                        className="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 flex gap-3"
                       >
-                        {isImageUrl(displayMedia) ? (
-                          <img
-                            src={displayMedia}
-                            alt="Attachment"
-                            className="max-w-[200px] max-h-[200px] rounded-lg object-cover"
-                            onError={(e) => {
-                              e.target.style.display = "none";
-                            }}
-                          />
-                        ) : isVideoUrl(displayMedia) ? (
-                          <video
-                            src={displayMedia}
-                            controls
-                            preload="metadata"
-                            className="max-w-[250px] max-h-[250px] rounded-lg object-cover bg-black"
-                          />
-                        ) : (
-                          <p>{msg.content || ""}</p>
-                        )}
+                        <img
+                          src={getAvatar(msg.sender)}
+                          alt="Avatar"
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-baseline">
+                            <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                              {msg.sender.display_name}
+                            </span>
+                            <span className="text-[10px] text-gray-500">
+                              {safeFormatDate(msg.created_at)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                            {msg.content}
+                          </p>
+                        </div>
                       </div>
+                    ))
+                  )}
+                </div>
+              ) : (
+                messages.map((msg, index) => {
+                  const displayMedia = msg.mediaUrl || msg.content;
 
-                      {/* Time & Read Receipt */}
-                      <div
-                        className={cn(
-                          "flex items-center gap-1 mt-1 px-1 text-[10px] font-medium",
-                          isMe ? "justify-end" : "justify-start"
-                        )}
-                        style={{ color: "var(--chat-text-secondary)" }}
-                      >
-                        <span>
-                          {new Date(msg.created_at).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                        {isMe && (
-                          <span
-                            style={{
-                              color: msg.is_read
-                                ? "var(--chat-icon-hover)"
-                                : "var(--chat-icon-color)",
-                            }}
-                          >
-                            {msg.is_read ? (
-                              <CheckCheck size={14} />
-                            ) : (
-                              <Check size={14} />
-                            )}
+                  const isMe = msg.sender?.id === user?.id;
+                  //group logic: check if next msg is same sender to adjust border radius
+                  const isNextSame =
+                    messages[index + 1]?.sender?.id === msg.sender?.id;
+
+                  return (
+                    <div
+                      key={msg.id || index}
+                      className={cn(
+                        "flex w-full",
+                        isMe ? "justify-end" : "justify-start"
+                      )}
+                    >
+                      <div className="flex flex-col max-w-[75%] lg:max-w-[60%]">
+                        <div
+                          className={cn(
+                            "px-5 py-3 shadow-sm text-[15px] leading-relaxed break-words relative group",
+                            isNextSame &&
+                              (isMe ? "rounded-br-sm" : "rounded-bl-sm") // Stack effect
+                          )}
+                          style={{
+                            background: isMe
+                              ? "var(--chat-message-bg-me)"
+                              : "var(--chat-message-bg-other)",
+                            color: isMe
+                              ? "var(--chat-message-text-me)"
+                              : "var(--chat-message-text-other)",
+                            border: isMe
+                              ? "none"
+                              : "1px solid var(--chat-message-border-other)",
+                            borderRadius: "1rem",
+                            borderTopLeftRadius: isMe ? "1rem" : "0.125rem",
+                            borderTopRightRadius: isMe ? "0.125rem" : "1rem",
+                            borderBottomRightRadius:
+                              isNextSame && isMe ? "0.125rem" : "1rem",
+                            borderBottomLeftRadius:
+                              isNextSame && !isMe ? "0.125rem" : "1rem",
+                          }}
+                        >
+                          {isImageUrl(displayMedia) ? (
+                            <img
+                              src={displayMedia}
+                              alt="Attachment"
+                              className="max-w-[200px] max-h-[200px] rounded-lg object-cover"
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                              }}
+                            />
+                          ) : isVideoUrl(displayMedia) ? (
+                            <video
+                              src={displayMedia}
+                              controls
+                              preload="metadata"
+                              className="max-w-[250px] max-h-[250px] rounded-lg object-cover bg-black"
+                            />
+                          ) : (
+                            <p>{msg.content || ""}</p>
+                          )}
+                        </div>
+
+                        {/* Time & Read Receipt */}
+                        <div
+                          className={cn(
+                            "flex items-center gap-1 mt-1 px-1 text-[10px] font-medium",
+                            isMe ? "justify-end" : "justify-start"
+                          )}
+                          style={{ color: "var(--chat-text-secondary)" }}
+                        >
+                          <span>
+                            {new Date(msg.created_at).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
                           </span>
-                        )}
+                          {isMe && (
+                            <span
+                              style={{
+                                color: msg.is_read
+                                  ? "var(--chat-icon-hover)"
+                                  : "var(--chat-icon-color)",
+                              }}
+                            >
+                              {msg.is_read ? (
+                                <CheckCheck size={14} />
+                              ) : (
+                                <Check size={14} />
+                              )}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
+
               <div ref={messagesEndRef} />
             </div>
 

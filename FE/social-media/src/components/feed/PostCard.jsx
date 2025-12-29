@@ -52,6 +52,7 @@ const safeFormatDate = (dateString) => {
 export default function PostCard({
   post,
   onDelete,
+  onUnsave,
   highlightId,
   readOnly = false,
 }) {
@@ -134,6 +135,17 @@ export default function PostCard({
 
     const handleUpdate = (payload) => {
       if (payload.postId && payload.postId !== post.id) return;
+
+      if (payload.savedBy) {
+        if (payload.savedBy === user?.id) setIsSaved(true);
+      }
+
+      if (payload.unsavedBy) {
+        if (payload.unsavedBy === user?.id) {
+          setIsSaved(false);
+          if (onUnsave) onUnsave(post.id); 
+        }
+      }
 
       if (payload.updatedPost) {
         const newContent = payload.updatedPost.post
@@ -271,7 +283,7 @@ export default function PostCard({
       socket.off("post_update", handleUpdate);
       socket.emit("leave_post", post.id);
     };
-  }, [socket, post.id, user?.id, showComments, onDelete, comments]);
+  }, [socket, post.id, user?.id, showComments, onDelete, onUnsave, comments]);
 
   //auto openning & scrolling
   useEffect(() => {
@@ -323,6 +335,7 @@ export default function PostCard({
 
     try {
       if (previousState) {
+        if (onUnsave) onUnsave(post.id);
         await unsavePost(post.id);
       } else {
         await savePost(post.id);

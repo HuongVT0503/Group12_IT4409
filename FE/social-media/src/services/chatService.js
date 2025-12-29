@@ -19,3 +19,7 @@ export const getOrCreateConversation = async (userId) => {
 export const getUnreadCount = async () => {
   return await api.get('/chat/unread/count');
 };
+
+export const searchMessages = async (conversationId, query) => {
+  return await api.get(`/chat/search/${conversationId}?q=${query}`);
+};
