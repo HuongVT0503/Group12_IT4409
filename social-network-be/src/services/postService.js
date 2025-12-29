@@ -105,6 +105,18 @@ async function editPost(postId, userId, newContent) {
   return result;
 }
 
+async function savePost(userId, postId) {
+  return await postRepo.savePost(userId, postId);
+}
+
+async function unsavePost(userId, postId) {
+  return await postRepo.unsavePost(userId, postId);
+}
+
+async function getSavedPosts(userId, limit) {
+  return await postRepo.getSavedPosts(userId, limit);
+}
+
 export {
   createPost,
   getPost,
@@ -116,4 +128,7 @@ export {
   countLikes,
   sharePost,
   editPost,
+  savePost,
+  unsavePost,
+  getSavedPosts
 };

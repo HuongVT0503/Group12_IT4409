@@ -87,6 +87,11 @@ async function findConversationByUsers(userId1, userId2) {
   return await chatRepo.findConversationByUsers(userId1, userId2);
 }
 
+async function searchMessages(conversationId, searchTerm) {
+  if (!searchTerm || searchTerm.trim() === "") return [];
+  return await chatRepo.searchMessagesInConversation(conversationId, searchTerm);
+}
+
 export {
   getOrCreateConversation,
   getUserConversations,
@@ -98,4 +103,5 @@ export {
   getUnreadMessageCount,
   findConversationById,
   findConversationByUsers,
+  searchMessages
 };
