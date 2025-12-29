@@ -10,6 +10,7 @@ import {
   X,
   Sun,
   Moon,
+  Bookmark,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect, useRef } from "react";
@@ -309,7 +310,7 @@ export default function TopBar() {
         />
         <span
           style={{ color: "var(--topbar-logo-text)" }}
-          className="text-2xl lg:text-2xl font-extrabold hidden sm:block"
+          className="text-2xl  font-extrabold hidden sm:block"
         >
           Social Media
         </span>
@@ -605,6 +606,16 @@ export default function TopBar() {
               >
                 <Settings size={18} />
                 Settings
+              </Link>
+
+              <Link
+                to="/saved"
+                onClick={() => setShowUserMenu(false)}
+                style={{ color: "var(--topbar-text)" }}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:[background:var(--topbar-dropdown-hover)] hover:[color:var(--topbar-badge-text)]"
+              >
+                <Bookmark size={18} />
+                Saved
               </Link>
 
               <div

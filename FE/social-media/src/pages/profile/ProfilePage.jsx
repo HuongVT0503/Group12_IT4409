@@ -646,7 +646,7 @@ export default function ProfilePage() {
 
         <div
           style={{ backgroundColor: "var(--profile-posts-bg)" }}
-          className="flex flex-col gap-4 w-full rounded-2xl mt-4"
+          className="flex flex-col gap-4 w-full rounded-2xl mt-4 mb-10"
         >
           {isOwnProfile && <CreatePost onPostCreated={handlePostCreated} />}
 
@@ -661,7 +661,7 @@ export default function ProfilePage() {
                 borderColor: "var(--profile-empty-border)",
                 color: "var(--profile-text-muted)",
               }}
-              className="text-center py-10 rounded-2xl border border-dashed"
+              className="text-center py-10 rounded-2xl border border-dashed mb-10"
             >
               No posts yet.
             </div>
