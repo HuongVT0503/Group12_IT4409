@@ -7,6 +7,7 @@ import { updateProfile } from "../../services/userService";
 import { useAuth } from "../../context/AuthContext";
 import { uploadMedia } from "../../services/mediaService";
 import Avatar from "../common/Avatar";
+import { getMediaUrl } from "../../utils/mediaUrl";
 
 export default function EditProfileModal({
   isOpen,
@@ -141,7 +142,7 @@ export default function EditProfileModal({
               >
                 <Avatar
                   src={
-                    formData.avatar_url ||
+                    getMediaUrl(formData.avatar_url) ||
                     `https://ui-avatars.com/api/?name=${formData.display_name}`
                   }
                   size={25}
@@ -207,7 +208,7 @@ export default function EditProfileModal({
                   {formData.cover_url ? (
                     <>
                       <img
-                        src={formData.cover_url}
+                        src={getMediaUrl(formData.cover_url)}
                         alt="Cover Preview"
                         className="w-full h-full object-cover"
                       />
