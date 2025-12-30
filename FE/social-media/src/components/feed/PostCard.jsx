@@ -526,7 +526,7 @@ export default function PostCard({
           <div className="relative">
             <Avatar
               src={
-                post.author.avatar ||
+                getMediaUrl(post.author.avatar) || post.author.avatar ||
                 `https://ui-avatars.com/api/?name=${post.author.name}`
               }
               alt={post.author.name}
@@ -860,7 +860,7 @@ export default function PostCard({
           <div className="flex gap-3 items-center mb-4 relative">
             <Avatar
               src={
-                user?.avatar_url ||
+                getMediaUrl(user?.avatar_url) || user?.avatar_url ||
                 `https://ui-avatars.com/api/?name=${user?.display_name}`
               }
               alt={user?.display_name}

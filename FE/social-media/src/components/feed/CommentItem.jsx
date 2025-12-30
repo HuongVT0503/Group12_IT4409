@@ -15,6 +15,7 @@ import EmojiPicker from "emoji-picker-react";
 import { uploadMedia } from "../../services/mediaService";
 import { likeComment, unlikeComment, updateComment } from "../../services/commentService";
 import Avatar from "../common/Avatar";
+import { getMediaUrl } from "../../utils/mediaUrl";
 
 export default function CommentItem({
   item,
@@ -146,7 +147,7 @@ export default function CommentItem({
           <div className="relative inline-block">
             <Avatar
               src={
-                item.author.avatar_url ||
+                getMediaUrl(item.author.avatar_url) || item.author.avatar_url ||
                 `https://ui-avatars.com/api/?name=${item.author.display_name}`
               }
               size={8}
