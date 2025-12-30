@@ -10,6 +10,7 @@ import { formatDistanceToNow } from "date-fns";
 import { MessageCircle, UserPlus, Users } from "lucide-react";
 import { useSocketContext } from "../../context/SocketContext";
 //import { useTheme } from "../../context/ThemeContext";
+import { getMediaUrl } from "../../utils/mediaUrl";
 
 export default function RightPanel() {
   const { user } = useAuth();
@@ -63,7 +64,7 @@ export default function RightPanel() {
   };
 
   const getAvatar = (u) =>
-    u?.avatar_url ||
+    getMediaUrl(u?.avatar_url) || u?.avatar_url ||
     `https://ui-avatars.com/api/?name=${
       u?.display_name || "User"
     }&background=random`;

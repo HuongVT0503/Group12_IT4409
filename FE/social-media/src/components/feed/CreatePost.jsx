@@ -11,6 +11,7 @@ import {
 import Avatar from "../common/Avatar";
 import { Button } from "@heroui/react";
 import EmojiPicker from "emoji-picker-react";
+import { getMediaUrl } from "../../utils/mediaUrl";
 //import { useTheme } from "../../context/ThemeContext";
 
 export default function CreatePost({ onPostCreated }) {
@@ -82,7 +83,7 @@ export default function CreatePost({ onPostCreated }) {
     >
       <Avatar
         src={
-          user?.avatar_url ||
+          getMediaUrl(user?.avatar_url) || user?.avatar_url ||
           `https://ui-avatars.com/api/?name=${user?.display_name}`
         }
         alt="me"

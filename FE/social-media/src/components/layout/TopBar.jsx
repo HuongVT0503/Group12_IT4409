@@ -24,6 +24,7 @@ import { formatDistanceToNow } from "date-fns";
 import { getProfile } from "../../services/userService";
 import { searchUsers } from "../../services/userService";
 import { useTheme } from "../../context/ThemeContext";
+import { getMediaUrl } from "../../utils/mediaUrl";
 
 //import { Avatar, Badge, Button } from "@heroui/react";
 
@@ -380,7 +381,7 @@ export default function TopBar() {
                   >
                     <img
                       src={
-                        user.avatar_url ||
+                        getMediaUrl(user.avatar_url) || user.avatar_url ||
                         `https://ui-avatars.com/api/?name=${user.display_name}`
                       }
                       alt={user.display_name}
@@ -542,7 +543,7 @@ export default function TopBar() {
           >
             <img
               src={
-                user?.avatar_url ||
+                getMediaUrl(user?.avatar_url) || user?.avatar_url ||
                 `https://ui-avatars.com/api/?name=${
                   user?.display_name || "User"
                 }`
