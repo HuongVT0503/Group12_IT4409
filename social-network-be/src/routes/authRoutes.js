@@ -5,9 +5,6 @@ import {
     loginUser, 
     refreshToken, 
     logoutUser,
-    googleCallback,
-    facebookCallback,
-    getOAuthProfile,
     changePassword
 } from '../controllers/authControllers.js';
 import { verifyToken } from '../middlewares/authMiddleware.js';
