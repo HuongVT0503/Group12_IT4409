@@ -38,6 +38,7 @@ import EmojiPicker from "emoji-picker-react";
 import ShareModal from "../common/ShareModal";
 import { uploadMedia } from "../../services/mediaService";
 //import { useTheme } from "../../context/ThemeContext";
+import { getMediaUrl } from "../../utils/mediaUrl";
 
 const safeFormatDate = (dateString) => {
   try {
@@ -722,13 +723,13 @@ export default function PostCard({
         >
           {isVideoUrl(post.image) ? (
             <video
-              src={post.image}
+              src={getMediaUrl(post.image)}
               controls
               className="w-full h-auto object-cover max-h-[500px]"
             />
           ) : (
             <img
-              src={post.image}
+              src={getMediaUrl(post.image)}
               alt="Post content"
               className="w-full h-auto object-cover max-h-[500px]"
             />
