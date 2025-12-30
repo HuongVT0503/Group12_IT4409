@@ -16,7 +16,6 @@ import { uploadMedia } from "../../services/mediaService";
 import { likeComment, unlikeComment, updateComment } from "../../services/commentService";
 import Avatar from "../common/Avatar";
 import { getMediaUrl } from "../../utils/mediaUrl";
-import { getMediaUrl } from "../../utils/mediaUrl";
 
 export default function CommentItem({
   item,
