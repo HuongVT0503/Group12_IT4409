@@ -23,6 +23,7 @@ import { cn } from "../../utils/cn";
 import { uploadMedia } from "../../services/mediaService";
 import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import EmojiPicker from "emoji-picker-react";
+import { getMediaUrl } from "../../utils/mediaUrl";
 
 export default function ChatPage() {
   const { user } = useAuth();
@@ -511,7 +512,7 @@ export default function ChatPage() {
   };
 
   const getAvatar = (u) =>
-    u?.avatar_url ||
+    getMediaUrl(u?.avatar_url) ||
     `https://ui-avatars.com/api/?name=${
       u?.display_name || "User"
     }&background=random`;
@@ -898,7 +899,8 @@ export default function ChatPage() {
                 </div>
               ) : (
                 messages.map((msg, index) => {
-                  const displayMedia = msg.mediaUrl || msg.content;
+                  const rawMedia = msg.mediaUrl || msg.content;
+                  const displayMedia = getMediaUrl(rawMedia) || rawMedia;
 
                   const isMe = msg.sender?.id === user?.id;
                   //group logic: check if next msg is same sender to adjust border radius

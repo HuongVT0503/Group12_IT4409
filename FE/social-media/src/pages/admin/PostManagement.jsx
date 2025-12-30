@@ -14,6 +14,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import Avatar from "../../components/common/Avatar";
 import AdminPostPreviewModal from "../../components/admin/AdminPostPreviewModal";
+import { getMediaUrl } from "../../utils/mediaUrl";
 
 export default function PostManagement() {
   const [reports, setReports] = useState([]);
@@ -181,7 +182,10 @@ export default function PostManagement() {
                   <td className="px-6 py-4 align-top">
                     <div className="flex items-center gap-2">
                       <Avatar
-                        src={`https://ui-avatars.com/api/?name=${report.fromUser}`}
+                        src={
+                          getMediaUrl(report.fromUserAvatar) ||
+                          `https://ui-avatars.com/api/?name=${report.fromUser}`
+                        }
                         size={8}
                       />
                       <div>

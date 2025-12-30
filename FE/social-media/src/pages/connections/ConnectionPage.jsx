@@ -9,6 +9,7 @@ import {
 } from "../../services/userService";
 import { useSocketContext } from "../../context/SocketContext";
 import Avatar from "../../components/common/Avatar";
+import { getMediaUrl } from "../../utils/mediaUrl";
 
 export default function ConnectionsPage() {
   const { user: currentUser } = useAuth();
@@ -207,6 +208,7 @@ export default function ConnectionsPage() {
                   <div className="relative">
                     <Avatar
                       src={
+                        getMediaUrl(person.avatar_url) ||
                         person.avatar_url ||
                         `https://ui-avatars.com/api/?name=${person.display_name}`
                       }

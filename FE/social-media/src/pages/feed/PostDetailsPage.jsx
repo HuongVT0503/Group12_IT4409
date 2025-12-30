@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import PostCard from "../../components/feed/PostCard";
 import { getPost } from "../../services/postService";
 import { ArrowLeft } from "lucide-react";
+import { getMediaUrl } from "../../utils/mediaUrl";
 
 export default function PostDetailsPage() {
   const { id } = useParams();
@@ -28,12 +29,12 @@ export default function PostDetailsPage() {
           isLiked: raw.isLiked || false,
           isSaved: raw.isSaved || false,
           timestamp: raw.post.created_at,
-          image: raw.post.media?.[0] || null,
+          image: raw.post.media?.[0] ? getMediaUrl(raw.post.media[0]) : null,
           author: {
             id: raw.author.id,
             name: raw.author.display_name || raw.author.username,
             handle: raw.author.username,
-            avatar: raw.author.avatar_url,
+            avatar: getMediaUrl(raw.author.avatar_url) || raw.author.avatar_url,
           },
           stats: {
             likes: raw.stats.likes || 0,
@@ -49,14 +50,16 @@ export default function PostDetailsPage() {
                 isSaved: sharedObj.isSaved || false,
                 image:
                   sharedObj.media && sharedObj.media.length > 0
-                    ? sharedObj.media[0]
+                    ? getMediaUrl(sharedObj.media[0]) || sharedObj.media[0]
                     : null,
                 timestamp: sharedObj.created_at,
                 author: {
                   id: sharedObj.author.id,
                   name:
                     sharedObj.author.display_name || sharedObj.author.username,
-                  avatar: sharedObj.author.avatar_url,
+                  avatar:
+                    getMediaUrl(sharedObj.author.avatar_url) ||
+                    sharedObj.author.avatar_url,
                 },
               }
             : null,
