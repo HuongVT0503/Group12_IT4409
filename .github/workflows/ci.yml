@@ -1,0 +1,21 @@
+name: CI Check
+
+on: [push, pull_request]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install & Build Backend
+      working-directory: ./social-network-be
+      run: |
+        npm install
+        # npm test # Uncomment if you add tests later
+
+    - name: Install & Build Frontend
+      working-directory: ./FE/social-media
+      run: |
+        npm install
+        npm run build
