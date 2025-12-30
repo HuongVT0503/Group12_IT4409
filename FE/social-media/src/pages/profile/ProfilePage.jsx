@@ -26,7 +26,7 @@ import CreatePost from "../../components/feed/CreatePost";
 import Avatar from "../../components/common/Avatar";
 import ReportModal from "../../components/common/ReportModal";
 import { useSocketContext } from "../../context/SocketContext";
-import { b } from "framer-motion/client";
+//import { b } from "framer-motion/client";
 //import { useTheme } from "../../context/ThemeContext";
 
 export default function ProfilePage() {
