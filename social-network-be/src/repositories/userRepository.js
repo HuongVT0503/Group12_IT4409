@@ -67,117 +67,6 @@ async function createUser({
   }
 }
 
-async function createOAuthUser({
-  id,
-  email,
-  display_name,
-  provider,
-  providerId,
-  profilePicture,
-}) {
-  const session = getSession();
-  try {
-    const baseUsername = display_name
-      ? display_name.replace(/\s+/g, "").toLowerCase()
-      : email.split("@")[0];
-    let username = baseUsername;
-    let counter = 1;
-    let existing = await findByUsername(username);
-    while (existing) {
-      username = `${baseUsername}${counter}`;
-      existing = await findByUsername(username);
-      counter++;
-    }
-
-    const oauthFieldName = `${provider}_id`;
-    const params = {
-      id,
-      email,
-      username,
-      display_name: display_name || email.split("@")[0],
-      providerId,
-      profilePicture: profilePicture || null,
-      role: "user",
-      isBanned: false,
-    };
-
-    const setClause = `
-      id: $id,
-      email: $email,
-      username: $username,
-      display_name: $display_name,
-      ${oauthFieldName}: $providerId,
-      avatar: $profilePicture,
-      role: $role,
-      isBanned: $isBanned,
-      created_at: datetime()
-    `;
-    const res = await session.run(
-      `CREATE (u:User {${setClause}}) RETURN u`,
-      params
-    );
-    return normalizeUser(res.records[0].get("u").properties);
-  } finally {
-    await session.close();
-  }
-}
-
-async function findByGoogleId(googleId) {
-  const session = getSession();
-  try {
-    const res = await session.run(
-      `MATCH (u:User {google_id:$googleId}) RETURN u LIMIT 1`,
-      { googleId }
-    );
-    if (!res.records.length) return null;
-    return normalizeUser(res.records[0].get("u").properties);
-  } finally {
-    await session.close();
-  }
-}
-
-async function findByFacebookId(facebookId) {
-  const session = getSession();
-  try {
-    const res = await session.run(
-      `MATCH (u:User {facebook_id:$facebookId}) RETURN u LIMIT 1`,
-      { facebookId }
-    );
-    if (!res.records.length) return null;
-    return normalizeUser(res.records[0].get("u").properties);
-  } finally {
-    await session.close();
-  }
-}
-
-async function updateOAuthProfile(
-  userId,
-  provider,
-  providerId,
-  profilePicture
-) {
-  const session = getSession();
-  try {
-    const oauthFieldName = `${provider}_id`;
-    const params = {
-      userId,
-      providerId,
-      profilePicture: profilePicture || null,
-    };
-
-    const res = await session.run(
-      `MATCH (u:User {id:$userId}) 
-       SET u.${oauthFieldName} = $providerId, u.avatar = $profilePicture 
-       RETURN u`,
-      params
-    );
-    if (!res.records.length) return null;
-    return normalizeUser(res.records[0].get("u").properties);
-  } finally {
-    await session.close();
-  }
-}
-
 async function findByEmail(email) {
   const session = getSession();
   try {
@@ -341,14 +230,10 @@ async function createReport({
 
 export {
   createUser,
-  createOAuthUser,
   findByEmail,
   findByUsername,
   findById,
-  findByGoogleId,
-  findByFacebookId,
   updateProfile,
-  updateOAuthProfile,
   followUser,
   unfollowUser,
   getFollowers,
