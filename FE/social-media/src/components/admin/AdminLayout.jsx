@@ -339,7 +339,7 @@ export default function AdminLayout() {
 const NavItem = ({ to, icon, label }) => (
   <NavLink
     to={to}
-    className={({ isActive }) =>
+    className={() =>
       `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors`
     }
     style={({ isActive }) => ({
