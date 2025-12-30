@@ -26,14 +26,22 @@ const updateProfileValidators = [
   body('avatar_url')
     .optional({ checkFalsy: true })
     .trim()
-    .isURL({ require_tld: false })
-    .withMessage('Avatar URL must be a valid URL'),
+    .custom((value) => {
+    if (value.startsWith('/uploads/') || value.startsWith('http')) {
+      return true;
+    }
+    throw new Error('Avatar URL must be a valid URL or a local path');
+  }),
   
   body('cover_url')
     .optional({ checkFalsy: true })
     .trim()
-    .isURL({ require_tld: false }) //to allow localhost 
-    .withMessage('Cover URL must be a valid URL'),
+    .custom((value) => {
+    if (value.startsWith('/uploads/') || value.startsWith('http')) {
+      return true;
+    }
+    throw new Error('Avatar URL must be a valid URL or a local path');
+  }),
   
   body('date_of_birth')
     .optional()
