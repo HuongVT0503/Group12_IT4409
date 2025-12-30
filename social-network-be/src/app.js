@@ -46,7 +46,9 @@ app.use(session({
 // app.use(passport.initialize());
 // app.use(passport.session());
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+//app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+//path.join(process.cwd(), 'uploads')
 app.get('/', (req, res) => res.json({ ok: true, version: '0.2' }));
 
 app.use('/api/v1/auth', authRoutes);
