@@ -627,13 +627,9 @@ export default function ChatPage() {
                 style={{
                   backgroundColor: isSelected
                     ? "var(--chat-selected-bg)"
-                    : isUnread
-                    ? "var(--chat-unread-bg)"
                     : "transparent",
                   borderLeftColor: isSelected
                     ? "var(--chat-selected-border)"
-                    : isUnread
-                    ? "var(--chat-unread-border)"
                     : "transparent",
                 }}
               >
