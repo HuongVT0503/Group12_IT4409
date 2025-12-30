@@ -28,6 +28,7 @@ import ReportModal from "../../components/common/ReportModal";
 import { useSocketContext } from "../../context/SocketContext";
 //import { b } from "framer-motion/client";
 //import { useTheme } from "../../context/ThemeContext";
+import { getMediaUrl } from "../../utils/mediaUrl";
 
 export default function ProfilePage() {
   const { id } = useParams(); //id from url
@@ -392,7 +393,7 @@ export default function ProfilePage() {
             className="h-48 lg:h-64 bg-cover bg-center w-full relative overflow-hidden rounded-t-lg"
             style={{
               backgroundImage: `url(${
-                profile.cover_url ||
+                getMediaUrl(profile.cover_url) ||
                 "https://ui-avatars.com/api/?name=" +
                   profile.display_name +
                   "&background=random&size=800"
@@ -406,7 +407,7 @@ export default function ProfilePage() {
               <div className="relative">
                 <Avatar
                   src={
-                    profile.avatar_url ||
+                    getMediaUrl(profile.avatar_url) ||
                     `https://ui-avatars.com/api/?name=${profile.display_name}`
                   }
                   size={isLgScreen ? 32 : 28}
