@@ -26,6 +26,7 @@ import CreatePost from "../../components/feed/CreatePost";
 import Avatar from "../../components/common/Avatar";
 import ReportModal from "../../components/common/ReportModal";
 import { useSocketContext } from "../../context/SocketContext";
+import { b } from "framer-motion/client";
 //import { useTheme } from "../../context/ThemeContext";
 
 export default function ProfilePage() {
@@ -383,7 +384,7 @@ export default function ProfilePage() {
         <div
           style={{
             backgroundColor: "var(--profile-card-bg)",
-            boxShadow: `0 1px 2px var(--profile-card-shadow)`,
+            boxShadow: `0 2px 2px var(--profile-card-shadow)`,
           }}
           className="w-full mb-4 rounded-lg mt-4"
         >
@@ -442,10 +443,11 @@ export default function ProfilePage() {
                     loading={messageLoading}
                     variant="outline"
                     style={{
-                      borderColor: "var(--profile-button-border)",
+                      borderColor: "var(--button-outline-border)",
                       color: "var(--profile-button-text)",
+                      backgroundColor: "#10b981",
                     }}
-                    className="rounded-lg px-4 py-2 text-sm hover:[background:var(--profile-button-hover)] hover:[color:var(--panel-link-color)]"
+                    className="rounded-lg px-4 py-2 text-sm hover:opacity-90"
                   >
                     <MessageCircle size={18} className="mr-2" />
                     Message
@@ -481,7 +483,7 @@ export default function ProfilePage() {
                         borderColor: "var(--profile-button-border)",
                         color: "var(--profile-button-text)",
                       }}
-                      className="p-2 border rounded-lg shadow-sm hover:[background:var(--profile-button-hover)]"
+                      className="p-2 border rounded-lg shadow-sm hover:[background:var(--profile-button-hover)] cursor-pointer"
                     >
                       <MoreHorizontal size={20} />
                     </button>
@@ -646,7 +648,7 @@ export default function ProfilePage() {
 
         <div
           style={{ backgroundColor: "var(--profile-posts-bg)" }}
-          className="flex flex-col gap-4 w-full rounded-2xl mt-4"
+          className="flex flex-col gap-4 w-full rounded-2xl mt-4 mb-10"
         >
           {isOwnProfile && <CreatePost onPostCreated={handlePostCreated} />}
 
@@ -661,7 +663,7 @@ export default function ProfilePage() {
                 borderColor: "var(--profile-empty-border)",
                 color: "var(--profile-text-muted)",
               }}
-              className="text-center py-10 rounded-2xl border border-dashed"
+              className="text-center py-10 rounded-2xl border border-dashed mb-10"
             >
               No posts yet.
             </div>

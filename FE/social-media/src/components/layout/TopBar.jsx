@@ -310,7 +310,7 @@ export default function TopBar() {
         />
         <span
           style={{ color: "var(--topbar-logo-text)" }}
-          className="text-2xl lg:text-2xl font-extrabold hidden sm:block"
+          className="text-2xl  font-extrabold hidden sm:block"
         >
           Social Media
         </span>

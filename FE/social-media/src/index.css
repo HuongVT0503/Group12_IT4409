@@ -61,50 +61,6 @@
   --color-text-secondary: #6b7280; /* gray-600 */
   --color-border: #e5e7eb; /* gray-200 */
 
-  /* Primary (Indigo) */
-  --color-primary-50: #eef2ff;
-  --color-primary-100: #e0e7ff;
-  --color-primary-200: #c7d2fe;
-  --color-primary-300: #a5b4fc;
-  --color-primary-400: #818cf8;
-  --color-primary-500: #6366f1;
-  --color-primary-600: #4f46e5;
-  --color-primary-700: #4338ca;
-  --color-primary-800: #3730a3;
-  --color-primary-900: #312e81;
-
-  /* Secondary */
-  --color-secondary-400: #a3a0bf;
-  --color-secondary-500: #8f8db1;
-  --color-secondary-600: #7a78a0;
-
-  /* Tertiary */
-  --color-tertiary-400: #8f667a;
-  --color-tertiary-500: #7a5368;
-  --color-tertiary-600: #6a475b;
-
-  /* Error */
-  --color-error-400: #ef4444;
-  --color-error-500: #ba1a1a;
-  --color-error-600: #991b1b;
-
-  /* Neutral (Gray) */
-  --color-neutral-50: #f9fafb;
-  --color-neutral-100: #f3f4f6;
-  --color-neutral-200: #e5e7eb;
-  --color-neutral-300: #d1d5db;
-  --color-neutral-400: #9ca3af;
-  --color-neutral-500: #929094;
-  --color-neutral-600: #6b7280;
-  --color-neutral-700: #374151;
-  --color-neutral-800: #1f2937;
-  --color-neutral-900: #111827;
-
-  /* Surface*/
-  --color-surface-dim: #dcd9e0;
-  --color-surface: #fcf8ff;
-  --color-surface-bright: #fcf8ff;
-
   /* TopBar specific */
   --topbar-bg: #ffffff;
   --topbar-border: #e5e7eb;
@@ -324,6 +280,66 @@
 
   /* === Create Post Page === */
   --create-post-title: #1f2937;
+
+  /* === Login Page === */
+  --login-bg: #ffffff;
+  --login-card-bg: #ffffff;
+  --login-text-primary: #111827;
+  --login-text-secondary: #6b7280;
+  --login-border: #e5e7eb;
+  --login-input-bg: #ffffff;
+  --login-input-border: #d1d5db;
+  --login-input-text: #111827;
+  --login-divider: #d1d5db;
+  --login-divider-text: #6b7280;
+  --login-divider-bg: #ffffff;
+
+  /* === Settings Page === */
+  --settings-bg: #ffffff;
+  --settings-card-bg: #ffffff;
+  --settings-card-border: #f3f4f6;
+  --settings-text-primary: #111827;
+  --settings-text-secondary: #6b7280;
+  --settings-section-header: #f9fafb;
+  --settings-input-bg: #ffffff;
+  --settings-input-border: #d1d5db;
+  --settings-input-text: #111827;
+  --settings-icon: #9ca3af;
+  --settings-button-save-bg: #2563eb;
+  --settings-button-save-text: #ffffff;
+  --settings-button-save-hover: #1d4ed8;
+  --settings-button-logout-text: #dc2626;
+  --settings-button-logout-hover: #fef2f2;
+  --settings-button-update-bg: #111827;
+  --settings-button-update-hover: #000000;
+
+  /* === Admin Panel === */
+  --admin-bg: #f3f4f6;
+  --admin-card-bg: #ffffff;
+  --admin-card-border: #e5e7eb;
+  --admin-text-primary: #1f2937;
+  --admin-text-secondary: #6b7280;
+
+  --admin-sidebar-bg: #1e293b;
+  --admin-sidebar-text: #ffffff;
+  --admin-sidebar-border: #334155;
+  --admin-sidebar-hover: #334155;
+  --admin-sidebar-active-bg: #6366f1;
+  --admin-sidebar-active-text: #ffffff;
+
+  --admin-header-bg: #ffffff;
+  --admin-header-border: #e5e7eb;
+  --admin-header-text: #1f2937;
+
+  --admin-table-header-bg: #f9fafb;
+  --admin-table-header-text: #6b7280;
+  --admin-table-row-hover: #f9fafb;
+  --admin-table-border: #f3f4f6;
+
+  --admin-tab-bg: #f3f4f6;
+  --admin-tab-active-bg: #ffffff;
+  --admin-tab-active-text: #2563eb;
+  --admin-tab-inactive-text: #6b7280;
 
   --chat-message-text-other: #1f2937;
   --chat-message-border-other: #f3f4f6;
@@ -569,6 +585,66 @@
 
   /* === Create Post Page (Dark) === */
   --create-post-title: #f9fafb;
+
+  /* === Login Page (Dark) === */
+  --login-bg: #1f2937;
+  --login-card-bg: #1f2937;
+  --login-text-primary: #f9fafb;
+  --login-text-secondary: #9ca3af;
+  --login-border: #374151;
+  --login-input-bg: #1f2937;
+  --login-input-border: #4b5563;
+  --login-input-text: #f9fafb;
+  --login-divider: #4b5563;
+  --login-divider-text: #9ca3af;
+  --login-divider-bg: #1f2937;
+
+  /* === Settings Page (Dark) === */
+  --settings-bg: #1f2937;
+  --settings-card-bg: #1f2937;
+  --settings-card-border: #374151;
+  --settings-text-primary: #f9fafb;
+  --settings-text-secondary: #9ca3af;
+  --settings-section-header: #111827;
+  --settings-input-bg: #1f2937;
+  --settings-input-border: #4b5563;
+  --settings-input-text: #f9fafb;
+  --settings-icon: #6b7280;
+  --settings-button-save-bg: #2563eb;
+  --settings-button-save-text: #ffffff;
+  --settings-button-save-hover: #1d4ed8;
+  --settings-button-logout-text: #f87171;
+  --settings-button-logout-hover: rgba(239, 68, 68, 0.1);
+  --settings-button-update-bg: #4b5563;
+  --settings-button-update-hover: #374151;
+
+  /* === Admin Panel (Dark) === */
+  --admin-bg: #111827;
+  --admin-card-bg: #1f2937;
+  --admin-card-border: #374151;
+  --admin-text-primary: #f9fafb;
+  --admin-text-secondary: #9ca3af;
+
+  --admin-sidebar-bg: #1f2937;
+  --admin-sidebar-text: #f3f4f6;
+  --admin-sidebar-border: #374151;
+  --admin-sidebar-hover: #374151;
+  --admin-sidebar-active-bg: #6366f1;
+  --admin-sidebar-active-text: #ffffff;
+
+  --admin-header-bg: #1f2937;
+  --admin-header-border: #374151;
+  --admin-header-text: #f9fafb;
+
+  --admin-table-header-bg: #374151;
+  --admin-table-header-text: #9ca3af;
+  --admin-table-row-hover: #374151;
+  --admin-table-border: #374151;
+
+  --admin-tab-bg: #374151;
+  --admin-tab-active-bg: #1f2937;
+  --admin-tab-active-text: #60a5fa;
+  --admin-tab-inactive-text: #9ca3af;
 }
 
 body {

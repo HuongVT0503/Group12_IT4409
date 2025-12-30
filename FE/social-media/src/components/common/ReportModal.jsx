@@ -32,7 +32,7 @@ export default function ReportModal({ isOpen, onClose, targetId, targetType }) {
   return createPortal(
     <div
       style={{ backgroundColor: "var(--modal-overlay)" }}
-      className="fixed inset-0 flex items-center justify-center backdrop-blur-sm p-4 animate-in fade-in"
+      className="fixed inset-0 flex items-center justify-center backdrop-blur-sm p-4 animate-in fade-in z-[9999]"
     >
       <div
         style={{ backgroundColor: "var(--modal-bg)" }}

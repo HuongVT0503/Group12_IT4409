@@ -23,7 +23,7 @@ export default function MainLayout() {
 
         {/* MIDDLE */}
         {/* On mobile: takes full width. On desktop: centered with margin for sidebars */}
-        <main className="w-full lg:pl-[280px]">
+        <main className="w-full lg:pl-[280px] pb-16 lg:pb-0">
           <Outlet />
         </main>
 

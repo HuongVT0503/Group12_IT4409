@@ -20,9 +20,8 @@ export default function Avatar({
         width: computedPx,
         height: computedPx,
         backgroundColor: "var(--avatar-bg)",
-        "--tw-ring-color": "var(--avatar-ring)",
       }}
-      className={`rounded-full object-cover ring-2 ${className}`}
+      className={`rounded-full object-cover ring-2 ring-[var(--avatar-ring)] ${className}`}
     />
   );
 }

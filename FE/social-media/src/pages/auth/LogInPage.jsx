@@ -62,9 +62,9 @@ export default function Login({ onSwitch, onForgot }) {
       }
     } catch (e2) {
       const msg = e2?.error?.message || e2?.message;
-      if (msg === 'Your account has been locked') {
-          navigate("/banned");
-          return;
+      if (msg === "Your account has been locked") {
+        navigate("/banned");
+        return;
       }
       setErr(msg);
     } finally {
@@ -73,31 +73,53 @@ export default function Login({ onSwitch, onForgot }) {
   }
 
   return (
-    <div className="min-h-dvh w-full flex flex-col items-center p-4 lg:p-12 lg:flex-row lg:justify-center lg:items-center bg-bg-main ">
+    <div
+      className="min-h-dvh w-full flex flex-col items-center p-4 lg:p-12 lg:flex-row lg:justify-center lg:items-center"
+      style={{ backgroundColor: "var(--login-bg)" }}
+    >
       {/* Mobile Header */}
       <div className="mb-6 flex items-center gap-2 lg:hidden">
         <img src={logo} alt="Logo" className="h-10 w-10 object-contain" />
-        <span className="font-bold text-2xl text-primary">SocioICT</span>
+        <span className="font-bold text-2xl text-[var(--topbar-logo-text)]">
+          SocioICT
+        </span>
       </div>
 
       {/* Desktop Hero */}
       <div className="hidden lg:flex flex-col justify-center max-w-[500px] mr-20 mt-20">
         <div className="flex items-center gap-3 mb-6">
           <img src={logo} alt="Logo" className="h-16 w-16" />
-          <span className="font-bold text-5xl text-primary">SocioICT</span>
+          <span className="font-bold text-5xl text-[var(--topbar-logo-text)]">
+            SocioICT
+          </span>
         </div>
-        <h2 className="text-8xl font-extrabold text-black leading-tight mb-4">
+        <h2
+          className="text-8xl font-extrabold leading-tight mb-4"
+          style={{ color: "var(--login-text-primary)" }}
+        >
           Welcome back
         </h2>
-        <p className="text-3xl text-gray-600 leading-relaxed">
+        <p
+          className="text-3xl leading-relaxed"
+          style={{ color: "var(--login-text-secondary)" }}
+        >
           Log in to reconnect with friends, classmates, and communities in your
           faculty.
         </p>
       </div>
 
       {/* Login Card */}
-      <div className="w-full max-w-md lg:max-w-[540px] bg-bg-card rounded-box shadow-xl p-6 lg:p-10 lg:mt-10">
-        <h1 className="text-4xl lg:text-5xl font-bold text-center mb-8 text-black">
+      <div
+        className="w-full max-w-md lg:max-w-[540px] rounded-box shadow-xl p-6 lg:p-10 lg:mt-10"
+        style={{
+          backgroundColor: "var(--login-card-bg)",
+          color: "var(--login-text-primary)",
+        }}
+      >
+        <h1
+          className="text-4xl lg:text-5xl font-bold text-center mb-8"
+          style={{ color: "var(--login-text-primary)" }}
+        >
           Log In
         </h1>
 
@@ -117,6 +139,11 @@ export default function Login({ onSwitch, onForgot }) {
             onChange={(e) => setForm({ ...form, identifier: e.target.value })}
             required
             size="lg"
+            style={{
+              backgroundColor: "var(--login-input-bg)",
+              borderColor: "var(--login-input-border)",
+              color: "var(--login-input-text)",
+            }}
           />
           <InputField
             label="Password"
@@ -127,6 +154,11 @@ export default function Login({ onSwitch, onForgot }) {
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             required
             size="lg"
+            style={{
+              backgroundColor: "var(--login-input-bg)",
+              borderColor: "var(--login-input-border)",
+              color: "var(--login-input-text)",
+            }}
           />
 
           <div className="flex items-center justify-between mt-1">
@@ -137,7 +169,10 @@ export default function Login({ onSwitch, onForgot }) {
                 onChange={(e) => setRemember(e.target.checked)}
                 className="w-5 h-5 lg:w-6 lg:h-6 accent-primary"
               />
-              <span className="text-base lg:text-lg text-gray-600">
+              <span
+                className="text-base lg:text-lg"
+                style={{ color: "var(--login-text-secondary)" }}
+              >
                 Remember me
               </span>
             </label>
@@ -162,10 +197,21 @@ export default function Login({ onSwitch, onForgot }) {
 
           <div className="relative py-2">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-300" />
+              <span
+                className="w-full border-t"
+                style={{ borderColor: "var(--login-divider)" }}
+              />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-4 text-gray-500">Or</span>
+              <span
+                className="px-4"
+                style={{
+                  backgroundColor: "var(--login-divider-bg)",
+                  color: "var(--login-divider-text)",
+                }}
+              >
+                Or
+              </span>
             </div>
           </div>
 
@@ -193,7 +239,10 @@ export default function Login({ onSwitch, onForgot }) {
           </div>
 
           {/* Desktop Signup Button */}
-          <div className="hidden lg:block mt-6 pt-6 border-t border-gray-300">
+          <div
+            className="hidden lg:block mt-6 pt-6 border-t"
+            style={{ borderColor: "var(--login-divider)" }}
+          >
             <Button
               variant="primary"
               size="lg"
@@ -207,10 +256,15 @@ export default function Login({ onSwitch, onForgot }) {
 
         {/* Mobile Bottom Link */}
         <div className="mt-6 text-center lg:hidden">
-          <span className="text-gray-600 text-sm">Don’t have an account? </span>
+          <span
+            className="text-sm"
+            style={{ color: "var(--login-text-secondary)" }}
+          >
+            Don’t have an account?
+          </span>
           <button
             onClick={onSwitch}
-            className="text-blue-600 font-semibold text-sm hover:underline"
+            className="text-blue-600 font-semibold text-sm hover:underline ml-1"
           >
             Sign Up
           </button>

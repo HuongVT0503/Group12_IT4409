@@ -143,7 +143,7 @@ export default function PostCard({
       if (payload.unsavedBy) {
         if (payload.unsavedBy === user?.id) {
           setIsSaved(false);
-          if (onUnsave) onUnsave(post.id); 
+          if (onUnsave) onUnsave(post.id);
         }
       }
 
@@ -566,7 +566,7 @@ export default function PostCard({
             <button
               onClick={() => setIsEditing(true)}
               style={{ color: "var(--post-icon-secondary)" }}
-              className="hover:text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-all"
+              className="hover:text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-all cursor-pointer"
               title="Edit Post"
             >
               <Edit2 size={20} />
@@ -576,19 +576,22 @@ export default function PostCard({
               onClick={toggleSave}
               style={{
                 color: isSaved
-                  ? "var(--post-icon-primary)" 
+                  ? "var(--post-icon-primary)"
                   : "var(--post-icon-secondary)",
               }}
-              className="flex items-center gap-2 text-sm font-semibold hover:scale-105 cursor-pointer"
+              className="hover:text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-all cursor-pointer"
               title={isSaved ? "Unsave" : "Save"}
             >
-              <Bookmark size={21} className={isSaved ? "fill-current" : ""} />
+              <Bookmark
+                size={21}
+                className={`${isSaved ? "fill-current" : ""}`}
+              />
             </button>
 
             <button
               onClick={handleDelete}
               style={{ color: "var(--post-icon-secondary)" }}
-              className="hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all"
+              className="hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all cursor-pointer"
             >
               <Trash2 size={20} />
             </button>
@@ -625,16 +628,17 @@ export default function PostCard({
                   onClick={toggleSave}
                   style={{
                     color: isSaved
-                      ? "var(--post-icon-primary)" 
+                      ? "var(--post-icon-primary)"
                       : "var(--post-icon-secondary)",
                   }}
-                  className="flex items-center gap-2 text-sm font-semibold hover:scale-105 cursor-pointer"
+                  className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-blue-50 flex items-center gap-2 cursor-pointer"
                   title={isSaved ? "Unsave" : "Save"}
                 >
                   <Bookmark
                     size={21}
                     className={isSaved ? "fill-current" : ""}
-                  />
+                  />{" "}
+                  {isSaved ? "Unsave" : "Save"}
                 </button>
               </div>
             )}
@@ -648,7 +652,7 @@ export default function PostCard({
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="w-full p-2 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full p-2 border border-[var(--input-focus-ring)] rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[var(--input-focus-ring)] transition-colors"
               rows={3}
             />
 

@@ -192,26 +192,26 @@ export default function ChatPage() {
   }, [routeChatId, conversations, location.state, selectedChat?.id]);
   //run when URL changes or convos load
 
-//debounce message search
-useEffect(() => {
-  const delayDebounceFn = setTimeout(async () => {
-    if (msgSearchQuery.trim().length > 0 && selectedChat) {
-      setIsSearchingMsg(true);
-      try {
-        const res = await searchMessages(selectedChat.id, msgSearchQuery);
-        setMsgSearchResults(res.data.results || []);
-      } catch (error) {
-        console.error("Message search failed", error);
-      } finally {
-        setIsSearchingMsg(false);
+  //debounce message search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (msgSearchQuery.trim().length > 0 && selectedChat) {
+        setIsSearchingMsg(true);
+        try {
+          const res = await searchMessages(selectedChat.id, msgSearchQuery);
+          setMsgSearchResults(res.data.results || []);
+        } catch (error) {
+          console.error("Message search failed", error);
+        } finally {
+          setIsSearchingMsg(false);
+        }
+      } else {
+        setMsgSearchResults([]);
       }
-    } else {
-      setMsgSearchResults([]);
-    }
-  }, 500);
+    }, 500);
 
-  return () => clearTimeout(delayDebounceFn);
-}, [msgSearchQuery, selectedChat]); 
+    return () => clearTimeout(delayDebounceFn);
+  }, [msgSearchQuery, selectedChat]);
 
   //select chat &fetch
   const loadChatData = async (conv) => {
@@ -411,8 +411,6 @@ useEffect(() => {
     }
   };
 
-
-
   const handleInputChange = (e) => {
     setInputText(e.target.value);
     if (socket && selectedChat) {
@@ -505,7 +503,6 @@ useEffect(() => {
     setInputText((prev) => prev + emojiData.emoji);
   };
 
-  
   const closeMsgSearch = () => {
     setIsMsgSearchOpen(false);
     setMsgSearchQuery("");
@@ -521,7 +518,7 @@ useEffect(() => {
 
   return (
     <div
-      className="flex h-[calc(100vh-130px)] lg:h-[calc(100vh-80px)] rounded-t rounded-[var(--radius-box)] shadow-sm border overflow-hidden"
+      className="flex h-[calc(100vh-130px)] lg:h-[calc(100vh-80px)] rounded-t rounded-[var(--radius-box)]  border overflow-hidden"
       style={{
         backgroundColor: "var(--chat-bg)",
         borderColor: "var(--chat-border)",
@@ -539,10 +536,7 @@ useEffect(() => {
         }}
       >
         {/* Search Header */}
-        <div
-          className="p-4 border-b"
-          style={{ borderColor: "var(--chat-border)" }}
-        >
+        <div className="p-4">
           <h2
             className="text-xl font-bold mb-4"
             style={{ color: "var(--chat-text-primary)" }}
@@ -560,7 +554,7 @@ useEffect(() => {
               placeholder="Search conversations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-full py-2.5 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full rounded-full py-2.5 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-[var(--input-focus-ring)] transition-all"
               style={{
                 backgroundColor: "var(--chat-input-bg)",
                 color: "var(--chat-input-text)",
@@ -571,7 +565,10 @@ useEffect(() => {
 
         {/*Horizontal Friends List */}
         {horizontalListUsers.length > 0 && (
-          <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar p-4">
+          <div
+            className="flex gap-4 overflow-x-auto  no-scrollbar p-4 border-y"
+            style={{ borderColor: "var(--chat-border)" }}
+          >
             {/* Friend Items */}
             {horizontalListUsers.map((friend) => (
               <div
@@ -583,7 +580,7 @@ useEffect(() => {
                   <img
                     src={getAvatar(friend)}
                     alt={friend.display_name}
-                    className="w-12 h-12 rounded-full object-cover border transition-colors"
+                    className="w-12 h-12 rounded-full object-cover border-2 transition-colors"
                     style={{ borderColor: "var(--chat-border)" }}
                   />
 
@@ -603,7 +600,7 @@ useEffect(() => {
         )}
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 overflow-y-auto custom-scrollbar mt-2">
           {conversations.length === 0 && (
             <div
               className="p-8 text-center text-sm"
@@ -625,7 +622,7 @@ useEffect(() => {
                 key={chat.id}
                 onClick={() => handleSelectChat(chat)}
                 className={cn(
-                  "p-4 flex gap-3 cursor-pointer transition-all border-l-4"
+                  "p-4 flex gap-3 cursor-pointer transition-all border-l-4 hover:bg-[var(--chat-selected-bg)]"
                 )}
                 style={{
                   backgroundColor: isSelected
@@ -643,7 +640,7 @@ useEffect(() => {
                 <div className="relative">
                   <img
                     src={getAvatar(chat.otherUser)}
-                    className="w-12 h-12 rounded-full object-cover border"
+                    className="w-12 h-12 rounded-full object-cover border-2"
                     alt={chat.otherUser?.display_name}
                     style={{ borderColor: "var(--chat-border)" }}
                   />
@@ -721,7 +718,7 @@ useEffect(() => {
                 borderColor: "var(--chat-header-border)",
               }}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsMobileListVisible(true)}
                   className="md:hidden p-2 -ml-2 rounded-full"
@@ -746,7 +743,7 @@ useEffect(() => {
                 >
                   <img
                     src={getAvatar(selectedChat.otherUser)}
-                    className="w-10 h-10 rounded-full object-cover border"
+                    className="w-12 h-12 rounded-full object-cover border-2"
                     alt="User"
                     style={{ borderColor: "var(--chat-border)" }}
                   />
@@ -785,20 +782,21 @@ useEffect(() => {
               >
                 <button
                   onClick={() => setIsMsgSearchOpen(!isMsgSearchOpen)}
-                  className={`p-2.5 rounded-full transition-colors ${
-                    isMsgSearchOpen
-                      ? "bg-primary/10 text-primary"
-                      : "hover:bg-primary/5"
-                  }`}
+                  className={`p-2.5 rounded-full transition-colors cursor-pointer hover:opacity-80`}
                 >
                   <Search size={20} />
                 </button>
-                
               </div>
             </div>
 
             {isMsgSearchOpen && (
-              <div className="px-4 py-2 border-b bg-gray-50 dark:bg-gray-800 flex items-center gap-2 animate-in slide-in-from-top-2 duration-200">
+              <div
+                className="px-4 py-2 border-b flex items-center gap-2 animate-in slide-in-from-top-2 duration-200"
+                style={{
+                  backgroundColor: "var(--chat-header-bg)",
+                  borderColor: "var(--chat-border)",
+                }}
+              >
                 <form
                   onSubmit={(e) => e.preventDefault()}
                   className="flex-1 relative"
@@ -808,7 +806,12 @@ useEffect(() => {
                     placeholder="Search in conversation..."
                     value={msgSearchQuery}
                     onChange={(e) => setMsgSearchQuery(e.target.value)}
-                    className="w-full pl-3 pr-10 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-1 focus:ring-primary bg-white dark:bg-gray-700 dark:text-gray-200"
+                    className="w-full pl-3 pr-10 py-1.5 text-sm rounded-md border focus:outline-none focus:ring-1 focus:ring-primary"
+                    style={{
+                      backgroundColor: "var(--chat-input-bg)",
+                      borderColor: "var(--chat-border)",
+                      color: "var(--chat-input-text)",
+                    }}
                     autoFocus
                   />
                   {msgSearchQuery && (
@@ -817,9 +820,9 @@ useEffect(() => {
                       onClick={() => {
                         setMsgSearchQuery("");
                         setMsgSearchResults([]);
-                      
                       }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 hover:opacity-80"
+                      style={{ color: "var(--chat-icon-color)" }}
                     >
                       <X size={14} />
                     </button>
@@ -827,7 +830,8 @@ useEffect(() => {
                 </form>
                 <button
                   onClick={closeMsgSearch}
-                  className="text-xs text-gray-500 hover:text-gray-700 font-medium"
+                  className="text-xs font-medium hover:opacity-80 cursor-pointer"
+                  style={{ color: "var(--chat-text-secondary)" }}
                 >
                   Cancel
                 </button>
@@ -842,18 +846,28 @@ useEffect(() => {
               {isMsgSearchOpen && msgSearchQuery ? (
                 <div className="space-y-4">
                   {isSearchingMsg ? (
-                    <p className="text-center text-sm text-gray-500 mt-4">
+                    <p
+                      className="text-center text-sm mt-4"
+                      style={{ color: "var(--chat-text-secondary)" }}
+                    >
                       Searching...
                     </p>
                   ) : msgSearchResults.length === 0 ? (
-                    <p className="text-center text-sm text-gray-500 mt-4">
+                    <p
+                      className="text-center text-sm mt-4"
+                      style={{ color: "var(--chat-text-secondary)" }}
+                    >
                       No results found.
                     </p>
                   ) : (
                     msgSearchResults.map((msg) => (
                       <div
                         key={msg.id}
-                        className="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 flex gap-3"
+                        className="p-3 rounded-lg shadow-sm border flex gap-3"
+                        style={{
+                          backgroundColor: "var(--chat-bg)",
+                          borderColor: "var(--chat-border)",
+                        }}
                       >
                         <img
                           src={getAvatar(msg.sender)}
@@ -862,14 +876,23 @@ useEffect(() => {
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-baseline">
-                            <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                            <span
+                              className="text-sm font-bold"
+                              style={{ color: "var(--chat-text-primary)" }}
+                            >
                               {msg.sender.display_name}
                             </span>
-                            <span className="text-[10px] text-gray-500">
+                            <span
+                              className="text-[10px]"
+                              style={{ color: "var(--chat-text-secondary)" }}
+                            >
                               {safeFormatDate(msg.created_at)}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                          <p
+                            className="text-sm line-clamp-2"
+                            style={{ color: "var(--chat-text-secondary)" }}
+                          >
                             {msg.content}
                           </p>
                         </div>
@@ -1071,7 +1094,7 @@ useEffect(() => {
                       onChange={handleInputChange}
                       onKeyDown={(e) => e.key === "Enter" && handleSend()}
                       placeholder="Type a message..."
-                      className="w-full rounded-[20px] py-3.5 pl-5 pr-12 outline-none focus:ring-2 focus:ring-primary/20 transition-all border border-transparent"
+                      className="w-full rounded-[20px] py-3.5 pl-5 pr-12 outline-none focus:ring-1  transition-all border border-transparent"
                       style={{
                         backgroundColor: "var(--chat-input-bg)",
                         color: "var(--chat-input-text)",
