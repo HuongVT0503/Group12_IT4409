@@ -215,7 +215,7 @@ export default function Login({ onSwitch, onForgot }) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3">
+          {/* <div className="flex flex-col gap-3">
             <Button variant="outline" size="md" type="button" className="gap-3">
               <div
                 className="h-7 w-7 bg-center bg-no-repeat bg-contain"
@@ -236,7 +236,7 @@ export default function Login({ onSwitch, onForgot }) {
               />
               Continue with Facebook
             </Button>
-          </div>
+          </div> */}
 
           {/* Desktop Signup Button */}
           <div
