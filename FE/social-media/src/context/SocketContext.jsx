@@ -30,7 +30,7 @@ export const SocketProvider = ({ children }) => {
       
       const token = sessionStorage.getItem("token") || localStorage.getItem("token");
       //Connect to root
-      const newSocket = io("http://localhost:4000", {
+      const newSocket = io(import.meta.env.VITE_API_URL, {
         auth: { token },
         ///transports: ['websocket']    //rremove to allow polling, auto detects ws or http
         reconnectionAttempts: 5,
