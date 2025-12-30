@@ -234,13 +234,13 @@ export default function CommentItem({
               <div className="mt-2">
                 {isVideoUrl(item.comment.media[0]) ? (
                   <video
-                    src={item.comment.media[0]}
+                    src={getMediaUrl(item.comment.media[0]) || item.comment.media[0]}
                     controls
                     className="max-h-60 rounded-lg border border-gray-200"
                   />
                 ) : (
                   <img
-                    src={item.comment.media[0]}
+                    src={getMediaUrl(item.comment.media[0]) || item.comment.media[0]}
                     alt="comment media"
                     className="max-h-40 rounded-lg object-cover"
                   />
