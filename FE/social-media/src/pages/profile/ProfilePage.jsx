@@ -222,12 +222,16 @@ export default function ProfilePage() {
       id: newPostData.post.id,
       content: newPostData.post.content,
       timestamp: newPostData.post.created_at,
-      image: newPostData.post.media?.[0] || null,
+      image: newPostData.post.media?.[0]
+        ? getMediaUrl(newPostData.post.media[0])
+        : null,
       author: {
         id: newPostData.author.id,
         name: newPostData.author.display_name || newPostData.author.username,
         handle: newPostData.author.username,
-        avatar: newPostData.author.avatar_url,
+        avatar:
+          getMediaUrl(newPostData.author.avatar_url) ||
+          newPostData.author.avatar_url,
       },
       stats: {
         //initialize

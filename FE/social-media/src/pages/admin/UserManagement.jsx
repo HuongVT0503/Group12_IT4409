@@ -17,6 +17,7 @@ import {
 import Avatar from "../../components/common/Avatar";
 //import Button from "../../components/common/ButtonComponent";
 import { formatDistanceToNow } from "date-fns";
+import { getMediaUrl } from "../../utils/mediaUrl";
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -265,6 +266,7 @@ export default function UserManagement() {
                       <div className="flex items-start gap-3">
                         <Avatar
                           src={
+                            getMediaUrl(report.targetAvatar) ||
                             report.targetAvatar ||
                             `https://ui-avatars.com/api/?name=${report.targetName}`
                           }
@@ -299,7 +301,10 @@ export default function UserManagement() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <Avatar
-                          src={`https://ui-avatars.com/api/?name=${report.fromUser}`}
+                          src={
+                            getMediaUrl(report.fromUserAvatar) ||
+                            `https://ui-avatars.com/api/?name=${report.fromUser}`
+                          }
                           size={6}
                         />
                         <span
@@ -419,7 +424,10 @@ export default function UserManagement() {
                   >
                     <td className="px-6 py-4 flex items-center gap-3">
                       <Avatar
-                        src={`https://ui-avatars.com/api/?name=${user.username}`}
+                        src={
+                          getMediaUrl(user.avatar_url) ||
+                          `https://ui-avatars.com/api/?name=${user.username}`
+                        }
                         size={9}
                       />
                       <div>

@@ -6,6 +6,7 @@ import { getFeed } from "../../services/postService";
 import { useSocket } from "../../context/SocketContext";
 import RightPanel from "../../components/layout/RightPanel.jsx";
 //import { useTheme } from "../../context/ThemeContext";
+import { getMediaUrl } from "../../utils/mediaUrl.js";
 
 export default function FeedPage() {
   const [posts, setPosts] = useState([]);
@@ -30,12 +31,15 @@ export default function FeedPage() {
       isSaved: data.isSaved || false,
       timestamp: postObj.created_at, //keep ISO string, format will done by PostCard   //.toLocaleString(),
       image:
-        postObj.media && postObj.media.length > 0 ? postObj.media[0] : null,
+        postObj.media && postObj.media.length > 0
+          ? getMediaUrl(postObj.media[0])
+          : null,
       author: {
         id: authorObj.id,
         name: authorObj.display_name || authorObj.username || "Unknown",
         handle: authorObj.username || "user",
         avatar:
+          getMediaUrl(authorObj.avatar_url) ||
           authorObj.avatar_url ||
           `https://ui-avatars.com/api/?name=${
             authorObj.display_name || "User"
@@ -53,13 +57,15 @@ export default function FeedPage() {
             content: sharedObj.content,
             image:
               sharedObj.media && sharedObj.media.length > 0
-                ? sharedObj.media[0]
+                ? getMediaUrl(sharedObj.media[0]) || sharedObj.media[0]
                 : null,
             timestamp: sharedObj.created_at,
             author: {
               id: sharedObj.author.id,
               name: sharedObj.author.display_name || sharedObj.author.username,
-              avatar: sharedObj.author.avatar_url,
+              avatar:
+                getMediaUrl(sharedObj.author.avatar_url) ||
+                sharedObj.author.avatar_url,
             },
           }
         : null,
