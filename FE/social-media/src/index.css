@@ -9,6 +9,8 @@
 @theme {
   --font-sans: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
 
+  --breakpoint-xs: 32rem;
+
   --color-success: #10b981;
   --color-success-light: #d1fae5;
 
@@ -142,7 +144,7 @@
   --panel-border: #f3f4f6;
   --panel-text: #111827;
   --panel-text-secondary: #9ca3af;
-  --panel-hover-bg: #f9fafb;
+  --panel-hover-bg: rgba(99, 102, 241, 0.08);
   --panel-link-color: #6366f1;
   --panel-icon-color: #6366f1;
   --panel-empty-bg: #f9fafb;

@@ -402,7 +402,7 @@ export default function ProfilePage() {
           ></div>
 
           <div className="lg:px-8 px-4">
-            <div className="relative flex flex-col md:flex-row md:justify-between items-start md:items-end lg:-mt-16 -mt-14 mb-4 gap-4">
+            <div className="relative flex flex-col xs:flex-row xs:justify-between items-start xs:items-end lg:-mt-16 -mt-14 mb-4 gap-4">
               <div className="relative">
                 <Avatar
                   src={
@@ -437,7 +437,7 @@ export default function ProfilePage() {
                   Edit Profile
                 </button>
               ) : (
-                <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                <div className="flex flex-wrap items-center gap-2 w-full xs:w-auto">
                   <Button
                     onClick={handleMessage}
                     loading={messageLoading}
