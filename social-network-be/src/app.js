@@ -7,7 +7,7 @@ import cors from 'cors';
 import path from 'path';
 import cookieParser from 'cookie-parser';
 import { fileURLToPath } from 'url';
-import passport from './config/passportConfig.js';
+//import passport from './config/passportConfig.js';
 import session from 'express-session';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -41,8 +41,8 @@ app.use(session({
   cookie: { httpOnly: true, secure: false }
 }));
 
-app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.initialize());
+// app.use(passport.session());
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.get('/', (req, res) => res.json({ ok: true, version: '0.2' }));
