@@ -21,43 +21,63 @@ export default function AdminDashboard() {
     }
   };
 
-  const StatCard = ({ title, value, icon: Icon, color, bg }) => (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+  const StatCard = ({ title, value, icon: Icon, iconColor, iconBgColor }) => (
+    <div
+      className="p-6 rounded-2xl border shadow-sm"
+      style={{
+        backgroundColor: "var(--admin-card-bg)",
+        borderColor: "var(--admin-card-border)",
+      }}
+    >
       <div className="flex justify-between items-start">
         <div>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <h3 className="text-3xl font-bold text-gray-900 mt-2">
+          <p
+            className="text-sm font-medium"
+            style={{ color: "var(--admin-text-secondary)" }}
+          >
+            {title}
+          </p>
+          <h3
+            className="text-3xl font-bold mt-2"
+            style={{ color: "var(--admin-text-primary)" }}
+          >
             {loading ? "..." : value}
           </h3>
         </div>
-        <div className={`p-3 ${bg} ${color} rounded-xl`}>
+        <div
+          className={`p-3 rounded-xl`}
+          style={{ backgroundColor: iconBgColor, color: iconColor }}
+        >
           <Icon size={24} />
         </div>
       </div>
-      
     </div>
   );
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <h1 className="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
-      
+      <h1
+        className="text-2xl font-bold"
+        style={{ color: "var(--admin-text-primary)" }}
+      >
+        Dashboard Overview
+      </h1>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard 
-          title="Total Users" 
-          value={stats.totalUsers} 
-          icon={Users} 
-          color="text-blue-600" 
-          bg="bg-blue-50" 
+        <StatCard
+          title="Total Users"
+          value={stats.totalUsers}
+          icon={Users}
+          iconColor="#2563eb"
+          iconBgColor="rgba(59, 130, 246, 0.1)"
         />
-        <StatCard 
-          title="Total Posts" 
-          value={stats.totalPosts} 
-          icon={FileText} 
-          color="text-purple-600" 
-          bg="bg-purple-50" 
+        <StatCard
+          title="Total Posts"
+          value={stats.totalPosts}
+          icon={FileText}
+          iconColor="#9333ea"
+          iconBgColor="rgba(147, 51, 234, 0.1)"
         />
-        
       </div>
     </div>
   );

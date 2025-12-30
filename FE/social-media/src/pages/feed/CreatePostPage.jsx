@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+//import { useEffect } from "react";
 import CreatePost from "../../components/feed/CreatePost";
 
 export default function CreatePostPage() {

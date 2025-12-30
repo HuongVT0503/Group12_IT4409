@@ -125,31 +125,60 @@ export default function UserManagement() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
-          <p className="text-gray-500 text-sm">
+          <h1
+            className="text-2xl font-bold"
+            style={{ color: "var(--admin-text-primary)" }}
+          >
+            User Management
+          </h1>
+          <p
+            className="text-sm"
+            style={{ color: "var(--admin-text-secondary)" }}
+          >
             Manage accounts and review reported users.
           </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="bg-gray-100 p-1 rounded-lg flex gap-1">
+        <div
+          className="p-1 rounded-lg flex gap-1"
+          style={{ backgroundColor: "var(--admin-table-header-bg)" }}
+        >
           <button
             onClick={() => setActiveTab("reports")}
-            className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${
-              activeTab === "reports"
-                ? "bg-white text-red-600 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
+            className={`px-4 py-2 text-sm font-semibold rounded-md transition-all`}
+            style={{
+              backgroundColor:
+                activeTab === "reports"
+                  ? "var(--admin-card-bg)"
+                  : "transparent",
+              color:
+                activeTab === "reports"
+                  ? "#ef4444"
+                  : "var(--admin-text-secondary)",
+              boxShadow:
+                activeTab === "reports"
+                  ? "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
+                  : "none",
+            }}
           >
             Reported Users ({reports.length})
           </button>
           <button
             onClick={() => setActiveTab("users")}
-            className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${
-              activeTab === "users"
-                ? "bg-white text-primary text-blue-600 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
+            className={`px-4 py-2 text-sm font-semibold rounded-md transition-all`}
+            style={{
+              backgroundColor:
+                activeTab === "users" ? "var(--admin-card-bg)" : "transparent",
+              color:
+                activeTab === "users"
+                  ? "#3b82f6"
+                  : "var(--admin-text-secondary)",
+              boxShadow:
+                activeTab === "users"
+                  ? "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
+                  : "none",
+            }}
           >
             All Users
           </button>
@@ -158,14 +187,35 @@ export default function UserManagement() {
 
       {/*repoted users*/}
       {activeTab === "reports" && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm animate-in fade-in">
-          <div className="p-4 border-b border-gray-100 bg-red-50/50">
-            <h3 className="font-bold text-red-800 flex items-center gap-2">
+        <div
+          className="rounded-xl border overflow-hidden shadow-sm animate-in fade-in"
+          style={{
+            backgroundColor: "var(--admin-card-bg)",
+            borderColor: "var(--admin-card-border)",
+          }}
+        >
+          <div
+            className="p-4 border-b"
+            style={{
+              borderColor: "var(--admin-table-border)",
+              backgroundColor: "rgba(239, 68, 68, 0.1)",
+            }}
+          >
+            <h3
+              className="font-bold flex items-center gap-2"
+              style={{ color: "#ef4444" }}
+            >
               <ShieldAlert size={20} /> Pending Actions
             </h3>
           </div>
-          <table className="w-full text-left text-sm text-gray-600">
-            <thead className="bg-gray-50 text-xs uppercase font-semibold text-gray-500">
+          <table className="w-full text-left text-sm">
+            <thead
+              className="text-xs uppercase font-semibold"
+              style={{
+                backgroundColor: "var(--admin-table-header-bg)",
+                color: "var(--admin-text-secondary)",
+              }}
+            >
               <tr>
                 <th className="px-6 py-4">Report Details</th>
                 <th className="px-6 py-4">Reporter</th>
@@ -173,10 +223,17 @@ export default function UserManagement() {
                 <th className="px-6 py-4 text-right">Decision</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody
+              className="divide-y"
+              style={{ borderColor: "var(--admin-table-border)" }}
+            >
               {loading ? (
                 <tr>
-                  <td colSpan="4" className="px-6 py-8 text-center">
+                  <td
+                    colSpan="4"
+                    className="px-6 py-8 text-center"
+                    style={{ color: "var(--admin-text-secondary)" }}
+                  >
                     Loading...
                   </td>
                 </tr>
@@ -184,14 +241,26 @@ export default function UserManagement() {
                 <tr>
                   <td
                     colSpan="4"
-                    className="px-6 py-12 text-center text-gray-400"
+                    className="px-6 py-12 text-center"
+                    style={{ color: "var(--admin-text-secondary)" }}
                   >
                     No pending user reports. Good job!
                   </td>
                 </tr>
               ) : (
                 reports.map((report) => (
-                  <tr key={report.reportId} className="hover:bg-gray-50/80">
+                  <tr
+                    key={report.reportId}
+                    className="transition-colors"
+                    style={{ borderBottomColor: "var(--admin-table-border)" }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor =
+                        "var(--admin-table-row-hover)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "transparent")
+                    }
+                  >
                     <td className="px-6 py-4">
                       <div className="flex items-start gap-3">
                         <Avatar
@@ -203,10 +272,16 @@ export default function UserManagement() {
                         />
                         <div>
                           {/* SHOW DISPLAY NAME HERE */}
-                          <div className="font-bold text-gray-900 text-base">
+                          <div
+                            className="font-bold text-base"
+                            style={{ color: "var(--admin-text-primary)" }}
+                          >
                             {report.targetName || "Unknown User"}
                           </div>
-                          <div className="text-gray-500 text-xs mb-1">
+                          <div
+                            className="text-xs mb-1"
+                            style={{ color: "var(--admin-text-secondary)" }}
+                          >
                             @{report.targetUsername || "username"}
                           </div>
 
@@ -227,12 +302,18 @@ export default function UserManagement() {
                           src={`https://ui-avatars.com/api/?name=${report.fromUser}`}
                           size={6}
                         />
-                        <span className="font-medium text-gray-900">
+                        <span
+                          className="font-medium"
+                          style={{ color: "var(--admin-text-primary)" }}
+                        >
                           {report.fromUser}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-gray-500">
+                    <td
+                      className="px-6 py-4"
+                      style={{ color: "var(--admin-text-secondary)" }}
+                    >
                       {report.createdAt
                         ? formatDistanceToNow(new Date(report.createdAt)) +
                           " ago"
@@ -242,7 +323,19 @@ export default function UserManagement() {
                       <div className="flex justify-end gap-3">
                         <button
                           onClick={() => handleRejectReport(report.reportId)}
-                          className="flex items-center gap-1 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-xs font-bold border border-gray-200"
+                          className="flex items-center gap-1 px-3 py-2 rounded-lg transition-colors text-xs font-bold border"
+                          style={{
+                            borderColor: "var(--admin-card-border)",
+                            color: "var(--admin-text-secondary)",
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--admin-table-header-bg)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
+                          }
                         >
                           <CheckCircle size={16} /> Ignore
                         </button>
@@ -267,21 +360,39 @@ export default function UserManagement() {
         <>
           <div className="relative">
             <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2"
               size={18}
+              style={{ color: "var(--admin-text-secondary)" }}
             />
             <input
               type="text"
               placeholder="Search users by name or email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 bg-white shadow-sm"
+              className="w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
+              style={{
+                backgroundColor: "var(--admin-card-bg)",
+                borderColor: "var(--admin-card-border)",
+                color: "var(--admin-text-primary)",
+              }}
             />
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm animate-in fade-in">
-            <table className="w-full text-left text-sm text-gray-600">
-              <thead className="bg-gray-50 text-xs uppercase font-semibold text-gray-500">
+          <div
+            className="rounded-xl border overflow-hidden shadow-sm animate-in fade-in"
+            style={{
+              backgroundColor: "var(--admin-card-bg)",
+              borderColor: "var(--admin-card-border)",
+            }}
+          >
+            <table className="w-full text-left text-sm">
+              <thead
+                className="text-xs uppercase font-semibold"
+                style={{
+                  backgroundColor: "var(--admin-table-header-bg)",
+                  color: "var(--admin-text-secondary)",
+                }}
+              >
                 <tr>
                   <th className="px-6 py-4">User</th>
                   <th className="px-6 py-4">Role</th>
@@ -289,11 +400,22 @@ export default function UserManagement() {
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody
+                className="divide-y"
+                style={{ borderColor: "var(--admin-table-border)" }}
+              >
                 {filteredUsers.map((user) => (
                   <tr
                     key={user.userId}
-                    className="hover:bg-gray-50/80 transition-colors"
+                    className="transition-colors"
+                    style={{ borderBottomColor: "var(--admin-table-border)" }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor =
+                        "var(--admin-table-row-hover)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "transparent")
+                    }
                   >
                     <td className="px-6 py-4 flex items-center gap-3">
                       <Avatar
@@ -301,32 +423,56 @@ export default function UserManagement() {
                         size={9}
                       />
                       <div>
-                        <div className="font-semibold text-gray-900">
+                        <div
+                          className="font-semibold"
+                          style={{ color: "var(--admin-text-primary)" }}
+                        >
                           {user.username}
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div
+                          className="text-xs"
+                          style={{ color: "var(--admin-text-secondary)" }}
+                        >
                           {user.email || "No email"}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 capitalize">
                       <span
-                        className={`px-2 py-1 rounded text-xs font-bold ${
-                          user.role === "admin"
-                            ? "bg-purple-100 text-purple-700"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
+                        className={`px-2 py-1 rounded text-xs font-bold`}
+                        style={{
+                          backgroundColor:
+                            user.role === "admin"
+                              ? "rgba(147, 51, 234, 0.1)"
+                              : "rgba(75, 85, 99, 0.1)",
+                          color:
+                            user.role === "admin"
+                              ? "#9333ea"
+                              : "var(--admin-text-secondary)",
+                        }}
                       >
                         {user.role}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       {user.isBanned ? (
-                        <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-semibold flex items-center w-fit gap-1">
+                        <span
+                          className="px-2 py-1 rounded text-xs font-semibold flex items-center w-fit gap-1"
+                          style={{
+                            backgroundColor: "rgba(239, 68, 68, 0.1)",
+                            color: "#b91c1c",
+                          }}
+                        >
                           <XCircle size={12} /> Banned
                         </span>
                       ) : (
-                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-semibold flex items-center w-fit gap-1">
+                        <span
+                          className="px-2 py-1 rounded text-xs font-semibold flex items-center w-fit gap-1"
+                          style={{
+                            backgroundColor: "rgba(34, 197, 94, 0.1)",
+                            color: "#15803d",
+                          }}
+                        >
                           <UserCheck size={12} /> Active
                         </span>
                       )}
@@ -335,11 +481,24 @@ export default function UserManagement() {
                       {user.role !== "admin" && (
                         <button
                           onClick={() => handleBanToggle(user)}
-                          className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors border ${
-                            user.isBanned
-                              ? "bg-white border-green-200 text-green-600 hover:bg-green-50"
-                              : "bg-white border-red-200 text-red-600 hover:bg-red-50"
-                          }`}
+                          className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors border`}
+                          style={{
+                            backgroundColor: "transparent",
+                            borderColor: user.isBanned
+                              ? "rgba(34, 197, 94, 0.3)"
+                              : "rgba(239, 68, 68, 0.3)",
+                            color: user.isBanned ? "#16a34a" : "#dc2626",
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              user.isBanned
+                                ? "rgba(34, 197, 94, 0.1)"
+                                : "rgba(239, 68, 68, 0.1)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
+                          }
                         >
                           {user.isBanned ? "Unban User" : "Ban User"}
                         </button>

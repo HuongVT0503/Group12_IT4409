@@ -6,9 +6,12 @@ import {
   LogOut,
   Bell,
   ShieldAlert,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
+import { useTheme } from "../../context/ThemeContext";
 import { useState, useEffect, useRef } from "react";
 import {
   getNotifications,
@@ -18,6 +21,7 @@ import { formatDistanceToNow } from "date-fns";
 
 export default function AdminLayout() {
   const { user, logout } = useAuth(); //admin user
+  const { theme, toggleTheme } = useTheme();
   const socket = useSocket();
   const navigate = useNavigate();
 
@@ -114,10 +118,19 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 font-sans">
+    <div
+      className="flex h-screen font-sans"
+      style={{ backgroundColor: "var(--admin-bg)" }}
+    >
       {/* Sidebar */}
-      <aside className="w-64 bg-slate-800 text-white flex flex-col shadow-lg z-20">
-        <div className="p-6 text-2xl font-bold tracking-tight text-center border-b border-slate-700 bg-slate-900">
+      <aside
+        className="w-64 flex flex-col shadow-lg z-20"
+        style={{
+          backgroundColor: "var(--admin-sidebar-bg)",
+          color: "var(--admin-sidebar-text)",
+        }}
+      >
+        <div className="p-6 text-2xl font-bold text-[#a78bfa] tracking-tight text-center">
           Admin Panel
         </div>
         <nav className="flex-1 p-4 space-y-2">
@@ -135,7 +148,18 @@ export default function AdminLayout() {
         </nav>
         <button
           onClick={handleLogout}
-          className="p-4 flex items-center gap-3 text-red-400 hover:bg-slate-700 transition-colors border-t border-slate-700"
+          className="p-4 flex items-center gap-3 hover:bg-slate-700 transition-colors border-t"
+          style={{
+            borderColor: "var(--admin-sidebar-border)",
+            color: "#f87171",
+          }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.backgroundColor =
+              "var(--admin-sidebar-hover)")
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.backgroundColor = "transparent")
+          }
         >
           <LogOut size={20} /> Logout
         </button>
@@ -143,17 +167,53 @@ export default function AdminLayout() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8 shadow-sm z-10">
-          <h2 className="text-xl font-semibold text-gray-800">
+        <header
+          className="border-b h-16 flex items-center justify-between px-8 shadow-sm z-10"
+          style={{
+            backgroundColor: "var(--admin-header-bg)",
+            borderColor: "var(--admin-header-border)",
+          }}
+        >
+          <h2
+            className="text-xl font-semibold"
+            style={{ color: "var(--admin-header-text)" }}
+          >
             Welcome back, {user?.display_name || "Admin"}
           </h2>
 
           <div className="flex items-center gap-4">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full transition-colors cursor-pointer"
+              style={{ color: "var(--admin-text-secondary)" }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "var(--admin-bg)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "transparent")
+              }
+              title={
+                theme === "dark"
+                  ? "Switch to Light Mode"
+                  : "Switch to Dark Mode"
+              }
+            >
+              {theme === "dark" ? <Sun size={24} /> : <Moon size={24} />}
+            </button>
+
             {/* Noti Bell */}
             <div className="relative" ref={notiRef}>
               <button
                 onClick={() => setShowNoti(!showNoti)}
-                className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
+                className="relative p-2 rounded-full transition-colors cursor-pointer"
+                style={{ color: "var(--admin-text-secondary)" }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = "var(--admin-bg)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = "transparent")
+                }
               >
                 <Bell size={24} />
                 {unreadCount > 0 && (
@@ -163,8 +223,21 @@ export default function AdminLayout() {
 
               {/* Dropdown */}
               {showNoti && (
-                <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
-                  <div className="p-3 border-b border-gray-200 font-bold text-gray-900 bg-gray-50 flex justify-between items-center">
+                <div
+                  className="absolute right-0 top-full mt-2 w-80 rounded-xl shadow-xl border overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50"
+                  style={{
+                    backgroundColor: "var(--admin-card-bg)",
+                    borderColor: "var(--admin-card-border)",
+                  }}
+                >
+                  <div
+                    className="p-3 border-b font-bold flex justify-between items-center"
+                    style={{
+                      backgroundColor: "var(--admin-table-header-bg)",
+                      borderColor: "var(--admin-card-border)",
+                      color: "var(--admin-text-primary)",
+                    }}
+                  >
                     <span>Reports</span>
                     {unreadCount > 0 && (
                       <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">
@@ -174,7 +247,10 @@ export default function AdminLayout() {
                   </div>
                   <div className="max-h-[300px] overflow-y-auto">
                     {notis.length === 0 ? (
-                      <div className="p-4 text-center text-sm text-gray-500">
+                      <div
+                        className="p-4 text-center text-sm"
+                        style={{ color: "var(--admin-text-secondary)" }}
+                      >
                         No reports found.
                       </div>
                     ) : (
@@ -182,16 +258,32 @@ export default function AdminLayout() {
                         <div
                           key={n.id}
                           onClick={() => handleNotificationClick(n)}
-                          className={`p-3 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors ${
-                            !n.read ? "bg-blue-50/50" : ""
-                          }`}
+                          className={`p-3 border-b cursor-pointer transition-colors`}
+                          style={{
+                            borderColor: "var(--admin-table-border)",
+                            backgroundColor: !n.read
+                              ? "rgba(59, 130, 246, 0.1)"
+                              : "transparent",
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--admin-table-row-hover)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.backgroundColor = !n.read
+                              ? "rgba(59, 130, 246, 0.1)"
+                              : "transparent")
+                          }
                         >
                           <div className="flex gap-3">
                             <div className="mt-1">
                               <ShieldAlert size={16} className="text-red-500" />
                             </div>
                             <div>
-                              <p className="text-sm text-gray-800">
+                              <p
+                                className="text-sm"
+                                style={{ color: "var(--admin-text-primary)" }}
+                              >
                                 <span className="font-bold">
                                   {n.data?.senderName}
                                 </span>{" "}
@@ -200,7 +292,10 @@ export default function AdminLayout() {
                               <p className="text-xs text-red-500 mt-1 italic">
                                 Reason: {n.data?.reason}
                               </p>
-                              <span className="text-xs text-gray-400 mt-1 block">
+                              <span
+                                className="text-xs mt-1 block"
+                                style={{ color: "var(--admin-text-secondary)" }}
+                              >
                                 {n.created_at
                                   ? formatDistanceToNow(
                                       new Date(n.created_at),
@@ -215,15 +310,13 @@ export default function AdminLayout() {
                     )}
                   </div>
                   {unreadCount > 0 && (
-                      <button
-                        onClick={handleMarkAllAsRead}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline transition-colors"
-                      >
-                        Mark all read
-                      </button>
-                    )}
-                  
-
+                    <button
+                      onClick={handleMarkAllAsRead}
+                      className="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline transition-colors w-full p-2 text-center"
+                    >
+                      Mark all read
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -246,13 +339,18 @@ export default function AdminLayout() {
 const NavItem = ({ to, icon, label }) => (
   <NavLink
     to={to}
-    className={({ isActive }) =>
-      `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-        isActive
-          ? "bg-primary text-white"
-          : "text-slate-400 hover:bg-slate-700 hover:text-white"
-      }`
+    className={() =>
+      `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors`
     }
+    style={({ isActive }) => ({
+      backgroundColor: isActive
+        ? "var(--admin-sidebar-active-bg)"
+        : "transparent",
+      color: isActive
+        ? "var(--admin-sidebar-active-text)"
+        : "var(--admin-sidebar-text)",
+      opacity: isActive ? 1 : 0.7,
+    })}
   >
     {icon} <span>{label}</span>
   </NavLink>

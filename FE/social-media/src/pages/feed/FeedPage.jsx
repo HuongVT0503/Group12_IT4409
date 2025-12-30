@@ -148,7 +148,7 @@ export default function FeedPage() {
       <div className="w-full flex justify-center">
         <div
           style={{ backgroundColor: "var(--feed-content-bg)" }}
-          className="w-full max-w-2xl pt-8 px-4 sm:px-6"
+          className="w-full max-w-2xl py-6 px-4 sm:px-6 mb-4 md:mb-10"
         >
           {/* Create Post Input */}
 
