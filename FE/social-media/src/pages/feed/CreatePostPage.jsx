@@ -1,9 +1,15 @@
+//import React from "react";
 import { useNavigate } from "react-router-dom";
 //import { useEffect } from "react";
 import CreatePost from "../../components/feed/CreatePost";
+import RightPanel from "../../components/layout/RightPanel";
 
 export default function CreatePostPage() {
   const navigate = useNavigate();
+
+  const handlePostCreated = () => {
+    navigate("/"); 
+  };
 
   return (
     <div
@@ -18,13 +24,15 @@ export default function CreatePostPage() {
           Create New Post
         </h1>
 
-        <CreatePost
-          onPostCreated={() => {
-            //success-> back to feed
-            navigate("/");
-          }}
-        />
+        <div className="relative z-10">
+            <CreatePost onPostCreated={handlePostCreated} />
+        </div>
+
       </div>
+
+      <aside className="hidden xl:block w-[320px] h-[calc(100vh-80px)] overflow-y-auto no-scrollbar sticky top-20 ml-10">
+        <RightPanel />
+      </aside>
     </div>
   );
 }
