@@ -11,7 +11,7 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { useNavigate, useLocation } from "react-router-dom";
 //import { set } from "date-fns";
 
-export default function Login({ onSwitch, onForgot }) {
+export default function Login({ onSwitch }) {
   //onSuccess?
   const [form, setForm] = useState({ identifier: "", password: "" });
   const [remember, setRemember] = useState(false);
@@ -176,13 +176,13 @@ export default function Login({ onSwitch, onForgot }) {
                 Remember me
               </span>
             </label>
-            <button
+            {/* <button
               type="button"
               onClick={onForgot}
               className="text-base lg:text-lg font-semibold text-blue-600 hover:underline"
             >
               Forgot Password?
-            </button>
+            </button> */}
           </div>
 
           {err && (
