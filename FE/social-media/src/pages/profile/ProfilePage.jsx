@@ -148,7 +148,7 @@ export default function ProfilePage() {
                   content: sharedObj.content,
                   image:
                     sharedObj.media && sharedObj.media.length > 0
-                      ? sharedObj.media[0]
+                      ? getMediaUrl(sharedObj.media[0])
                       : null,
                   timestamp: sharedObj.created_at,
                   author: {
@@ -156,7 +156,7 @@ export default function ProfilePage() {
                     name:
                       sharedObj.author.display_name ||
                       sharedObj.author.username,
-                    avatar: sharedObj.author.avatar_url,
+                    avatar: getMediaUrl(sharedObj.author.avatar_url),
                   },
                 }
               : null,
